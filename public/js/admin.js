@@ -153,7 +153,8 @@ function autoTranslate(text, taBox, taInput, context){
     schedule(){
       if(manual || translateOff) return;
       clearTimeout(timer);
-      timer = setTimeout(run, 900);
+      // Long text goes to the slower, better model, so wait for a longer pause first.
+      timer = setTimeout(run, (text.en || "").length > 80 ? 1800 : 900);
     },
     manualEdit(){
       manual = true;
