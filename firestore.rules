@@ -1,0 +1,48 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Paste the admin user's UID here (Firebase console > Authentication > Users).
+    // UID, not email: anyone can self-register an unverified email/password account.
+    function isAdmin() {
+      return request.auth != null && request.auth.uid == 'YH9Rv09hCkcrTBKam3u0jcDwzRy2';
+    }
+
+    // Wedding details (single doc: site/config). Public read, admin-only write.
+    match /site/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Uploaded photos stored as compressed data URLs. Public read, admin-only write.
+    match /images/{imageId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Background music, split into ~900 KB chunks (docs "<version>_<index>").
+    match /music/{chunkId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Guest book. Guests can read visible wishes and add new ones; only the
+    // admin can see hidden ones, hide/unhide, or delete.
+    match /wishes/{wishId} {
+      allow read: if resource.data.hidden == false || isAdmin();
+
+      allow create: if request.resource.data.keys().hasOnly(['name', 'message', 'createdAt', 'hidden'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 60
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 500
+        && request.resource.data.hidden == false
+        && request.resource.data.createdAt == request.time;
+
+      allow update, delete: if isAdmin();
+    }
+  }
+}

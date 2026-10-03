@@ -1,0 +1,12 @@
+# Firebase CLI deploy cache and logs
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+
+# Vercel CLI project link
+.vercel/
+
+node_modules/
+.DS_Store
+Thumbs.db

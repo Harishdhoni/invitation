@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <radialGradient id="core" cx="50%" cy="38%" r="65%">
+      <stop offset="0" stop-color="#a92a3c"/>
+      <stop offset="1" stop-color="#4a0f1c"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f3dfa0"/>
+      <stop offset=".55" stop-color="#d4af37"/>
+      <stop offset="1" stop-color="#a3801f"/>
+    </linearGradient>
+    <path id="big" d="M100 6 C112 22 112 36 100 50 C88 36 88 22 100 6Z"/>
+    <path id="small" d="M100 20 C108 31 108 41 100 50 C92 41 92 31 100 20Z"/>
+  </defs>
+  <g fill="url(#gold)" stroke="#a3801f" stroke-width=".7">
+    <use href="#big"/>
+    <use href="#big" transform="rotate(45 100 100)"/>
+    <use href="#big" transform="rotate(90 100 100)"/>
+    <use href="#big" transform="rotate(135 100 100)"/>
+    <use href="#big" transform="rotate(180 100 100)"/>
+    <use href="#big" transform="rotate(225 100 100)"/>
+    <use href="#big" transform="rotate(270 100 100)"/>
+    <use href="#big" transform="rotate(315 100 100)"/>
+  </g>
+  <g fill="#f3dfa0" stroke="#a3801f" stroke-width=".7" opacity=".9">
+    <use href="#small" transform="rotate(22.5 100 100)"/>
+    <use href="#small" transform="rotate(67.5 100 100)"/>
+    <use href="#small" transform="rotate(112.5 100 100)"/>
+    <use href="#small" transform="rotate(157.5 100 100)"/>
+    <use href="#small" transform="rotate(202.5 100 100)"/>
+    <use href="#small" transform="rotate(247.5 100 100)"/>
+    <use href="#small" transform="rotate(292.5 100 100)"/>
+    <use href="#small" transform="rotate(337.5 100 100)"/>
+  </g>
+  <circle cx="100" cy="100" r="56" fill="url(#core)" stroke="url(#gold)" stroke-width="4"/>
+  <circle cx="100" cy="100" r="48" fill="none" stroke="#d4af37" stroke-width="1" opacity=".55"/>
+  <text x="100" y="127" text-anchor="middle" font-size="76" font-weight="700"
+        font-family="'Noto Sans Tamil','Nirmala UI','Latha','Tamil Sangam MN',sans-serif"
+        fill="url(#gold)">உ</text>
+</svg>

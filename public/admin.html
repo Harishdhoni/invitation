@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Wedding Admin</title>
+<link rel="icon" href="assets/emblem.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Noto+Sans+Tamil:wght@400;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<!-- Shown when js/firebase-config.js still has placeholder values -->
+<section id="setupView" class="center-view" hidden>
+  <div class="card narrow">
+    <img src="assets/emblem.svg" alt="" class="logo">
+    <h1>Connect Firebase first</h1>
+    <p>The admin page saves to Firestore, so it needs your Firebase project details.</p>
+    <ol>
+      <li>Firebase console → <b>Project settings</b> → <b>Your apps</b> → add a <b>Web app</b>.</li>
+      <li>Copy the <code>firebaseConfig</code> values into <code>public/js/firebase-config.js</code>.</li>
+      <li>Reload this page.</li>
+    </ol>
+    <p class="muted">Full steps are in <code>SETUP.md</code>.</p>
+  </div>
+</section>
+
+<!-- LOGIN -->
+<section id="loginView" class="center-view" hidden>
+  <form id="loginForm" class="card narrow">
+    <img src="assets/emblem.svg" alt="" class="logo">
+    <h1>Wedding Admin</h1>
+    <label class="field"><span>Email</span><input type="email" id="loginEmail" autocomplete="username" required></label>
+    <label class="field"><span>Password</span><input type="password" id="loginPassword" autocomplete="current-password" required></label>
+    <button type="submit" class="btn primary block" id="loginBtn">Log in</button>
+    <p class="error" id="loginError" role="alert"></p>
+  </form>
+</section>
+
+<!-- APP -->
+<div id="appView" hidden>
+  <header class="topbar">
+    <div class="brand"><img src="assets/emblem.svg" alt=""> Wedding Admin</div>
+    <div class="top-actions">
+      <a class="btn ghost" href="./" target="_blank" rel="noopener">View site ↗</a>
+      <span class="who" id="whoAmI"></span>
+      <button class="btn ghost" id="logoutBtn">Log out</button>
+    </div>
+  </header>
+
+  <div class="banner warn" id="uidBanner" hidden></div>
+  <div class="banner info" id="firstRunBanner" hidden>Showing sample details. Edit them and click <b>Save changes</b> to publish.</div>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="details">Couple &amp; Hero</button>
+    <button class="tab" data-tab="photos">Photos &amp; Music</button>
+    <button class="tab" data-tab="events">Events</button>
+    <button class="tab" data-tab="contacts">Help &amp; Contacts</button>
+    <button class="tab" data-tab="wishes">Wishes <span class="count" id="wishCount"></span></button>
+  </nav>
+
+  <main>
+    <section class="panel active" data-panel="details">
+      <div class="card" id="detailsForm"></div>
+    </section>
+
+    <section class="panel" data-panel="photos">
+      <div class="photo-grid">
+        <div class="card photo-card" data-image="cover">
+          <h2>Couple cover photo</h2>
+          <p class="muted">Shown full-width below the names. Landscape works best.</p>
+          <img class="preview" alt="">
+          <div class="photo-meta muted"></div>
+          <div class="row">
+            <label class="btn primary">Choose photo<input type="file" accept="image/*" hidden></label>
+            <button class="btn ghost" data-remove>Use default</button>
+          </div>
+        </div>
+        <div class="card photo-card" data-image="deity">
+          <h2>Deity / emblem image</h2>
+          <p class="muted">Shown at the top with a golden glow. A PNG with a transparent background looks best.</p>
+          <img class="preview" alt="">
+          <div class="photo-meta muted"></div>
+          <div class="row">
+            <label class="btn primary">Choose image<input type="file" accept="image/*" hidden></label>
+            <button class="btn ghost" data-remove>Use default</button>
+          </div>
+        </div>
+        <div class="card music-card">
+          <h2>Background music</h2>
+          <p class="muted">Starts when guests open the invitation, and loops. MP3 up to 10 MB — 3–5 MB is best so it loads fast on mobile data.</p>
+          <div class="music-box">
+            <div class="music-icon" aria-hidden="true">🎵</div>
+            <div class="music-info">
+              <div class="music-name" id="musicName">No music added</div>
+              <div class="muted" id="musicMeta"></div>
+            </div>
+          </div>
+          <audio id="musicPreview" controls preload="none" hidden></audio>
+          <div class="row">
+            <label class="btn primary">Choose music<input type="file" id="musicFile" accept="audio/mpeg,audio/mp3,audio/mp4,audio/aac,audio/x-m4a,.mp3,.m4a" hidden></label>
+            <button class="btn ghost" id="musicPreviewBtn" hidden>▶ Play current</button>
+            <button class="btn ghost" id="musicRemoveBtn" hidden>Remove music</button>
+          </div>
+        </div>
+      </div>
+      <p class="muted note">Photos are compressed in your browser before upload so each one fits in Firestore (≈ under 700 KB). Music is split into small pieces and uploaded when you click Save.</p>
+    </section>
+
+    <section class="panel" data-panel="events">
+      <div id="eventsList"></div>
+      <button class="btn ghost add" id="addEventBtn">＋ Add event</button>
+    </section>
+
+    <section class="panel" data-panel="contacts">
+      <div class="card" id="helpForm"></div>
+      <h2 class="list-title">Coordinators</h2>
+      <div id="coordList"></div>
+      <button class="btn ghost add" id="addCoordBtn">＋ Add coordinator</button>
+    </section>
+
+    <section class="panel" data-panel="wishes">
+      <div class="card">
+        <p class="muted" id="wishSummary">Loading wishes…</p>
+        <div class="table-wrap">
+          <table class="wish-table">
+            <thead><tr><th>When</th><th>Name</th><th>Wish</th><th>Status</th><th></th></tr></thead>
+            <tbody id="wishRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="savebar" id="saveBar">
+    <span class="save-status" id="saveStatus">All changes saved</span>
+    <button class="btn primary" id="saveBtn" disabled>Save changes</button>
+  </footer>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>

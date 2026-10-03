@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#4a0f1c">
+
+<!-- EDIT BEFORE SHARING: link previews (WhatsApp, Facebook, etc.) never run JavaScript,
+     so these tags must be typed here by hand. The admin page cannot change them.
+     og:image must be a full https:// URL to a JPG/PNG (1200x630 works best). -->
+<title>Arjun weds Meera</title>
+<meta name="description" content="Together with our families — join us on 12th February 2027 at Chennai.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Arjun weds Meera">
+<meta property="og:description" content="Together with our families — join us on 12th February 2027 at Chennai.">
+<meta property="og:image" content="https://wedding-invitation-769fc.web.app/assets/og-cover.jpg">
+<meta property="og:url" content="https://wedding-invitation-769fc.web.app/">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="assets/emblem.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Noto+Sans+Tamil:wght@400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/invite.css">
+</head>
+<body class="locked">
+
+<div id="scrollProgress"></div>
+
+<!-- CURTAIN INTRO -->
+<div id="curtain-overlay">
+  <div class="curtain-panel left"></div>
+  <div class="curtain-panel right"></div>
+  <div id="curtain-center">
+    <div class="curtain-blessing" id="curtainVerse"></div>
+    <button class="curtain-emblem" id="openCurtainBtn" aria-label="Open the invitation">
+      <svg viewBox="0 0 100 100" fill="none" aria-hidden="true">
+        <circle cx="50" cy="50" r="47" fill="#f3dfa0" stroke="#d4af37" stroke-width="2"/>
+        <circle cx="50" cy="50" r="41" stroke="#a3801f" stroke-width=".8" opacity=".5"/>
+        <path d="M42 33 L69 50 L42 67 Z" fill="#7d1528" stroke="#7d1528" stroke-width="4" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <div class="curtain-tap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20V4m0 0l-6 6m6-6l6 6"/></svg>
+      <span data-i18n="curtainTap">Tap the emblem to open the invitation</span>
+    </div>
+    <div class="curtain-names couple-names"></div>
+  </div>
+</div>
+
+<div id="petals-container" aria-hidden="true"></div>
+<div id="goldFrame" aria-hidden="true"></div>
+
+<div id="topbar">
+  <div class="topbar-right">
+    <div class="lang-switch" role="group" aria-label="Language">
+      <button class="lang-btn active" data-lang="en">EN</button>
+      <button class="lang-btn" data-lang="ta">தமிழ்</button>
+    </div>
+    <button id="shareBtn" data-i18n="shareBtn">⧉ Copy Invite Link</button>
+  </div>
+</div>
+
+<nav id="dotNav" aria-label="Sections">
+  <a href="#hero" title="Home"></a>
+  <a href="#coupleCover" title="Photo"></a>
+  <a href="#events" title="Events"></a>
+  <a href="#countdown" title="Countdown"></a>
+  <a href="#wishes" title="Wishes"></a>
+  <a href="#stay" title="Help"></a>
+</nav>
+
+<!-- HERO -->
+<header id="hero">
+  <span class="corner tl" aria-hidden="true"></span><span class="corner tr" aria-hidden="true"></span>
+  <span class="corner bl" aria-hidden="true"></span><span class="corner br" aria-hidden="true"></span>
+
+  <div class="deity-wrap">
+    <img class="deity-img" id="deityImg" src="assets/emblem.svg" alt="">
+  </div>
+  <div class="hero-eyebrow" data-i18n="heroEyebrow">Together with our families</div>
+  <h1 class="hero-names couple-names"></h1>
+  <p class="hero-tagline" id="heroTagline"></p>
+  <div class="hero-date-pill" id="heroDatePill"></div>
+  <div class="scroll-cue"><div class="stem"></div><span data-i18n="scrollCue">Scroll</span></div>
+</header>
+
+<!-- COUPLE PHOTO -->
+<section id="coupleCover">
+  <div class="cover-frame reveal">
+    <img id="coverImg" src="assets/cover-placeholder.svg" alt="The couple">
+  </div>
+</section>
+
+<!-- EVENTS -->
+<section id="events" class="section damask">
+  <div class="eyebrow" data-i18n="eventsEyebrow">Save The Dates</div>
+  <h2 class="section-title" data-i18n="eventsTitle">Wedding Events</h2>
+  <div class="kolam-divider"><span class="dot"></span><span class="line"></span><span class="dot big"></span><span class="line"></span><span class="dot"></span></div>
+  <p class="section-sub" data-i18n="eventsSub">We would be delighted to have you join us at each of these celebrations.</p>
+  <div class="events-grid" id="eventsGrid"></div>
+</section>
+
+<!-- COUNTDOWN -->
+<section id="countdown" class="section">
+  <div class="eyebrow" data-i18n="countdownEyebrow">Almost Time</div>
+  <h2 class="section-title" data-i18n="countdownTitle">Counting Down To Our Muhurtham</h2>
+  <div class="kolam-divider"><span class="dot"></span><span class="line"></span><span class="dot big"></span><span class="line"></span><span class="dot"></span></div>
+  <div class="cd-grid reveal">
+    <div class="cd-box"><div class="cd-num" id="cdDays">00</div><div class="cd-label" data-i18n="cdDays">Days</div></div>
+    <div class="cd-box"><div class="cd-num" id="cdHours">00</div><div class="cd-label" data-i18n="cdHours">Hours</div></div>
+    <div class="cd-box"><div class="cd-num" id="cdMins">00</div><div class="cd-label" data-i18n="cdMins">Minutes</div></div>
+    <div class="cd-box"><div class="cd-num" id="cdSecs">00</div><div class="cd-label" data-i18n="cdSecs">Seconds</div></div>
+  </div>
+</section>
+
+<!-- WISHES -->
+<section id="wishes" class="section damask">
+  <div class="eyebrow" data-i18n="wishesEyebrow">Guest Book</div>
+  <h2 class="section-title" data-i18n="wishesTitle">Leave Us Your Wishes</h2>
+  <div class="kolam-divider"><span class="dot"></span><span class="line"></span><span class="dot big"></span><span class="line"></span><span class="dot"></span></div>
+  <p class="section-sub" data-i18n="wishesSub">Your blessings mean the world to us — leave a little note below.</p>
+
+  <form class="wish-form reveal" id="wishForm">
+    <input type="text" id="wishName" maxlength="60" placeholder="Your name" data-i18n-placeholder="wishNamePh" required>
+    <textarea id="wishMessage" maxlength="500" placeholder="Write your wishes for the couple..." data-i18n-placeholder="wishMsgPh" required></textarea>
+    <button type="submit" class="btn-solid" data-i18n="sendWishes">Send Wishes 💌</button>
+  </form>
+
+  <p class="wishes-empty" id="wishesEmpty" data-i18n="noWishes" hidden>Be the first to leave your blessings 💛</p>
+  <div class="wishes-wall" id="wishesWall"></div>
+  <button class="btn-ghost wishes-more" id="wishesMore" data-i18n="showMore" hidden>Show more wishes</button>
+</section>
+
+<!-- HELP & SUPPORT -->
+<section id="stay" class="section">
+  <div class="eyebrow" data-i18n="stayEyebrow">For Our Guests</div>
+  <h2 class="section-title" data-i18n="stayTitle">Help &amp; Support</h2>
+  <div class="kolam-divider"><span class="dot"></span><span class="line"></span><span class="dot big"></span><span class="line"></span><span class="dot"></span></div>
+  <div class="stay-box reveal">
+    <p id="stayText"></p>
+    <div class="eyebrow" data-i18n="coordinatorsLabel">Coordinators</div>
+    <div id="coordinators"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="hashtag" id="footerHashtag"></div>
+  <p class="thanks" data-i18n="footerThanks">With gratitude and love, we thank you for being part of our story.</p>
+</footer>
+
+<!-- Music is uploaded from the admin page; the button stays hidden until a song exists. -->
+<button id="musicToggle" title="Toggle background music" data-i18n-title="musicHint" aria-label="Toggle background music" hidden>🎵</button>
+<audio id="bgMusic" loop preload="auto"></audio>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="js/invite.js"></script>
+</body>
+</html>
