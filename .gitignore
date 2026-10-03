@@ -4,8 +4,9 @@ firebase-debug.log*
 firestore-debug.log*
 ui-debug.log*
 
-# Vercel CLI project link
+# Vercel CLI project link and its local token file
 .vercel/
+.env*
 
 node_modules/
 .DS_Store
