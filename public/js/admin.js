@@ -74,25 +74,139 @@ function normalize(cfg){
 
 /* ---------------------------- field builders ---------------------------- */
 // Every builder writes straight into the given object, so `state` is always current.
-function biField(label, obj, key, { multiline = false, hint = "", onInput } = {}){
+// English edits are translated into the Tamil box after a short pause (see autoTranslate).
+// `context` tells the translator what the text is, e.g. "Event venue name".
+function biField(label, obj, key, { multiline = false, hint = "", onInput, context = label } = {}){
   obj[key] = asBi(obj[key]);
+  const text = obj[key];
   const wrap = el("div", "field");
   wrap.append(el("span", "label", label));
   const bi = el("div", "bi");
-  [["en", "EN"], ["ta", "தமிழ்"]].forEach(([code, tag]) => {
-    const box = el("div", "lang");
-    box.dataset.lang = tag;
+  const box = (cls, tag) => {
+    const b = el("div", "lang " + cls);
+    b.dataset.lang = tag;
     const input = multiline ? el("textarea") : Object.assign(el("input"), { type: "text" });
-    input.value = obj[key][code] || "";
-    if(code === "ta") input.placeholder = "Optional — English is used if empty";
-    input.addEventListener("input", () => { obj[key][code] = input.value; setDirty(); onInput?.(); });
-    box.append(input);
-    bi.append(box);
-  });
+    input.value = text[cls] || "";
+    b.append(input);
+    bi.append(b);
+    return [b, input];
+  };
+  const [, enInput] = box("en", "EN");
+  const [taBox, taInput] = box("ta", "தமிழ்");
+  taInput.placeholder = "Fills in automatically from English";
+
+  const auto = autoTranslate(text, taBox, taInput, context);
+  enInput.addEventListener("input", () => { text.en = enInput.value; setDirty(); onInput?.(); auto.schedule(); });
+  taInput.addEventListener("input", () => { text.ta = taInput.value; setDirty(); auto.manualEdit(); });
+
   wrap.append(bi);
   if(hint) wrap.append(el("small", "hint", hint));
   return wrap;
 }
+
+/* ---------------------------- auto-translate ---------------------------- */
+// Uses Gemini via Firebase AI Logic (js/translate.js), loaded on first use.
+// A Tamil box typed in by hand stops following the English until "Translate again".
+let translatorModule = null;
+let translateOff = false;   // set when AI Logic isn't enabled, so we don't retry on every keystroke
+let lastTranslateToast = 0;
+const autoFields = new Set();
+const loadTranslator = () => (translatorModule ||= import("./translate.js"));
+
+function autoTranslate(text, taBox, taInput, context){
+  let timer = null, seq = 0, manual = false;
+  const again = el("button", "retranslate", "↻ Translate again");
+  again.type = "button";
+  again.hidden = true;
+  taBox.append(again);
+  const status = s => { taBox.dataset.lang = "தமிழ்" + (s ? " · " + s : ""); };
+
+  async function run(){
+    clearTimeout(timer);
+    const en = (text.en || "").trim();
+    const my = ++seq;
+    if(!en){
+      if(text.ta){ text.ta = ""; taInput.value = ""; setDirty(); }
+      status("");
+      return;
+    }
+    status("translating…");
+    try {
+      const out = await (await loadTranslator()).toTamil(en, context);
+      if(my !== seq || manual) return;
+      if(out !== text.ta){ text.ta = out; taInput.value = out; setDirty(); }
+      status("auto");
+    } catch(e){
+      if(my === seq) status("");
+      await reportTranslateError(e);
+    }
+  }
+
+  again.addEventListener("click", () => {
+    manual = false;
+    translateOff = false;
+    again.hidden = true;
+    run();
+  });
+
+  const field = {
+    schedule(){
+      if(manual || translateOff) return;
+      clearTimeout(timer);
+      timer = setTimeout(run, 900);
+    },
+    manualEdit(){
+      manual = true;
+      seq++;                 // drop any translation still in flight
+      clearTimeout(timer);
+      status("edited");
+      again.hidden = false;
+    },
+    needsFill: () => !manual && !(text.ta || "").trim() && !!(text.en || "").trim(),
+    item: () => ({ text: text.en.trim(), context }),
+    apply(out){ text.ta = out; taInput.value = out; status("auto"); },
+    get connected(){ return taInput.isConnected; }
+  };
+  autoFields.add(field);
+  return field;
+}
+
+async function reportTranslateError(e){
+  console.warn("translation failed", e);
+  const kind = translatorModule ? (await translatorModule).translateErrorKind(e) : "other";
+  if(kind === "not-enabled") translateOff = true;
+  if(Date.now() - lastTranslateToast < 6000) return;
+  lastTranslateToast = Date.now();
+  toast(kind === "not-enabled"
+    ? "Auto-translate needs AI Logic switched on: Firebase console → AI Logic → Get started → Gemini Developer API."
+    : kind === "quota" ? "Translation limit reached for the moment — try again in a minute."
+    : "Couldn't translate right now: " + String(e?.message || e).slice(0, 120));
+}
+
+// Fill every empty Tamil box that has English, in a few batched requests.
+$("fillTamilBtn").addEventListener("click", async () => {
+  for(const f of autoFields) if(!f.connected) autoFields.delete(f);
+  const todo = [...autoFields].filter(f => f.needsFill());
+  if(!todo.length) return toast("Every Tamil box already has text.");
+  const btn = $("fillTamilBtn");
+  btn.disabled = true;
+  translateOff = false;
+  try {
+    const t = await loadTranslator();
+    for(let i = 0; i < todo.length; i += 15){
+      const group = todo.slice(i, i + 15);
+      btn.textContent = `Translating ${Math.min(i + 15, todo.length)}/${todo.length}…`;
+      const outs = await t.toTamilBatch(group.map(f => f.item()));
+      group.forEach((f, j) => { if(outs[j]) f.apply(outs[j]); });
+    }
+    setDirty();
+    toast(`Filled ${todo.length} Tamil field${todo.length === 1 ? "" : "s"} — check them, then Save.`);
+  } catch(e){
+    await reportTranslateError(e);
+  }
+  btn.disabled = false;
+  btn.textContent = "அ Fill missing Tamil";
+});
 
 function textField(label, obj, key, { multiline = false, hint = "", placeholder = "", onInput } = {}){
   const wrap = el("label", "field");
@@ -136,11 +250,11 @@ function moveItem(list, i, dir, rerender){
 /* ------------------------------ form panels ------------------------------ */
 function renderDetails(){
   $("detailsForm").replaceChildren(
-    biField("Groom's name", state, "groomName", { hint: "Shown first. Leave Tamil empty to show the English name in both languages." }),
-    biField("Bride's name", state, "brideName"),
+    biField("Groom's name", state, "groomName", { context: "Groom's personal name (transliterate)", hint: "Shown first. Tamil fills in automatically — clear the Tamil box to show the English name in both languages." }),
+    biField("Bride's name", state, "brideName", { context: "Bride's personal name (transliterate)" }),
     istDateTimeField("Muhurtham date & time (India time)", state, "weddingDateTimeISO", "The countdown on the invite counts down to this moment."),
-    biField("Date line under the names", state, "heroDateLine", { hint: "Example: 💍 12th February 2027 • Chennai" }),
-    biField("Tagline / your story", state, "tagline", { multiline: true }),
+    biField("Date line under the names", state, "heroDateLine", { context: "Wedding date and city line", hint: "Example: 💍 12th February 2027 • Chennai" }),
+    biField("Tagline / your story", state, "tagline", { multiline: true, context: "Invitation message from the couple" }),
     textField("Hashtag", state, "hashtag", { placeholder: "#ArjunWedsMeera", hint: "Shown in the footer." }),
     textField("Opening verse on the curtain", state, "curtainVerse", { multiline: true, hint: "Shown before guests tap to open the invite. Line breaks are kept." })
   );
@@ -148,7 +262,7 @@ function renderDetails(){
 
 function renderHelp(){
   $("helpForm").replaceChildren(
-    biField("Message for outstation guests", state, "accommodationText", { multiline: true })
+    biField("Message for outstation guests", state, "accommodationText", { multiline: true, context: "Help message for outstation guests" })
   );
 }
 
@@ -224,12 +338,12 @@ function renderEvents(){
 
     card.append(
       head,
-      biField("Event name", ev, "name", { onInput: () => { title.textContent = ev.name.en || "Untitled event"; } }),
-      biField("Date", ev, "date", { hint: "Type it exactly as guests should read it, e.g. 12th February 2027." }),
-      biField("Time", ev, "time"),
-      biField("Venue name", ev, "place"),
-      biField("Address", ev, "venue"),
-      biField("Short description (optional)", ev, "desc", { multiline: true }),
+      biField("Event name", ev, "name", { context: "Wedding event / ceremony name", onInput: () => { title.textContent = ev.name.en || "Untitled event"; } }),
+      biField("Date", ev, "date", { context: "Event date", hint: "Type it exactly as guests should read it, e.g. 12th February 2027." }),
+      biField("Time", ev, "time", { context: "Event time" }),
+      biField("Venue name", ev, "place", { context: "Venue / hall / temple name (transliterate)" }),
+      biField("Address", ev, "venue", { context: "Venue address: area, city, PIN (transliterate place names)" }),
+      biField("Short description (optional)", ev, "desc", { multiline: true, context: "Event description" }),
       maps,
       iconChooser(ev)
     );
@@ -262,7 +376,7 @@ function renderCoords(){
     input.addEventListener("input", () => { c.phones = input.value.split(",").map(s => s.trim()).filter(Boolean); setDirty(); });
     phones.append(el("span", "", "Phone numbers"), input, el("small", "hint", "Separate multiple numbers with commas. Each becomes a tap-to-call link."));
 
-    card.append(head, biField("Name", c, "name", { onInput: () => { title.textContent = c.name.en || "New coordinator"; } }), phones);
+    card.append(head, biField("Name", c, "name", { context: "Family coordinator's personal name (transliterate)", onInput: () => { title.textContent = c.name.en || "New coordinator"; } }), phones);
     list.append(card);
   });
 }

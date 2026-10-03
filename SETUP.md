@@ -26,7 +26,9 @@ Go to https://console.firebase.google.com
 3. **Build → Authentication → Get started → Sign-in method → Email/Password → Enable.**
 4. **Authentication → Users → Add user** → your admin email + a strong password.
    Copy the **User UID** shown in the list.
-5. **Project settings (⚙) → General → Your apps → `</>` (Web)** → register an app (no Hosting checkbox needed) →
+5. **Build → AI Logic → Get started → Gemini Developer API** (free, no card). This powers the admin
+   page's automatic English → Tamil translation. It can take a few minutes to start working.
+6. **Project settings (⚙) → General → Your apps → `</>` (Web)** → register an app (no Hosting checkbox needed) →
    copy the `firebaseConfig` values.
 
 ## 3. Paste your values (3 files)
@@ -73,6 +75,10 @@ Open the admin page, log in, and go through the tabs:
 - **Events** — add/reorder/remove events. Each gets a "Get Directions" button (Maps search text or a Maps link).
 - **Help & Contacts** — message for outstation guests + coordinators with tap-to-call numbers.
 - **Wishes** — hide or delete any guest wish; changes are instant.
+
+Type in the **EN** boxes and the **தமிழ்** box fills in automatically about a second after you stop typing
+(Gemini via Firebase AI Logic). Typing in a Tamil box yourself keeps your version — click **↻ Translate again**
+to go back to automatic. **அ Fill missing Tamil** (bottom bar) translates every empty Tamil box at once.
 
 Click **Save changes** (or Ctrl+S) after editing the first four tabs.
 

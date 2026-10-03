@@ -69,7 +69,13 @@ input:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 
   content:attr(data-lang);position:absolute;top:-.55rem;right:.6rem;background:#fff;padding:0 .3rem;
   font-size:.66rem;letter-spacing:.06em;color:var(--gold-dark);font-weight:600;
 }
-.bi .lang[data-lang="தமிழ்"] input,.bi .lang[data-lang="தமிழ்"] textarea{font-family:var(--tamil);}
+.bi .lang.ta input,.bi .lang.ta textarea{font-family:var(--tamil);}
+.bi .lang.ta::before{font-family:var(--tamil);}
+.retranslate{
+  display:block;margin:.3rem 0 0 auto;background:none;border:none;cursor:pointer;
+  color:var(--maroon);font:500 .78rem var(--sans);padding:0;
+}
+.retranslate:hover{text-decoration:underline;}
 @media(max-width:640px){.bi{grid-template-columns:1fr;gap:.9rem;}}
 
 /* ---------- layout ---------- */
@@ -150,7 +156,9 @@ main{max-width:980px;margin:0 auto;padding:1.2rem 1rem 7rem;}
   position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;align-items:center;justify-content:flex-end;gap:1rem;
   padding:.8rem 1.4rem;background:#fff;border-top:1px solid var(--line);box-shadow:0 -6px 20px rgba(74,15,28,.06);
 }
+.savebar .fill-tamil{margin-right:auto;}
 .save-status{font-size:.88rem;color:var(--muted);}
+@media(max-width:520px){.savebar{gap:.5rem;padding:.7rem .8rem;}.save-status{display:none;}}
 .save-status.dirty{color:#9a5b00;font-weight:500;}
 #toast{
   position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(16px);z-index:50;

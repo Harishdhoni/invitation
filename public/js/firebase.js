@@ -12,7 +12,7 @@ export {
   signInWithEmailAndPassword, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 
-const app = isFirebaseConfigured ? initializeApp(firebaseConfig) : null;
+export const app = isFirebaseConfigured ? initializeApp(firebaseConfig) : null;
 export const db = app ? getFirestore(app) : null;
 export const auth = app ? getAuth(app) : null;
 export { isFirebaseConfigured };

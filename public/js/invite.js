@@ -286,8 +286,11 @@ document.querySelectorAll(".lang-btn").forEach(btn => btn.addEventListener("clic
   renderAll();
 }));
 
+// Always share the live site, even when the page is opened from localhost or a Vercel preview URL.
+const SHARE_URL = "https://invitation-five-mu.vercel.app/";
+
 $("shareBtn").addEventListener("click", async () => {
-  try { await navigator.clipboard.writeText(location.href.split("#")[0]); showToast(T().linkCopied); }
+  try { await navigator.clipboard.writeText(SHARE_URL); showToast(T().linkCopied); }
   catch { showToast(T().linkCopyFailed); }
 });
 
