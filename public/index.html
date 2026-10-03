@@ -5,17 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#4a0f1c">
 
-<!-- EDIT BEFORE SHARING: link previews (WhatsApp, Facebook, etc.) never run JavaScript,
-     so these tags must be typed here by hand. The admin page cannot change them.
-     og:image must be a full https:// URL to a JPG/PNG (1200x630 works best). -->
-<title>Arjun weds Meera</title>
-<meta name="description" content="Together with our families — join us on 12th February 2027 at Chennai.">
+<!-- Link previews (WhatsApp, Facebook, etc.) never run JavaScript. On Vercel, api/invite.js
+     replaces everything between og:start and og:end with each wedding's names and cover photo
+     (and adds <meta name="wedding-id">). These generic tags are used for the main link "/". -->
+<!-- og:start -->
+<title>Wedding Invitation</title>
+<meta name="description" content="Together with our families, we invite you to celebrate with us.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Arjun weds Meera">
-<meta property="og:description" content="Together with our families — join us on 12th February 2027 at Chennai.">
+<meta property="og:title" content="Wedding Invitation">
+<meta property="og:description" content="Together with our families, we invite you to celebrate with us.">
 <meta property="og:image" content="https://invitation-five-mu.vercel.app/assets/og-cover.jpg">
 <meta property="og:url" content="https://invitation-five-mu.vercel.app/">
 <meta name="twitter:card" content="summary_large_image">
+<!-- og:end -->
 
 <link rel="icon" href="assets/emblem.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">

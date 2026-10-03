@@ -19,4 +19,8 @@ export const firebaseConfig = {
 // this is only used to show a clear message if someone else signs in.
 export const ADMIN_UID = "YH9Rv09hCkcrTBKam3u0jcDwzRy2";
 
+// The live site address. Share links are built from it (SITE_URL/<wedding link name>),
+// even when a page is opened from localhost or a Vercel preview URL.
+export const SITE_URL = "https://invitation-five-mu.vercel.app";
+
 export const isFirebaseConfigured = !firebaseConfig.apiKey.startsWith("PASTE");

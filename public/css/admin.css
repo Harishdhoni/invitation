@@ -105,6 +105,39 @@ main{max-width:980px;margin:0 auto;padding:1.2rem 1rem 7rem;}
 .note{margin-top:1rem;}
 .add{margin-top:1rem;}
 
+/* ---------- weddings list ---------- */
+.list-main{padding-bottom:3rem;}
+.list-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;}
+.page-title{font-size:1.35rem;margin:0;}
+.form-card{margin-bottom:1rem;}
+.form-card h2{font-size:1.05rem;color:var(--maroon-dark);margin-bottom:.4rem;}
+.form-card > .muted{margin-bottom:1rem;}
+.form-card .error{margin:0 0 .8rem;min-height:0;}
+.field > .slug-input{
+  display:flex;align-items:stretch;margin:0;font-weight:400;color:var(--ink);
+  border:1px solid var(--line);border-radius:8px;background:#fffdfa;overflow:hidden;
+}
+.slug-input:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,.2);}
+.slug-input .slug-prefix{display:flex;align-items:center;padding:0 .2rem 0 .7rem;color:var(--muted);font-size:.88rem;white-space:nowrap;}
+.slug-input input[type=text]{border:none;box-shadow:none;background:none;padding-left:0;min-width:0;}
+.slug-input input[type=text]:focus{box-shadow:none;}
+@media(max-width:520px){.slug-input .slug-prefix{display:none;}.slug-input input[type=text]{padding-left:.7rem;}}
+.wedding-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:1rem;}
+.wedding-card{display:flex;flex-direction:column;gap:.5rem;}
+.wedding-card .item-head{margin-bottom:.2rem;}
+.wedding-card.past{opacity:.75;}
+.wedding-link{font-size:.88rem;overflow-wrap:anywhere;margin-bottom:.4rem;}
+.badge.main{background:var(--gold-light);color:var(--maroon-dark);}
+
+/* ---------- editor header ---------- */
+.editor-head{
+  display:flex;align-items:center;gap:.6rem 1rem;flex-wrap:wrap;
+  max-width:980px;margin:1rem auto 0;padding:0 1rem;
+}
+.editor-head .back{font-size:.88rem;text-decoration:none;white-space:nowrap;}
+.editor-head .back:hover{text-decoration:underline;}
+.editor-head h1{font-size:1.2rem;margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
 /* ---------- repeatable items ---------- */
 .item{margin-bottom:1rem;}
 .item-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:1rem;padding-bottom:.7rem;border-bottom:1px solid var(--line);}

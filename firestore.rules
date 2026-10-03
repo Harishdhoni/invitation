@@ -9,26 +9,64 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == 'YH9Rv09hCkcrTBKam3u0jcDwzRy2';
     }
 
-    // Wedding details (single doc: site/config). Public read, admin-only write.
+    // Site-wide settings (site/settings: which wedding "/" shows). Public read, admin-only write.
+    // site/config is the pre-multi-wedding invitation, kept so the admin can import it.
     match /site/{docId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Uploaded photos stored as compressed data URLs. Public read, admin-only write.
+    // One document per wedding, keyed by its link name (weddings/arjun-meera).
+    // Guests can open a wedding they have the link to, but only the admin can list them all.
+    match /weddings/{weddingId} {
+      allow get: if true;
+      allow list, write: if isAdmin();
+
+      // Uploaded photos stored as compressed data URLs.
+      match /images/{imageId} {
+        allow get: if true;
+        allow list, write: if isAdmin();
+      }
+
+      // Background music, split into ~900 KB chunks (docs "<version>_<index>").
+      match /music/{chunkId} {
+        allow get: if true;
+        allow list, write: if isAdmin();
+      }
+
+      // Guest book. Guests can read visible wishes and add new ones to a wedding
+      // that exists; only the admin can see hidden ones, hide/unhide, or delete.
+      // The admin can also create wishes as-is (used when importing the old invitation).
+      match /wishes/{wishId} {
+        allow read: if resource.data.hidden == false || isAdmin();
+
+        allow create: if isAdmin() || (
+          request.resource.data.keys().hasOnly(['name', 'message', 'createdAt', 'hidden'])
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() <= 60
+          && request.resource.data.message is string
+          && request.resource.data.message.size() > 0
+          && request.resource.data.message.size() <= 500
+          && request.resource.data.hidden == false
+          && request.resource.data.createdAt == request.time
+          && exists(/databases/$(database)/documents/weddings/$(weddingId))
+        );
+
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    // Data of the original single invitation (imported into weddings/ from the admin page).
+    // Same access as before, so a site still running the single-invitation code keeps working.
     match /images/{imageId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-
-    // Background music, split into ~900 KB chunks (docs "<version>_<index>").
     match /music/{chunkId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-
-    // Guest book. Guests can read visible wishes and add new ones; only the
-    // admin can see hidden ones, hide/unhide, or delete.
     match /wishes/{wishId} {
       allow read: if resource.data.hidden == false || isAdmin();
 

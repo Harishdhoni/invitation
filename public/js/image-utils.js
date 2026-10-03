@@ -23,16 +23,17 @@ function loadImage(file){
 }
 
 /**
- * @param {File} file
- * @param {{maxDim?: number, maxChars?: number, alpha?: boolean}} opts
+ * @param {Blob} file
+ * @param {{maxDim?: number, maxChars?: number, alpha?: boolean, type?: string}} opts
  *   maxDim   longest side in pixels
  *   maxChars budget for the resulting data URL
  *   alpha    keep transparency (deity image, icons) when WebP isn't available
+ *   type     force an output format, e.g. "image/jpeg" for link previews
  * @returns {Promise<{dataUrl: string, w: number, h: number}>}
  */
-export async function compressImage(file, { maxDim = 1600, maxChars = 900_000, alpha = false } = {}){
+export async function compressImage(file, { maxDim = 1600, maxChars = 900_000, alpha = false, type: forced = "" } = {}){
   const img = await loadImage(file);
-  const type = webpSupported ? "image/webp" : (alpha ? "image/png" : "image/jpeg");
+  const type = forced || (webpSupported ? "image/webp" : (alpha ? "image/png" : "image/jpeg"));
   let scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
 
   for(let attempt = 0; attempt < 8; attempt++){
@@ -54,5 +55,9 @@ export async function compressImage(file, { maxDim = 1600, maxChars = 900_000, a
   }
   throw new Error("Image is still too large after compression — please try a smaller photo.");
 }
+
+// Small JPEG copy of the cover photo for WhatsApp/Facebook link previews,
+// which want a JPEG well under 300 KB.
+export const compressPreviewImage = file => compressImage(file, { maxDim: 1200, maxChars: 300_000, type: "image/jpeg" });
 
 export const kb = dataUrl => Math.round(dataUrl.length * 0.75 / 1024);

@@ -45,101 +45,152 @@
   <header class="topbar">
     <div class="brand"><img src="assets/emblem.svg" alt=""> Wedding Admin</div>
     <div class="top-actions">
-      <a class="btn ghost" href="./" target="_blank" rel="noopener">View site ↗</a>
       <span class="who" id="whoAmI"></span>
       <button class="btn ghost" id="logoutBtn">Log out</button>
     </div>
   </header>
 
   <div class="banner warn" id="uidBanner" hidden></div>
-  <div class="banner info" id="firstRunBanner" hidden>Showing sample details. Edit them and click <b>Save changes</b> to publish.</div>
 
-  <nav class="tabs" role="tablist">
-    <button class="tab active" data-tab="details">Couple &amp; Hero</button>
-    <button class="tab" data-tab="photos">Photos &amp; Music</button>
-    <button class="tab" data-tab="events">Events</button>
-    <button class="tab" data-tab="contacts">Help &amp; Contacts</button>
-    <button class="tab" data-tab="wishes">Wishes <span class="count" id="wishCount"></span></button>
-  </nav>
+  <!-- WEDDINGS LIST (admin page with no ?w=) -->
+  <main id="weddingsView" class="list-main" hidden>
+    <div class="list-head">
+      <h1 class="page-title">Weddings</h1>
+      <button class="btn primary" id="newWeddingBtn">＋ New wedding</button>
+    </div>
 
-  <main>
-    <section class="panel active" data-panel="details">
-      <div class="card" id="detailsForm"></div>
-    </section>
+    <form class="card form-card" id="importForm" hidden>
+      <h2>Import your current invitation</h2>
+      <p class="muted">Copies the invitation you made before — details, photos, music and wishes — into a wedding with its own link.
+        The main link (<span id="importMainLink"></span>) keeps showing it, so links you already sent still work. Nothing is deleted.</p>
+      <label class="field"><span>Link name</span>
+        <span class="slug-input"><span class="slug-prefix"></span><input type="text" id="importSlug" required></span>
+      </label>
+      <p class="error" id="importError" role="alert"></p>
+      <button type="submit" class="btn primary" id="importBtn">Import</button>
+    </form>
 
-    <section class="panel" data-panel="photos">
-      <div class="photo-grid">
-        <div class="card photo-card" data-image="cover">
-          <h2>Couple cover photo</h2>
-          <p class="muted">Shown full-width below the names. Landscape works best.</p>
-          <img class="preview" alt="">
-          <div class="photo-meta muted"></div>
-          <div class="row">
-            <label class="btn primary">Choose photo<input type="file" accept="image/*" hidden></label>
-            <button class="btn ghost" data-remove>Use default</button>
-          </div>
-        </div>
-        <div class="card photo-card" data-image="deity">
-          <h2>Deity / emblem image</h2>
-          <p class="muted">Shown at the top with a golden glow. A PNG with a transparent background looks best.</p>
-          <img class="preview" alt="">
-          <div class="photo-meta muted"></div>
-          <div class="row">
-            <label class="btn primary">Choose image<input type="file" accept="image/*" hidden></label>
-            <button class="btn ghost" data-remove>Use default</button>
-          </div>
-        </div>
-        <div class="card music-card">
-          <h2>Background music</h2>
-          <p class="muted">Starts when guests open the invitation, and loops. MP3 up to 10 MB — 3–5 MB is best so it loads fast on mobile data.</p>
-          <div class="music-box">
-            <div class="music-icon" aria-hidden="true">🎵</div>
-            <div class="music-info">
-              <div class="music-name" id="musicName">No music added</div>
-              <div class="muted" id="musicMeta"></div>
-            </div>
-          </div>
-          <audio id="musicPreview" controls preload="none" hidden></audio>
-          <div class="row">
-            <label class="btn primary">Choose music<input type="file" id="musicFile" accept="audio/mpeg,audio/mp3,audio/mp4,audio/aac,audio/x-m4a,.mp3,.m4a" hidden></label>
-            <button class="btn ghost" id="musicPreviewBtn" hidden>▶ Play current</button>
-            <button class="btn ghost" id="musicRemoveBtn" hidden>Remove music</button>
-          </div>
-        </div>
+    <form class="card form-card" id="newWeddingForm" hidden>
+      <h2>New wedding</h2>
+      <div class="two-col">
+        <label class="field"><span>Groom's name</span><input type="text" id="newGroom" required></label>
+        <label class="field"><span>Bride's name</span><input type="text" id="newBride" required></label>
       </div>
-      <p class="muted note">Photos are compressed in your browser before upload so each one fits in Firestore (≈ under 700 KB). Music is split into small pieces and uploaded when you click Save.</p>
-    </section>
-
-    <section class="panel" data-panel="events">
-      <div id="eventsList"></div>
-      <button class="btn ghost add" id="addEventBtn">＋ Add event</button>
-    </section>
-
-    <section class="panel" data-panel="contacts">
-      <div class="card" id="helpForm"></div>
-      <h2 class="list-title">Coordinators</h2>
-      <div id="coordList"></div>
-      <button class="btn ghost add" id="addCoordBtn">＋ Add coordinator</button>
-    </section>
-
-    <section class="panel" data-panel="wishes">
-      <div class="card">
-        <p class="muted" id="wishSummary">Loading wishes…</p>
-        <div class="table-wrap">
-          <table class="wish-table">
-            <thead><tr><th>When</th><th>Name</th><th>Wish</th><th>Status</th><th></th></tr></thead>
-            <tbody id="wishRows"></tbody>
-          </table>
-        </div>
+      <label class="field"><span>Link name</span>
+        <span class="slug-input"><span class="slug-prefix"></span><input type="text" id="newSlug" required></span>
+        <small class="hint">Lowercase letters, numbers and dashes. This is the link guests open, so it can't be changed later.</small>
+      </label>
+      <p class="error" id="newWeddingError" role="alert"></p>
+      <div class="row">
+        <button type="submit" class="btn primary" id="createWeddingBtn">Create wedding</button>
+        <button type="button" class="btn ghost" id="cancelNewBtn">Cancel</button>
       </div>
-    </section>
+    </form>
+
+    <p class="muted" id="weddingsStatus">Loading weddings…</p>
+    <div class="wedding-list" id="weddingsList"></div>
   </main>
 
-  <footer class="savebar" id="saveBar">
-    <button class="btn ghost fill-tamil" id="fillTamilBtn" title="Translate every empty Tamil box from its English text">அ Fill missing Tamil</button>
-    <span class="save-status" id="saveStatus">All changes saved</span>
-    <button class="btn primary" id="saveBtn" disabled>Save changes</button>
-  </footer>
+  <!-- EDITOR (admin page with ?w=<wedding>) -->
+  <div id="editorView" hidden>
+    <div class="editor-head">
+      <a class="back" id="backLink" href="#">← All weddings</a>
+      <h1 id="editorTitle"></h1>
+      <div class="row">
+        <button class="btn ghost small" id="copyLinkBtn">Copy link</button>
+        <a class="btn ghost small" id="viewSiteLink" target="_blank" rel="noopener">View site ↗</a>
+      </div>
+    </div>
+
+    <div class="banner info" id="firstRunBanner" hidden>Sample events and contacts are filled in to start from. Replace them with this wedding's details, use <b>அ Fill missing Tamil</b> for the names, and click <b>Save changes</b>.</div>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="details">Couple &amp; Hero</button>
+      <button class="tab" data-tab="photos">Photos &amp; Music</button>
+      <button class="tab" data-tab="events">Events</button>
+      <button class="tab" data-tab="contacts">Help &amp; Contacts</button>
+      <button class="tab" data-tab="wishes">Wishes <span class="count" id="wishCount"></span></button>
+    </nav>
+
+    <main>
+      <section class="panel active" data-panel="details">
+        <div class="card" id="detailsForm"></div>
+      </section>
+
+      <section class="panel" data-panel="photos">
+        <div class="photo-grid">
+          <div class="card photo-card" data-image="cover">
+            <h2>Couple cover photo</h2>
+            <p class="muted">Shown full-width below the names. Landscape works best.</p>
+            <img class="preview" alt="">
+            <div class="photo-meta muted"></div>
+            <div class="row">
+              <label class="btn primary">Choose photo<input type="file" accept="image/*" hidden></label>
+              <button class="btn ghost" data-remove>Use default</button>
+            </div>
+          </div>
+          <div class="card photo-card" data-image="deity">
+            <h2>Deity / emblem image</h2>
+            <p class="muted">Shown at the top with a golden glow. A PNG with a transparent background looks best.</p>
+            <img class="preview" alt="">
+            <div class="photo-meta muted"></div>
+            <div class="row">
+              <label class="btn primary">Choose image<input type="file" accept="image/*" hidden></label>
+              <button class="btn ghost" data-remove>Use default</button>
+            </div>
+          </div>
+          <div class="card music-card">
+            <h2>Background music</h2>
+            <p class="muted">Starts when guests open the invitation, and loops. MP3 up to 10 MB — 3–5 MB is best so it loads fast on mobile data.</p>
+            <div class="music-box">
+              <div class="music-icon" aria-hidden="true">🎵</div>
+              <div class="music-info">
+                <div class="music-name" id="musicName">No music added</div>
+                <div class="muted" id="musicMeta"></div>
+              </div>
+            </div>
+            <audio id="musicPreview" controls preload="none" hidden></audio>
+            <div class="row">
+              <label class="btn primary">Choose music<input type="file" id="musicFile" accept="audio/mpeg,audio/mp3,audio/mp4,audio/aac,audio/x-m4a,.mp3,.m4a" hidden></label>
+              <button class="btn ghost" id="musicPreviewBtn" hidden>▶ Play current</button>
+              <button class="btn ghost" id="musicRemoveBtn" hidden>Remove music</button>
+            </div>
+          </div>
+        </div>
+        <p class="muted note">Photos are compressed in your browser before upload so each one fits in Firestore (≈ under 700 KB). Music is split into small pieces and uploaded when you click Save.</p>
+      </section>
+
+      <section class="panel" data-panel="events">
+        <div id="eventsList"></div>
+        <button class="btn ghost add" id="addEventBtn">＋ Add event</button>
+      </section>
+
+      <section class="panel" data-panel="contacts">
+        <div class="card" id="helpForm"></div>
+        <h2 class="list-title">Coordinators</h2>
+        <div id="coordList"></div>
+        <button class="btn ghost add" id="addCoordBtn">＋ Add coordinator</button>
+      </section>
+
+      <section class="panel" data-panel="wishes">
+        <div class="card">
+          <p class="muted" id="wishSummary">Loading wishes…</p>
+          <div class="table-wrap">
+            <table class="wish-table">
+              <thead><tr><th>When</th><th>Name</th><th>Wish</th><th>Status</th><th></th></tr></thead>
+              <tbody id="wishRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="savebar" id="saveBar">
+      <button class="btn ghost fill-tamil" id="fillTamilBtn" title="Translate every empty Tamil box from its English text">அ Fill missing Tamil</button>
+      <span class="save-status" id="saveStatus">All changes saved</span>
+      <button class="btn primary" id="saveBtn" disabled>Save changes</button>
+    </footer>
+  </div>
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>

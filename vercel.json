@@ -5,6 +5,13 @@
   "installCommand": "",
   "outputDirectory": "public",
   "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/:slug([a-z0-9-]+)", "destination": "/api/invite?slug=:slug" }
+  ],
+  "functions": {
+    "api/invite.js": { "includeFiles": "public/index.html" }
+  },
   "headers": [
     {
       "source": "/(.*)\\.(html|js|css)",

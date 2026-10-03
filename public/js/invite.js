@@ -1,5 +1,5 @@
-import { DEFAULT_CONFIG, TRANSLATIONS, tr, withDefaults, clone } from "./defaults.js";
-import { isFirebaseConfigured } from "./firebase-config.js";
+import { DEFAULT_CONFIG, TRANSLATIONS, tr, withDefaults, clone, isValidSlug } from "./defaults.js";
+import { isFirebaseConfigured, SITE_URL } from "./firebase-config.js";
 
 /* ---------------------------- small helpers ---------------------------- */
 const $ = id => document.getElementById(id);
@@ -17,30 +17,56 @@ function el(tag, className, text){
 }
 const safeUrl = u => (/^https?:\/\//i.test(u || "") ? u : "");
 
-const CONFIG_CACHE = "wi:config";
-const IMG_CACHE = id => "wi:img:" + id;
+/* ----------------------------- which wedding ----------------------------- */
+// On Vercel, /arjun-meera is served by api/invite.js, which adds <meta name="wedding-id">.
+// ?w= is for local previews; the last path segment covers Firebase Hosting's rewrite.
+// The main link "/" has none of these and shows the wedding picked in the admin.
+const pageSlug = document.querySelector('meta[name="wedding-id"]')?.content
+  || new URLSearchParams(location.search).get("w")
+  || [location.pathname.split("/").pop()].find(isValidSlug)
+  || "";
+let slug = isValidSlug(pageSlug) ? pageSlug : "";
+const badLink = !!pageSlug && !slug;
+
+const CONFIG_CACHE = () => "wi:config:" + slug;
+const IMG_PREFIX = () => `wi:img:${slug}:`;
+const IMG_CACHE = id => IMG_PREFIX() + id;
+const DEFAULT_WEDDING = "wi:default";
 const LOCAL_WISHES = "wi:wishes";
 const FALLBACK_IMG = { cover: "assets/cover-placeholder.svg", deity: "assets/emblem.svg" };
 const WISH_PAGE = 30;
 
+// Shown until the wedding's details load, so guests never see the sample couple's names.
+const BLANK = {
+  ...clone(DEFAULT_CONFIG), groomName: "", brideName: "", tagline: "", heroDateLine: "", hashtag: "",
+  curtainVerse: "", accommodationText: "", weddingDateTimeISO: "", events: [], coordinators: []
+};
+
 /* -------------------------------- state -------------------------------- */
-let config = (() => {
-  try { const c = JSON.parse(store.get(CONFIG_CACHE)); return c ? withDefaults(c) : clone(DEFAULT_CONFIG); }
-  catch { return clone(DEFAULT_CONFIG); }
-})();
+function cachedConfig(){
+  if(!isFirebaseConfigured) return clone(DEFAULT_CONFIG);
+  if(!slug) return clone(BLANK);
+  try { const c = JSON.parse(store.get(CONFIG_CACHE())); return c ? withDefaults(c) : clone(BLANK); }
+  catch { return clone(BLANK); }
+}
+let config = cachedConfig();
+let notFound = false;
 let lang = store.get("wi:lang") === "ta" ? "ta" : "en";
 const T = () => TRANSLATIONS[lang];
 const images = {};   // imageId -> data URL currently known
 let fb = null;       // Firebase module, once loaded
 let wishes = [];
+const weddingDoc = (...path) => fb.doc(fb.db, "weddings", slug, ...path);
 
 /* ------------------------------- rendering ------------------------------- */
 function renderNames(){
   const groom = tr(config.groomName, lang), bride = tr(config.brideName, lang);
   document.querySelectorAll(".couple-names").forEach(n => {
+    if(!groom && !bride) return n.replaceChildren(); // still loading, or no such wedding
     n.replaceChildren(el("span", "name-part", groom), " ", el("span", "hero-amp", "&"), " ", el("span", "name-part", bride));
   });
-  document.title = `${tr(config.groomName, "en")} weds ${tr(config.brideName, "en")}`;
+  if(tr(config.groomName, "en") || tr(config.brideName, "en"))
+    document.title = `${tr(config.groomName, "en")} weds ${tr(config.brideName, "en")}`;
 }
 
 function renderEvents(){
@@ -121,7 +147,9 @@ function renderAll(){
   document.querySelectorAll("[data-i18n-title]").forEach(n => { const v = dict[n.dataset.i18nTitle]; if(v !== undefined) n.title = v; });
   document.querySelectorAll(".lang-btn").forEach(b => b.classList.toggle("active", b.dataset.lang === lang));
 
-  $("curtainVerse").textContent = config.curtainVerse || "";
+  $("curtainVerse").textContent = notFound ? dict.notFound : (config.curtainVerse || "");
+  $("openCurtainBtn").hidden = notFound;
+  document.querySelector(".curtain-tap").hidden = notFound;
   $("heroTagline").textContent = tr(config.tagline, lang);
   $("heroDatePill").textContent = tr(config.heroDateLine, lang);
   $("stayText").textContent = tr(config.accommodationText, lang);
@@ -191,7 +219,7 @@ async function loadRemoteImages(){
   const missing = neededImageIds().filter(id => !images[id]);
   await Promise.all(missing.map(async id => {
     try {
-      const snap = await fb.getDoc(fb.doc(fb.db, "images", id));
+      const snap = await fb.getDoc(weddingDoc("images", id));
       if(snap.exists()){ images[id] = snap.data().dataUrl; cacheImage(id, images[id]); }
     } catch(e){ console.warn("image load failed", id, e); }
   }));
@@ -200,18 +228,17 @@ async function loadRemoteImages(){
 
 async function loadRemoteConfig(){
   try {
-    const snap = await fb.getDoc(fb.doc(fb.db, "site", "config"));
-    if(snap.exists()){
-      const data = snap.data();
-      delete data.updatedAt;
-      config = withDefaults(data);
-      store.set(CONFIG_CACHE, JSON.stringify(config));
-    } else {
-      config = clone(DEFAULT_CONFIG);
-      store.del(CONFIG_CACHE);
+    const snap = await fb.getDoc(weddingDoc());
+    if(!snap.exists()){
+      store.del(CONFIG_CACHE());
+      return showNotFound();
     }
+    const data = snap.data();
+    delete data.updatedAt;
+    config = withDefaults(data);
+    store.set(CONFIG_CACHE(), JSON.stringify(config));
     const keep = new Set(neededImageIds().map(IMG_CACHE));
-    store.keys().filter(k => k.startsWith("wi:img:") && !keep.has(k)).forEach(store.del);
+    store.keys().filter(k => k.startsWith(IMG_PREFIX()) && !keep.has(k)).forEach(store.del);
     loadImagesFromCache();
     renderAll();
     renderImages();
@@ -223,13 +250,36 @@ async function loadRemoteConfig(){
   }
 }
 
+// The main link "/" shows whichever wedding the admin marked as the main one.
+async function defaultWedding(){
+  try {
+    const snap = await fb.getDoc(fb.doc(fb.db, "site", "settings"));
+    const s = snap.exists() ? snap.data().defaultWedding : "";
+    if(!isValidSlug(s)) return "";
+    store.set(DEFAULT_WEDDING, s);
+    return s;
+  } catch(e){
+    console.warn("Could not load site settings; using the last known wedding.", e);
+    return store.get(DEFAULT_WEDDING) || "";
+  }
+}
+
+function showNotFound(){
+  notFound = true;
+  config = clone(BLANK);
+  if(unsubWishes){ unsubWishes(); unsubWishes = null; }
+  wishes = [];
+  musicBtn.hidden = true;
+  renderAll();
+}
+
 /* -------------------------------- wishes -------------------------------- */
 let wishLimit = WISH_PAGE, unsubWishes = null;
 
 function subscribeWishes(){
   if(unsubWishes) unsubWishes();
   const q = fb.query(
-    fb.collection(fb.db, "wishes"),
+    fb.collection(weddingDoc(), "wishes"),
     fb.where("hidden", "==", false),
     fb.orderBy("createdAt", "desc"),
     fb.limit(wishLimit)
@@ -269,7 +319,7 @@ $("wishForm").addEventListener("submit", async e => {
   // The live listener shows the new wish immediately (Firestore applies local
   // writes before the server confirms); this await only catches rejections.
   try {
-    await fb.addDoc(fb.collection(fb.db, "wishes"), {
+    await fb.addDoc(fb.collection(weddingDoc(), "wishes"), {
       name, message, hidden: false, createdAt: fb.serverTimestamp()
     });
   } catch(err){
@@ -286,11 +336,10 @@ document.querySelectorAll(".lang-btn").forEach(btn => btn.addEventListener("clic
   renderAll();
 }));
 
-// Always share the live site, even when the page is opened from localhost or a Vercel preview URL.
-const SHARE_URL = "https://invitation-five-mu.vercel.app/";
-
+// Always share this wedding's link on the live site, even when the page is opened
+// from localhost, a Vercel preview URL, or the main link "/".
 $("shareBtn").addEventListener("click", async () => {
-  try { await navigator.clipboard.writeText(SHARE_URL); showToast(T().linkCopied); }
+  try { await navigator.clipboard.writeText(`${SITE_URL}/${slug}`); showToast(T().linkCopied); }
   catch { showToast(T().linkCopyFailed); }
 });
 
@@ -360,7 +409,7 @@ async function loadMusic(){
   if(!m || musicV === m.v) return;
   musicV = m.v;
   musicReady = false;
-  const key = "music-cache/" + m.v;
+  const prefix = `music-cache/${slug}/`, key = prefix + m.v;
   let blob = null;
   try {
     const hit = await (await caches.open(MUSIC_CACHE)).match(key);
@@ -370,13 +419,14 @@ async function loadMusic(){
     if(!blob){
       if(!fb) throw new Error("offline");
       const parts = await Promise.all(Array.from({ length: m.chunks }, async (_, i) => {
-        const snap = await fb.getDoc(fb.doc(fb.db, "music", `${m.v}_${i}`));
+        const snap = await fb.getDoc(weddingDoc("music", `${m.v}_${i}`));
         return snap.data().data.toUint8Array();
       }));
       blob = new Blob(parts, { type: m.type || "audio/mpeg" });
       try {
         const cache = await caches.open(MUSIC_CACHE);
-        for(const req of await cache.keys()) await cache.delete(req); // drop older songs
+        for(const req of await cache.keys()) // drop this wedding's older songs
+          if(req.url.includes("/" + prefix)) await cache.delete(req);
         await cache.put(key, new Response(blob, { headers: { "content-type": blob.type } }));
       } catch {}
     }
@@ -456,9 +506,19 @@ renderAll();
 renderImages();
 onScroll();
 
-if(isFirebaseConfigured){
-  import("./firebase.js").then(mod => {
+if(isFirebaseConfigured && badLink){
+  showNotFound();
+} else if(isFirebaseConfigured){
+  import("./firebase.js").then(async mod => {
     fb = mod;
+    if(!slug){
+      slug = await defaultWedding();
+      if(!slug) return showNotFound();
+      config = cachedConfig();
+      loadImagesFromCache();
+      renderAll();
+      renderImages();
+    }
     loadRemoteConfig();
     subscribeWishes();
   }).catch(e => {

@@ -1,6 +1,6 @@
-import { DEFAULT_CONFIG, clone, withDefaults, newId } from "./defaults.js";
-import { isFirebaseConfigured, ADMIN_UID } from "./firebase-config.js";
-import { compressImage, kb } from "./image-utils.js";
+import { DEFAULT_CONFIG, clone, withDefaults, newId, tr, slugify, isValidSlug } from "./defaults.js";
+import { isFirebaseConfigured, ADMIN_UID, SITE_URL } from "./firebase-config.js";
+import { compressImage, compressPreviewImage, kb } from "./image-utils.js";
 
 /* ---------------------------- small helpers ---------------------------- */
 const $ = id => document.getElementById(id);
@@ -28,8 +28,17 @@ const EVENT_BI_KEYS = ["name", "date", "time", "place", "venue", "desc"];
 const eventImageId = ev => "event-" + ev.id;
 
 /* -------------------------------- state -------------------------------- */
+// admin?w=<wedding> edits that wedding; plain admin lists them all.
+// Switching wedding is a page load, so the state below always belongs to one wedding.
+const params = new URLSearchParams(location.search);
+const weddingId = params.get("w") || "";
+const shareLink = id => `${SITE_URL}/${id}`;
+const previewLink = id => `./?w=${id}`;   // works on XAMPP and Vercel alike
+const wdoc = (...path) => fb.doc(fb.db, "weddings", weddingId, ...path);
+const settingsDoc = () => fb.doc(fb.db, "site", "settings");
+
 let fb = null;
-let state = null;            // working copy of site/config, bound to the form inputs
+let state = null;            // working copy of weddings/<weddingId>, bound to the form inputs
 let pendingImages = {};      // imageId -> { dataUrl, w, h } chosen but not yet saved
 const removedImages = new Set();
 const loadedImages = {};     // imageId -> data URL already in Firestore
@@ -422,13 +431,15 @@ document.querySelectorAll(".photo-card").forEach(card => {
     try {
       pendingImages[id] = await compressImage(f, id === "cover" ? { maxDim: 1600 } : { maxDim: 900, alpha: true });
       removedImages.delete(id);
+      // The cover also becomes the WhatsApp/Facebook preview image (api/og-image.js).
+      if(id === "cover"){ pendingImages.og = await compressPreviewImage(f); removedImages.delete("og"); }
       setDirty();
     } catch(e){ toast(e.message); }
     refreshPhoto(id);
   });
   card.querySelector("[data-remove]").addEventListener("click", () => {
-    delete pendingImages[id];
-    if(state.images[id]) removedImages.add(id);
+    const ids = id === "cover" ? ["cover", "og"] : [id];
+    ids.forEach(i => { delete pendingImages[i]; if(state.images[i]) removedImages.add(i); });
     setDirty();
     refreshPhoto(id);
   });
@@ -490,7 +501,7 @@ $("musicPreviewBtn").addEventListener("click", async () => {
   $("musicMeta").textContent = "Loading…";
   try {
     const parts = await Promise.all(Array.from({ length: m.chunks }, async (_, i) => {
-      const snap = await fb.getDoc(fb.doc(fb.db, "music", musicChunkId(m.v, i)));
+      const snap = await fb.getDoc(wdoc("music", musicChunkId(m.v, i)));
       return snap.data().data.toUint8Array();
     }));
     const preview = $("musicPreview");
@@ -513,7 +524,7 @@ async function uploadMusic(){
   try {
     for(let i = 0; i < chunks; i++){
       $("saveStatus").textContent = `Uploading music ${i + 1}/${chunks}…`;
-      await fb.setDoc(fb.doc(fb.db, "music", musicChunkId(v, i)), {
+      await fb.setDoc(wdoc("music", musicChunkId(v, i)), {
         data: fb.Bytes.fromUint8Array(bytes.subarray(i * MUSIC_CHUNK, (i + 1) * MUSIC_CHUNK))
       });
     }
@@ -527,14 +538,14 @@ async function uploadMusic(){
 function deleteMusicChunks(m){
   if(!m) return Promise.resolve();
   return Promise.all(Array.from({ length: m.chunks }, (_, i) =>
-    fb.deleteDoc(fb.doc(fb.db, "music", musicChunkId(m.v, i))).catch(() => {})));
+    fb.deleteDoc(wdoc("music", musicChunkId(m.v, i))).catch(() => {})));
 }
 
 async function loadSavedImages(){
-  const ids = Object.keys(state.images);
+  const ids = Object.keys(state.images).filter(id => id !== "og"); // the preview copy isn't shown here
   await Promise.all(ids.map(async id => {
     try {
-      const snap = await fb.getDoc(fb.doc(fb.db, "images", id));
+      const snap = await fb.getDoc(wdoc("images", id));
       if(snap.exists()) loadedImages[id] = snap.data().dataUrl;
     } catch(e){ console.warn("image load failed", id, e); }
   }));
@@ -563,18 +574,19 @@ async function save(){
 
     state.events.forEach(ev => { if(ev.icon.type === "image") ev.icon.imageId = eventImageId(ev); });
     for(const [id, img] of Object.entries(pendingImages)){
-      batch.set(fb.doc(fb.db, "images", id), { ...img, updatedAt: fb.serverTimestamp() });
+      batch.set(wdoc("images", id), { ...img, updatedAt: fb.serverTimestamp() });
       images[id] = version;
     }
 
     // Delete image docs nothing points at any more (removed photos, deleted events).
     const keep = new Set(["cover", "deity"].filter(id => images[id] && !removedImages.has(id)));
+    if(keep.has("cover") && images.og && !removedImages.has("og")) keep.add("og");
     state.events.forEach(ev => { if(ev.icon.type === "image" && images[eventImageId(ev)]) keep.add(eventImageId(ev)); });
     for(const id of Object.keys(images)){
-      if(!keep.has(id)){ batch.delete(fb.doc(fb.db, "images", id)); delete images[id]; }
+      if(!keep.has(id)){ batch.delete(wdoc("images", id)); delete images[id]; }
     }
 
-    batch.set(fb.doc(fb.db, "site", "config"), { ...clone(state), images, music, updatedAt: fb.serverTimestamp() });
+    batch.set(wdoc(), { ...clone(state), images, music, updatedAt: fb.serverTimestamp() });
     try {
       await batch.commit();
     } catch(e){
@@ -632,11 +644,11 @@ function renderWishRows(docs){
     const acts = el("td", "acts");
     const toggle = el("button", "btn ghost small", w.hidden ? "Show" : "Hide");
     toggle.addEventListener("click", () =>
-      fb.updateDoc(fb.doc(fb.db, "wishes", d.id), { hidden: !w.hidden }).catch(e => toast("Failed: " + e.message)));
+      fb.updateDoc(wdoc("wishes", d.id), { hidden: !w.hidden }).catch(e => toast("Failed: " + e.message)));
     const del = el("button", "btn danger small", "Delete");
     del.addEventListener("click", () => {
       if(confirm(`Delete the wish from "${w.name}" permanently?`))
-        fb.deleteDoc(fb.doc(fb.db, "wishes", d.id)).catch(e => toast("Failed: " + e.message));
+        fb.deleteDoc(wdoc("wishes", d.id)).catch(e => toast("Failed: " + e.message));
     });
     acts.append(toggle, del);
 
@@ -655,7 +667,7 @@ function renderWishRows(docs){
 }
 
 function watchWishes(){
-  const q = fb.query(fb.collection(fb.db, "wishes"), fb.orderBy("createdAt", "desc"), fb.limit(500));
+  const q = fb.query(fb.collection(wdoc(), "wishes"), fb.orderBy("createdAt", "desc"), fb.limit(500));
   fb.onSnapshot(q, snap => renderWishRows(snap.docs),
     e => { $("wishSummary").textContent = "Could not load wishes: " + e.message; });
 }
@@ -665,6 +677,285 @@ document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", (
   document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t === tab));
   document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.dataset.panel === tab.dataset.tab));
 }));
+
+/* ------------------------------ weddings list ------------------------------ */
+let settings = {};           // site/settings: { defaultWedding, legacyImported }
+let weddings = [];           // [{ id, cfg }]
+let legacyConfig = null;     // site/config from before multi-wedding, until it's imported
+
+const SLUG_RULES = "Use 3–40 lowercase letters, numbers and dashes, like arjun-meera. " +
+  "admin, api, assets, css, js and index are used by the site itself.";
+const siteHost = () => SITE_URL.replace(/^https?:\/\//, "");
+
+function coupleNames(cfg, fallback = ""){
+  return [tr(cfg.groomName, "en"), tr(cfg.brideName, "en")].filter(Boolean).join(" & ") || fallback;
+}
+
+function weddingTime(cfg){
+  const t = new Date(cfg.weddingDateTimeISO || "").getTime();
+  return isNaN(t) ? null : t;
+}
+
+async function copyText(text){
+  try {
+    await navigator.clipboard.writeText(text);
+    toast("Link copied: " + text);
+  } catch {
+    prompt("Copy this link:", text);
+  }
+}
+
+function actionBtn(label, className, onClick){
+  const b = el("button", "btn small " + className, label);
+  b.type = "button";
+  b.addEventListener("click", onClick);
+  return b;
+}
+
+// Firestore batches hold at most 500 writes.
+async function inBatches(items, write){
+  for(let i = 0; i < items.length; i += 450){
+    const batch = fb.writeBatch(fb.db);
+    items.slice(i, i + 450).forEach(x => write(batch, x));
+    await batch.commit();
+  }
+}
+
+function enterList(){
+  show("weddingsView");
+  document.querySelectorAll(".slug-prefix").forEach(s => { s.textContent = siteHost() + "/"; });
+  $("importMainLink").textContent = siteHost() + "/";
+  loadWeddings();
+}
+
+async function loadWeddings(){
+  const status = $("weddingsStatus");
+  status.textContent = "Loading weddings…";
+  show("weddingsStatus");
+  try {
+    const [list, settingsSnap] = await Promise.all([
+      fb.getDocs(fb.collection(fb.db, "weddings")),
+      fb.getDoc(settingsDoc())
+    ]);
+    settings = settingsSnap.exists() ? settingsSnap.data() : {};
+    weddings = list.docs.map(d => ({ id: d.id, cfg: d.data() }));
+    legacyConfig = null;
+    if(!settings.legacyImported){
+      const legacy = await fb.getDoc(fb.doc(fb.db, "site", "config"));
+      if(legacy.exists()) legacyConfig = legacy.data();
+    }
+  } catch(e){
+    status.textContent = e.code === "permission-denied"
+      ? "Permission denied — check the admin UID in firestore.rules and deploy the rules."
+      : "Couldn't load weddings: " + e.message;
+    return;
+  }
+
+  if(legacyConfig && $("importForm").hidden){
+    $("importSlug").value = slugify(`${tr(legacyConfig.groomName, "en")}-${tr(legacyConfig.brideName, "en")}`);
+    show("importForm");
+  }
+  if(!legacyConfig) show("importForm", false);
+  renderWeddings();
+}
+
+function renderWeddings(){
+  // Upcoming weddings first (soonest at the top), then past ones (most recent first).
+  // A wedding counts as upcoming until a day after its Muhurtham.
+  const cutoff = Date.now() - 86_400_000;
+  const time = w => weddingTime(w.cfg) ?? Infinity;
+  const upcoming = weddings.filter(w => time(w) >= cutoff).sort((a, b) => time(a) - time(b));
+  const past = weddings.filter(w => time(w) < cutoff).sort((a, b) => time(b) - time(a));
+
+  $("weddingsList").replaceChildren(...upcoming.map(w => weddingCard(w, false)), ...past.map(w => weddingCard(w, true)));
+  $("weddingsStatus").textContent = weddings.length ? "" : "No weddings yet. Click ＋ New wedding to create the first one.";
+  show("weddingsStatus", !weddings.length);
+}
+
+function weddingCard(w, isPast){
+  const card = el("div", "card wedding-card" + (isPast ? " past" : ""));
+  const head = el("div", "item-head");
+  const tags = el("div", "item-tools");
+  const isMain = settings.defaultWedding === w.id;
+  if(isMain) tags.append(el("span", "badge main", "Main link"));
+  if(isPast) tags.append(el("span", "badge off", "Past"));
+  head.append(el("h3", "", coupleNames(w.cfg, w.id)), tags);
+
+  const t = weddingTime(w.cfg);
+  const when = el("p", "muted", t
+    ? new Date(t).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kolkata" })
+    : "No Muhurtham date set");
+
+  const link = el("a", "wedding-link", `${siteHost()}/${w.id}`);
+  link.href = previewLink(w.id);
+  link.target = "_blank";
+  link.rel = "noopener";
+
+  const edit = el("a", "btn primary small", "Edit");
+  edit.href = "?w=" + w.id;
+  const acts = el("div", "row");
+  acts.append(edit, actionBtn("Copy link", "ghost", () => copyText(shareLink(w.id))));
+  if(!isMain) acts.append(actionBtn("Show at main link", "ghost", () => setMainWedding(w)));
+  acts.append(actionBtn("Delete", "danger", () => deleteWedding(w)));
+
+  card.append(head, when, link, acts);
+  return card;
+}
+
+async function setMainWedding(w){
+  try {
+    await fb.setDoc(settingsDoc(), { defaultWedding: w.id }, { merge: true });
+    settings.defaultWedding = w.id;
+    renderWeddings();
+    toast(`${siteHost()}/ now shows ${coupleNames(w.cfg, w.id)}.`);
+  } catch(e){
+    toast("Failed: " + e.message);
+  }
+}
+
+async function deleteWedding(w){
+  const name = coupleNames(w.cfg, w.id);
+  const typed = prompt(`Delete "${name}" permanently? Its details, photos, music and all wishes are removed, and its link stops working.\n\nType the link name "${w.id}" to confirm:`);
+  if(typed === null) return;
+  if(typed.trim() !== w.id) return toast("The link name didn't match, so nothing was deleted.");
+
+  $("weddingsStatus").textContent = `Deleting ${name}…`;
+  show("weddingsStatus");
+  try {
+    const ref = (...path) => fb.doc(fb.db, "weddings", w.id, ...path);
+    // Photos and music are listed in the config, so they can be deleted without downloading them.
+    const refs = Object.keys(w.cfg.images || {}).map(id => ref("images", id));
+    const m = w.cfg.music;
+    if(m) for(let i = 0; i < m.chunks; i++) refs.push(ref("music", musicChunkId(m.v, i)));
+    const wishes = await fb.getDocs(fb.collection(ref(), "wishes"));
+    refs.push(...wishes.docs.map(d => d.ref));
+    await inBatches(refs, (batch, r) => batch.delete(r));
+    await fb.deleteDoc(ref());   // last, so a failed delete can simply be retried
+    if(settings.defaultWedding === w.id) await fb.setDoc(settingsDoc(), { defaultWedding: "" }, { merge: true });
+    toast(`Deleted ${name}.`);
+  } catch(e){
+    console.error(e);
+    toast("Delete failed: " + e.message);
+  }
+  loadWeddings();
+}
+
+/* ------------------------------ new wedding ------------------------------ */
+let slugEdited = false;
+const suggestSlug = () => {
+  if(!slugEdited) $("newSlug").value = slugify(`${$("newGroom").value}-${$("newBride").value}`);
+};
+$("newGroom").addEventListener("input", suggestSlug);
+$("newBride").addEventListener("input", suggestSlug);
+$("newSlug").addEventListener("input", () => { slugEdited = true; });
+
+$("newWeddingBtn").addEventListener("click", () => {
+  $("newWeddingForm").reset();
+  $("newWeddingError").textContent = "";
+  slugEdited = false;
+  show("newWeddingForm");
+  $("newGroom").focus();
+});
+$("cancelNewBtn").addEventListener("click", () => show("newWeddingForm", false));
+
+$("newWeddingForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const groom = $("newGroom").value.trim(), bride = $("newBride").value.trim();
+  const id = $("newSlug").value.trim().toLowerCase();
+  const error = $("newWeddingError");
+  error.textContent = "";
+  if(!isValidSlug(id)){ error.textContent = SLUG_RULES; return; }
+
+  $("createWeddingBtn").disabled = true;
+  try {
+    const ref = fb.doc(fb.db, "weddings", id);
+    if((await fb.getDoc(ref)).exists()) throw new Error(`"${id}" is already used by another wedding. Pick a different link name.`);
+    // Start from the sample details so every section has something to edit.
+    const cfg = normalize(clone(DEFAULT_CONFIG));
+    cfg.groomName = { en: groom, ta: "" };
+    cfg.brideName = { en: bride, ta: "" };
+    cfg.hashtag = "#" + [groom, bride].map(n => n.replace(/[^\p{L}\p{N}]/gu, "")).join("Weds");
+    await fb.setDoc(ref, { ...cfg, updatedAt: fb.serverTimestamp() });
+    if(!settings.defaultWedding) await fb.setDoc(settingsDoc(), { defaultWedding: id }, { merge: true });
+    location.href = `?w=${id}&new=1`;
+  } catch(e){
+    error.textContent = e.message;
+    $("createWeddingBtn").disabled = false;
+  }
+});
+
+/* ------------------------- import the old invitation ------------------------- */
+// Copies site/config and the top-level images, music and wishes into weddings/<id>.
+// The originals are left as they are.
+async function importLegacy(id, status){
+  const target = (...path) => fb.doc(fb.db, "weddings", id, ...path);
+  if((await fb.getDoc(target())).exists()) throw new Error(`"${id}" is already used by another wedding.`);
+
+  const { updatedAt, ...rest } = legacyConfig;
+  const cfg = clone(rest);
+  const images = { ...(cfg.images || {}) };
+
+  // One write per photo or music chunk: each is up to ~900 KB, too big to batch together.
+  const ids = Object.keys(images);
+  let cover = null;
+  for(const [i, imageId] of ids.entries()){
+    status(`Copying photos ${i + 1}/${ids.length}…`);
+    const snap = await fb.getDoc(fb.doc(fb.db, "images", imageId));
+    if(!snap.exists()){ delete images[imageId]; continue; }
+    await fb.setDoc(target("images", imageId), snap.data());
+    if(imageId === "cover") cover = snap.data().dataUrl;
+  }
+  if(cover){
+    status("Making the link preview…");
+    try {
+      const og = await compressPreviewImage(await (await fetch(cover)).blob());
+      await fb.setDoc(target("images", "og"), { ...og, updatedAt: fb.serverTimestamp() });
+      images.og = images.cover;
+    } catch(e){
+      console.warn("link preview image skipped; the cover photo is used instead", e);
+    }
+  }
+
+  const m = cfg.music;
+  if(m){
+    for(let i = 0; i < m.chunks; i++){
+      status(`Copying music ${i + 1}/${m.chunks}…`);
+      const snap = await fb.getDoc(fb.doc(fb.db, "music", musicChunkId(m.v, i)));
+      if(!snap.exists()) throw new Error("A piece of the music is missing, so it can't be copied.");
+      await fb.setDoc(target("music", musicChunkId(m.v, i)), snap.data());
+    }
+  }
+
+  status("Copying wishes…");
+  const wishes = await fb.getDocs(fb.collection(fb.db, "wishes"));
+  await inBatches(wishes.docs, (batch, d) => batch.set(target("wishes", d.id), d.data()));
+
+  // The wedding doc goes last: until it exists, the link shows "not found" and a retry starts over.
+  status("Saving details…");
+  await fb.setDoc(target(), { ...cfg, images, updatedAt: fb.serverTimestamp() });
+  await fb.setDoc(settingsDoc(), { defaultWedding: id, legacyImported: true }, { merge: true });
+}
+
+$("importForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const id = $("importSlug").value.trim().toLowerCase();
+  const error = $("importError"), btn = $("importBtn");
+  error.textContent = "";
+  if(!isValidSlug(id)){ error.textContent = SLUG_RULES; return; }
+
+  btn.disabled = true;
+  try {
+    await importLegacy(id, text => { btn.textContent = text; });
+    show("importForm", false);
+    toast(`Imported ✓ ${siteHost()}/${id} is ready, and the main link shows it too.`);
+    loadWeddings();
+  } catch(e){
+    console.error(e);
+    error.textContent = "Import failed: " + e.message;
+  }
+  btn.disabled = false;
+  btn.textContent = "Import";
+});
 
 /* ------------------------------ auth + boot ------------------------------ */
 const AUTH_ERRORS = {
@@ -714,19 +1005,31 @@ async function enterApp(user){
     show("uidBanner");
   }
 
+  if(weddingId) enterEditor();
+  else enterList();
+}
+
+async function enterEditor(){
+  let snap = null;
   try {
-    const snap = await fb.getDoc(fb.doc(fb.db, "site", "config"));
-    if(snap.exists()){
-      const data = snap.data();
-      delete data.updatedAt;
-      state = normalize(data);
-    } else {
-      state = normalize(clone(DEFAULT_CONFIG));
-      show("firstRunBanner");
-    }
+    if(isValidSlug(weddingId)) snap = await fb.getDoc(wdoc());
   } catch(e){
-    toast("Couldn't load saved details: " + e.message);
-    state = normalize(clone(DEFAULT_CONFIG));
+    return backToList("Couldn't load this wedding: " + e.message);
+  }
+  if(!snap?.exists()) return backToList(`There's no wedding with the link name "${weddingId}".`);
+
+  const data = snap.data();
+  delete data.updatedAt;
+  state = normalize(data);
+
+  show("editorView");
+  $("editorTitle").textContent = coupleNames(state, weddingId);
+  document.title = coupleNames(state, weddingId) + " · Wedding Admin";
+  $("backLink").href = location.pathname;
+  $("viewSiteLink").href = previewLink(weddingId);
+  if(params.has("new")){
+    show("firstRunBanner");
+    history.replaceState(null, "", "?w=" + weddingId); // don't show it again on reload
   }
 
   renderDetails();
@@ -736,9 +1039,17 @@ async function enterApp(user){
   refreshPhoto("cover");
   refreshPhoto("deity");
   refreshMusic();
-  setDirty(!$("firstRunBanner").hidden);
+  setDirty(false);
   loadSavedImages();
   watchWishes();
+}
+
+$("copyLinkBtn").addEventListener("click", () => copyText(shareLink(weddingId)));
+
+function backToList(msg){
+  history.replaceState(null, "", location.pathname);
+  toast(msg);
+  enterList();
 }
 
 if(!isFirebaseConfigured){

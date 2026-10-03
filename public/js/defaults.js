@@ -78,7 +78,8 @@ export const TRANSLATIONS = {
     musicLoading: "Music is loading — one moment 🎵",
     stayEyebrow: "For Our Guests", stayTitle: "Help & Support", coordinatorsLabel: "Coordinators",
     footerThanks: "With gratitude and love, we thank you for being part of our story.",
-    musicHint: "Toggle background music"
+    musicHint: "Toggle background music",
+    notFound: "This invitation link isn't valid. Please check the link you received."
   },
   ta: {
     shareBtn: "⧉ இணைப்பை நகலெடு",
@@ -100,7 +101,8 @@ export const TRANSLATIONS = {
     musicLoading: "இசை ஏற்றப்படுகிறது — சற்று பொறுக்கவும் 🎵",
     stayEyebrow: "விருந்தினர்களுக்காக", stayTitle: "உதவி மற்றும் ஆதரவு", coordinatorsLabel: "தொடர்புக்கு",
     footerThanks: "எங்கள் வாழ்க்கைப் பயணத்தின் ஒரு பகுதியாக இருப்பதற்கு அன்புடனும் நன்றியுடனும்.",
-    musicHint: "பின்னணி இசை"
+    musicHint: "பின்னணி இசை",
+    notFound: "இந்த அழைப்பிதழ் இணைப்பு செல்லுபடியாகவில்லை. நீங்கள் பெற்ற இணைப்பைச் சரிபார்க்கவும்."
   }
 };
 
@@ -123,3 +125,16 @@ export function withDefaults(saved){
 }
 
 export const newId = () => Math.random().toString(36).slice(2, 10);
+
+/* ------------------------- wedding link names (slugs) ------------------------- */
+// Each wedding lives at weddings/<slug> and is shared as SITE_URL/<slug>.
+// Names that are real paths on the site can't be used.
+const RESERVED_SLUGS = new Set(["admin", "api", "assets", "css", "js", "index"]);
+
+export const slugify = s => (s || "").toLowerCase()
+  .normalize("NFKD").replace(/[̀-ͯ]/g, "")
+  .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40).replace(/-+$/, "");
+
+export const isValidSlug = s =>
+  typeof s === "string" && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(s) &&
+  s.length >= 3 && s.length <= 40 && !RESERVED_SLUGS.has(s);

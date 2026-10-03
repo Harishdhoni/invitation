@@ -3,6 +3,9 @@
     "public": "public",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "cleanUrls": true,
+    "rewrites": [
+      { "source": "/*", "destination": "/index.html" }
+    ],
     "headers": [
       {
         "source": "**/*.@(html|js|css)",

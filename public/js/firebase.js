@@ -5,7 +5,7 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-aut
 import { firebaseConfig, isFirebaseConfigured } from "./firebase-config.js";
 
 export {
-  doc, getDoc, setDoc, deleteDoc, updateDoc, addDoc, collection, query, where,
+  doc, getDoc, getDocs, setDoc, deleteDoc, updateDoc, addDoc, collection, query, where,
   orderBy, limit, onSnapshot, serverTimestamp, writeBatch, Bytes
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 export {
