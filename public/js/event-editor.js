@@ -25,7 +25,7 @@ const editorMarkup = admin => `
     <button class="tab" data-tab="photos">Photos &amp; Music</button>
     <button class="tab" data-tab="events">Events</button>
     <button class="tab" data-tab="contacts">Help &amp; Contacts</button>
-    ${admin ? `<button class="tab" data-tab="design">Design</button>` : ""}
+    <button class="tab" data-tab="design">Design</button>
     <button class="tab" data-tab="wishes">Wishes <span class="count" id="wishCount"></span></button>
   </nav>
 
@@ -88,11 +88,11 @@ const editorMarkup = admin => `
       <div id="coordList"></div>
       <button class="btn ghost add" id="addCoordBtn">＋ Add coordinator</button>
     </section>
-${admin ? `
+
     <section class="panel" data-panel="design">
       <div class="card">
-        <label class="field"><span>Category</span><select id="designCategory"></select>
-          <small class="hint">What kind of event this is. Each category has its own templates.</small></label>
+        ${admin ? `<label class="field"><span>Category</span><select id="designCategory"></select>
+          <small class="hint">What kind of event this is. Each category has its own templates.</small></label>` : ""}
         <div class="field">
           <span class="label">Template</span>
           <p class="muted design-current" id="designCurrent"></p>
@@ -101,7 +101,7 @@ ${admin ? `
         <a class="btn ghost small" id="designPreviewLink" target="_blank" rel="noopener">Preview this event in the selected template ↗</a>
       </div>
     </section>
-` : ""}
+
     <section class="panel" data-panel="wishes">
       <div class="card">
         <p class="muted" id="wishSummary">Loading wishes…</p>
@@ -511,21 +511,24 @@ function renderCoords(){
 
 /* --------------------------------- design --------------------------------- */
 // Which category this event is in and which template shows it (state.category / state.templateId).
+// The admin can change both; an editor can only pick another template of the event's own category.
 let categories = [];         // [{ id, name, order }]
 let templates = [];          // [{ id, name, categoryId, html, … }]
-let T = null;                // admin-templates.js, loaded for the admin's Design tab only
+let T = null;                // admin-templates.js: template cards and previews for the Design tab
 
 function renderDesign(){
   const sel = $("designCategory");
-  sel.replaceChildren(...categories.map(c => Object.assign(el("option", "", c.name), { value: c.id })));
-  if(!categories.some(c => c.id === state.category)) sel.prepend(Object.assign(el("option", "", state.category), { value: state.category }));
-  sel.value = state.category;
+  if(sel){
+    sel.replaceChildren(...categories.map(c => Object.assign(el("option", "", c.name), { value: c.id })));
+    if(!categories.some(c => c.id === state.category)) sel.prepend(Object.assign(el("option", "", state.category), { value: state.category }));
+    sel.value = state.category;
+  }
 
   const offered = T.templatesIn(templates, state.category).some(t => t.id === state.templateId);
   $("designCurrent").textContent = "Now showing: " + T.templateName(templates, state.templateId) +
     (offered ? "" : ` (not a ${T.categoryName(categories, state.category)} template — pick one below)`);
   $("designPicker").replaceChildren(T.templatePicker({
-    templates, category: state.category, selected: state.templateId, name: "designTemplate",
+    templates, category: state.category, selected: state.templateId, name: "designTemplate", canCreate: isAdminPage,
     onChange: id => {
       state.templateId = id;
       $("designCurrent").textContent = "Now showing: " + T.templateName(templates, id);
@@ -857,14 +860,19 @@ export async function openEditor({ mod, id, backHref = "", firstRun = false, onA
   const data = snap.data();
   delete data.updatedAt;
   state = normalize(data);
-  if(isAdminPage){
-    try {
-      T = await import("./admin-templates.js");
+  try {
+    T = await import("./admin-templates.js");
+    T.useFirebase(fb);
+    if(isAdminPage){
       [categories, templates] = await Promise.all([T.loadCategories(), T.loadTemplates()]);
-    } catch(e){
-      console.warn("categories/templates unavailable", e);
-      toast("Couldn't load templates — deploy the latest firestore.rules (see SETUP.md).");
+    } else {
+      // Only the templates of this event's category.
+      const snap = await fb.getDocs(fb.query(fb.collection(fb.db, "templates"), fb.where("categoryId", "==", state.category || "wedding")));
+      templates = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.name.localeCompare(b.name));
     }
+  } catch(e){
+    console.warn("categories/templates unavailable", e);
+    toast(isAdminPage ? "Couldn't load templates — deploy the latest firestore.rules (see SETUP.md)." : "Couldn't load the designs right now.");
   }
 
   show("editorView");

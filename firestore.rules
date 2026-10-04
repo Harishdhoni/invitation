@@ -27,6 +27,13 @@ service cloud.firestore {
         && get(pinPath(get(editorPath()).data.pin)).data.slug == slug;
     }
 
+    // Any editor with a live PIN (for any event); used to let editors list designs.
+    function isAnyEditor() {
+      return request.auth != null
+        && exists(editorPath())
+        && exists(pinPath(get(editorPath()).data.pin));
+    }
+
     // PINs are the document ids: anyone signed in can look one up (that is how a PIN is checked),
     // so they are long and random (8 characters, see js/pin.js). Only the admin can list or change them.
     match /pins/{pin} {
@@ -60,10 +67,12 @@ service cloud.firestore {
     }
 
     // Invitation designs: one HTML page each. Guests' pages load the one their event uses,
-    // so anyone can get a template by id; only the admin can list, add, change or delete them.
+    // so anyone can get a template by id. Editors can also list them, to pick a design for their event;
+    // only the admin can add, change or delete them.
     match /templates/{templateId} {
       allow get: if true;
-      allow list, write: if isAdmin();
+      allow list: if isAdmin() || isAnyEditor();
+      allow write: if isAdmin();
     }
 
     // One document per event of any category, keyed by its link name (weddings/arjun-meera).
@@ -73,11 +82,17 @@ service cloud.firestore {
       allow get: if true;
       allow list, write: if isAdmin();
 
-      // An editor can change the details of their event, but not which category or design it uses,
-      // and cannot create or delete events.
+      // An editor can change the details of their event and pick another design from the event's own
+      // category, but cannot change its category, or create or delete events.
       allow update: if isEditorOf(weddingId)
         && request.resource.data.get('category', 'wedding') == resource.data.get('category', 'wedding')
-        && request.resource.data.get('templateId', '') == resource.data.get('templateId', '');
+        && (
+          request.resource.data.get('templateId', '') == resource.data.get('templateId', '')
+          || (request.resource.data.templateId == '' && resource.data.get('category', 'wedding') == 'wedding')
+          || (request.resource.data.templateId is string && request.resource.data.templateId != ''
+              && get(/databases/$(database)/documents/templates/$(request.resource.data.templateId)).data.categoryId
+                 == resource.data.get('category', 'wedding'))
+        );
 
       // Uploaded photos stored as compressed data URLs.
       match /images/{imageId} {

@@ -87,13 +87,13 @@ export function thumbnail(t, { width = 390, height = 600 } = {}){
 
 /* ----------------------------- template picker ----------------------------- */
 // Cards for choosing one of a category's templates. Calls onChange(id) ("" = Classic).
-export function templatePicker({ templates, category, selected, onChange, name = "template" }){
+export function templatePicker({ templates, category, selected, onChange, name = "template", canCreate = true }){
   const list = templatesIn(templates, category);
   const wrap = el("div", "picker");
   if(!list.length){
     const empty = el("div", "picker-empty");
-    empty.append(el("p", "muted", "There are no templates in this category yet."),
-      linkBtn("＋ Create one", "ghost", `?template=new&category=${encodeURIComponent(category)}`));
+    empty.append(el("p", "muted", "There are no templates in this category yet."));
+    if(canCreate) empty.append(linkBtn("＋ Create one", "ghost", `?template=new&category=${encodeURIComponent(category)}`));
     wrap.append(empty);
     return wrap;
   }
