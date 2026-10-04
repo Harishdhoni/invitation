@@ -278,3 +278,28 @@ textarea.code{min-height:52vh;font:400 .8rem/1.5 ui-monospace,SFMono-Regular,Con
 input.pin-input{
   text-align:center;font:600 1.4rem var(--sans);letter-spacing:.18em;text-transform:uppercase;padding:.7rem .5rem;
 }
+
+/* ---------- music trimmer ---------- */
+.trim-dialog{
+  width:min(640px,calc(100vw - 24px));border:1px solid var(--line);border-radius:14px;padding:1.3rem;
+  background:#fff;color:var(--ink);box-shadow:0 20px 60px rgba(46,16,19,.35);margin:auto;
+}
+.trim-dialog::backdrop{background:rgba(46,16,19,.55);}
+.trim-dialog h2{font-size:1.1rem;color:var(--maroon-dark);margin-bottom:.3rem;}
+.trim-dialog > .muted{margin-bottom:.9rem;overflow-wrap:anywhere;}
+.trim-dialog .wave{position:relative;height:96px;margin-bottom:.9rem;background:#fffaf0;border:1px solid var(--line);border-radius:8px;touch-action:none;}
+.trim-dialog .wave canvas{position:absolute;inset:0;width:100%;height:100%;}
+.trim-dialog .dim{position:absolute;top:0;bottom:0;background:rgba(251,246,238,.82);pointer-events:none;}
+.trim-dialog .dim:first-of-type{left:0;}
+.trim-dialog .dim:nth-of-type(2){right:0;}
+.trim-dialog .handle{
+  position:absolute;top:-4px;bottom:-4px;width:14px;margin-left:-7px;cursor:ew-resize;touch-action:none;
+}
+.trim-dialog .handle::after{content:"";position:absolute;left:5px;width:4px;top:0;bottom:0;background:var(--gold);border-radius:2px;box-shadow:0 0 0 1px var(--gold-dark);}
+.trim-fields{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;}
+.trim-dialog .field{margin-bottom:.7rem;}
+.trim-dialog .row{align-items:center;margin-bottom:.6rem;}
+.trim-dialog .row.end{justify-content:flex-end;margin:.8rem 0 0;}
+.trim-dialog .check{font-size:.86rem;cursor:pointer;}
+.trim-dialog .error{margin:.3rem 0 0;min-height:0;}
+.trim-dialog input[type=number]{width:100%;border:1px solid var(--line);border-radius:8px;padding:.5rem .6rem;font:inherit;}

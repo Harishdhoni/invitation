@@ -121,8 +121,9 @@ Click **Edit** on an event and go through the tabs:
 - **Couple & Hero** (**Names & Hero** for other categories) — names (Tamil optional; English is used if empty), an
   optional invitation title (e.g. *Aarav turns 1!*, used by some templates and in link previews), the main date/time
   for the countdown, tagline, date line, hashtag, opening verse.
-- **Photos & Music** — couple cover photo, deity/emblem image, and the background song (MP3 up to 10 MB;
-  3–5 MB loads best on mobile). Photos are compressed in your browser; the song is stored in ~900 KB pieces.
+- **Photos & Music** — couple cover photo, deity/emblem image, and the background song. Choosing a song opens a cutter: drag the gold handles (or type start and end
+  seconds) on the waveform, press Preview, then Use this clip. A long song (up to 60 MB) can be cut down to the
+  part you want; the saved clip is at most 10 MB, and 3–5 MB loads best on mobile. Photos are compressed in your browser; the song is stored in ~900 KB pieces.
   The 🎵 button only appears on the invite once a song is added.
 - **Events** — add/reorder/remove events. Each gets a "Get Directions" button (Maps search text or a Maps link).
 - **Help & Contacts** — message for outstation guests + coordinators with tap-to-call numbers.

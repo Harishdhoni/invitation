@@ -4,6 +4,7 @@
 import { clone, withDefaults, newId, tr, isWedding, isValidSlug } from "./defaults.js";
 import { SITE_URL } from "./firebase-config.js";
 import { compressImage, compressPreviewImage, kb } from "./image-utils.js";
+import { openTrimmer } from "./audio-trim.js";
 import { $, show, el, toast, copyText } from "./admin-ui.js";
 
 // The editor's markup lives here once. The Design tab is only for the admin; it needs
@@ -58,7 +59,7 @@ const editorMarkup = admin => `
         </div>
         <div class="card music-card">
           <h2>Background music</h2>
-          <p class="muted">Starts when guests open the invitation, and loops. MP3 up to 10 MB — 3–5 MB is best so it loads fast on mobile data.</p>
+          <p class="muted">Starts when guests open the invitation, and loops. Choose a song and cut the part you want — the saved music is at most 10 MB, and 3–5 MB loads fastest on mobile data.</p>
           <div class="music-box">
             <div class="music-icon" aria-hidden="true">🎵</div>
             <div class="music-info">
@@ -153,7 +154,8 @@ let dirty = false;
 // Firestore caps a document at 1 MiB, so music is stored as ~900 KB chunks
 // in music/<version>_<index>, described by state.music = { v, chunks, size, type, name }.
 const MUSIC_CHUNK = 900_000;
-const MUSIC_MAX = 10 * 1024 * 1024;
+const MUSIC_MAX = 10 * 1024 * 1024;           // what gets saved
+const MUSIC_SOURCE_MAX = 60 * 1024 * 1024;    // what can be chosen and cut down to size
 export const musicChunkId = (v, i) => `${v}_${i}`;
 const mb = n => (n / 1024 / 1024).toFixed(1) + " MB";
 let editorOpen = false;
@@ -631,14 +633,27 @@ $("musicFile").addEventListener("change", async () => {
   $("musicFile").value = "";
   if(!f) return;
   if(!/^audio\//.test(f.type) && !/\.(mp3|m4a)$/i.test(f.name)) return toast("Please choose an audio file (MP3 or M4A).");
-  if(f.size > MUSIC_MAX) return toast(`That file is ${mb(f.size)}. Please use a song under 10 MB (3–5 MB is best).`);
+  if(f.size > MUSIC_SOURCE_MAX) return toast(`That file is ${mb(f.size)}. Please choose one under 60 MB.`);
+
+  // Let the person cut the part they want; the result is what gets saved.
+  let pick;
+  try {
+    pick = await openTrimmer(f, { maxBytes: MUSIC_MAX });
+  } catch(e){
+    console.warn("couldn't open the audio for trimming", e);
+    if(f.size > MUSIC_MAX) return toast(`Couldn't read that file to cut it, and at ${mb(f.size)} it is too big to use as it is. Try an MP3.`);
+    pick = { bytes: new Uint8Array(await f.arrayBuffer()), name: f.name, type: f.type || "audio/mpeg" };
+    toast("Couldn't open the cutting tool for that file, so it will be used as it is.");
+  }
+  if(!pick) return;   // cancelled
+
   if(pendingMusic) URL.revokeObjectURL(pendingMusic.url);
   pendingMusic = {
-    bytes: new Uint8Array(await f.arrayBuffer()),
-    name: f.name,
-    type: f.type || "audio/mpeg",
-    size: f.size,
-    url: URL.createObjectURL(f)
+    bytes: pick.bytes,
+    name: pick.name,
+    type: pick.type,
+    size: pick.bytes.length,
+    url: URL.createObjectURL(new Blob([pick.bytes], { type: pick.type }))
   };
   removeMusic = false;
   setDirty();
