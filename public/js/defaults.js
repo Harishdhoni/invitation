@@ -53,8 +53,97 @@ export const DEFAULT_CONFIG = {
   // "cover" and "deity" fall back to the files in assets/ until then.
   images: {},
   // Background music uploaded from the admin page: { v, chunks, size, type, name }.
-  music: null
+  music: null,
+  // Which kind of event this is (categories/<id>) and which design shows it (templates/<id>).
+  // An empty templateId means the built-in Classic design in index.html (weddings only).
+  category: "wedding",
+  templateId: "",
+  // Optional heading for the invitation and its link preview, e.g. "Aarav turns 1!".
+  title: { en: "", ta: "" }
 };
+
+/* ------------------------------ categories ------------------------------ */
+// Created in Firestore the first time the admin opens the Templates page; more can be added there.
+export const DEFAULT_CATEGORIES = [
+  { id: "wedding", name: "Weddings", order: 1 },
+  { id: "housewarming", name: "Housewarmings", order: 2 },
+  { id: "birthday", name: "Birthdays", order: 3 }
+];
+export const isWedding = cfg => (cfg?.category || "wedding") === "wedding";
+
+// Sample details per category: new events start from them, and template previews show them.
+const SAMPLES = {
+  wedding: {},
+  housewarming: {
+    groomName: { en: "Ravi", ta: "" },
+    brideName: { en: "Priya", ta: "" },
+    title: { en: "Gruhapravesam", ta: "கிரகப்பிரவேசம்" },
+    weddingDateTimeISO: "2027-03-14T07:00:00+05:30",
+    hashtag: "#RaviPriyaNewHome",
+    curtainVerse: "அறனெனப் பட்டதே இல்வாழ்க்கை அஃதும்\nபிறன்பழிப்ப தில்லாயின் நன்று.",
+    tagline: { en: "With the blessings of God and our elders, we are stepping into our new home. We warmly invite you and your family to the Gruhapravesam and to share a meal with us.", ta: "" },
+    heroDateLine: { en: "🏡 14th March 2027 • Coimbatore", ta: "" },
+    accommodationText: { en: "Coming from out of town or need help finding our new home? Call us and we'll guide you.", ta: "" },
+    coordinators: [{ name: { en: "Ravi", ta: "" }, phones: ["+91 90000 00000"] }],
+    events: [
+      { id: "homam", icon: { type: "emoji", emoji: "🔥", imageId: "" },
+        name: { en: "Ganapathi Homam", ta: "" }, date: { en: "14th March 2027", ta: "" }, time: { en: "6:00 AM", ta: "" },
+        place: { en: "Our new home", ta: "" }, venue: { en: "12, Lakshmi Nagar, Saibaba Colony, Coimbatore - 641011", ta: "" },
+        desc: { en: "A homam to bless the house before we move in.", ta: "" }, mapQuery: "Saibaba Colony Coimbatore 641011", mapUrl: "" },
+      { id: "gruhapravesam", icon: { type: "emoji", emoji: "🏡", imageId: "" },
+        name: { en: "Gruhapravesam", ta: "" }, date: { en: "14th March 2027", ta: "" }, time: { en: "7:00 AM to 8:30 AM", ta: "" },
+        place: { en: "Our new home", ta: "" }, venue: { en: "12, Lakshmi Nagar, Saibaba Colony, Coimbatore - 641011", ta: "" },
+        desc: { en: "Boiling of milk and the house-warming puja.", ta: "" }, mapQuery: "Saibaba Colony Coimbatore 641011", mapUrl: "" },
+      { id: "lunch", icon: { type: "emoji", emoji: "🍃", imageId: "" },
+        name: { en: "Lunch", ta: "" }, date: { en: "14th March 2027", ta: "" }, time: { en: "12:00 PM onwards", ta: "" },
+        place: { en: "Our new home", ta: "" }, venue: { en: "12, Lakshmi Nagar, Saibaba Colony, Coimbatore - 641011", ta: "" },
+        desc: { en: "A traditional banana-leaf meal with family and friends.", ta: "" }, mapQuery: "Saibaba Colony Coimbatore 641011", mapUrl: "" }
+    ]
+  },
+  birthday: {
+    groomName: { en: "Aarav", ta: "" },
+    brideName: { en: "", ta: "" },
+    title: { en: "Aarav turns 1!", ta: "" },
+    weddingDateTimeISO: "2027-04-18T17:00:00+05:30",
+    hashtag: "#AaravTurnsOne",
+    curtainVerse: "",
+    tagline: { en: "Our little star is turning one! Join us for an evening of cake, games and lots of love as we celebrate Aarav's first birthday.", ta: "" },
+    heroDateLine: { en: "🎂 18th April 2027 • Chennai", ta: "" },
+    accommodationText: { en: "Need help finding the venue? Call us any time.", ta: "" },
+    coordinators: [{ name: { en: "Aarav's parents", ta: "" }, phones: ["+91 90000 00000"] }],
+    events: [
+      { id: "party", icon: { type: "emoji", emoji: "🎂", imageId: "" },
+        name: { en: "Birthday Party", ta: "" }, date: { en: "18th April 2027", ta: "" }, time: { en: "5:00 PM to 7:00 PM", ta: "" },
+        place: { en: "Little Hearts Party Hall", ta: "" }, venue: { en: "T. Nagar, Chennai - 600017", ta: "" },
+        desc: { en: "Cake cutting, games and a magic show.", ta: "" }, mapQuery: "T. Nagar Chennai 600017", mapUrl: "" },
+      { id: "dinner", icon: { type: "emoji", emoji: "🍽️", imageId: "" },
+        name: { en: "Dinner", ta: "" }, date: { en: "18th April 2027", ta: "" }, time: { en: "7:00 PM onwards", ta: "" },
+        place: { en: "Little Hearts Party Hall", ta: "" }, venue: { en: "T. Nagar, Chennai - 600017", ta: "" },
+        desc: { en: "", ta: "" }, mapQuery: "T. Nagar Chennai 600017", mapUrl: "" }
+    ]
+  }
+};
+// For categories the admin adds later.
+const GENERIC_SAMPLE = {
+  groomName: { en: "Your name", ta: "" },
+  brideName: { en: "", ta: "" },
+  title: { en: "You're invited", ta: "" },
+  hashtag: "",
+  curtainVerse: "",
+  tagline: { en: "We would love you to celebrate this special day with us.", ta: "" },
+  heroDateLine: { en: "✨ 12th February 2027 • Chennai", ta: "" },
+  accommodationText: { en: "Need help finding the venue? Call us any time.", ta: "" },
+  events: [{ ...DEFAULT_CONFIG.events[0], id: "main", icon: { type: "emoji", emoji: "✨", imageId: "" },
+    name: { en: "The Celebration", ta: "" }, desc: { en: "", ta: "" } }]
+};
+export const sampleFor = (category = "wedding") => ({
+  ...clone(DEFAULT_CONFIG), ...clone(SAMPLES[category || "wedding"] || GENERIC_SAMPLE), category: category || "wedding"
+});
+export const SAMPLE_WISHES = [
+  { name: "Priya", message: "Wishing you all the joy in the world! Can't wait to celebrate with you." },
+  { name: "Karthik & Family", message: "Congratulations! May this new beginning bring you happiness and blessings." },
+  { name: "Lakshmi Aunty", message: "So happy for you. God bless!" }
+];
 
 /* ------------------------- UI strings (EN / Tamil) ------------------------- */
 export const TRANSLATIONS = {
@@ -79,7 +168,8 @@ export const TRANSLATIONS = {
     stayEyebrow: "For Our Guests", stayTitle: "Help & Support", coordinatorsLabel: "Coordinators",
     footerThanks: "With gratitude and love, we thank you for being part of our story.",
     musicHint: "Toggle background music",
-    notFound: "This invitation link isn't valid. Please check the link you received."
+    notFound: "This invitation link isn't valid. Please check the link you received.",
+    previewWish: "This is a preview — wishes aren't saved."
   },
   ta: {
     shareBtn: "⧉ இணைப்பை நகலெடு",
@@ -102,7 +192,8 @@ export const TRANSLATIONS = {
     stayEyebrow: "விருந்தினர்களுக்காக", stayTitle: "உதவி மற்றும் ஆதரவு", coordinatorsLabel: "தொடர்புக்கு",
     footerThanks: "எங்கள் வாழ்க்கைப் பயணத்தின் ஒரு பகுதியாக இருப்பதற்கு அன்புடனும் நன்றியுடனும்.",
     musicHint: "பின்னணி இசை",
-    notFound: "இந்த அழைப்பிதழ் இணைப்பு செல்லுபடியாகவில்லை. நீங்கள் பெற்ற இணைப்பைச் சரிபார்க்கவும்."
+    notFound: "இந்த அழைப்பிதழ் இணைப்பு செல்லுபடியாகவில்லை. நீங்கள் பெற்ற இணைப்பைச் சரிபார்க்கவும்.",
+    previewWish: "இது முன்னோட்டம் — வாழ்த்துகள் சேமிக்கப்படாது."
   }
 };
 
@@ -129,7 +220,7 @@ export const newId = () => Math.random().toString(36).slice(2, 10);
 /* ------------------------- wedding link names (slugs) ------------------------- */
 // Each wedding lives at weddings/<slug> and is shared as SITE_URL/<slug>.
 // Names that are real paths on the site can't be used.
-const RESERVED_SLUGS = new Set(["admin", "api", "assets", "css", "js", "index"]);
+const RESERVED_SLUGS = new Set(["admin", "api", "assets", "css", "js", "index", "templates", "editor"]);
 
 export const slugify = s => (s || "").toLowerCase()
   .normalize("NFKD").replace(/[̀-ͯ]/g, "")
@@ -138,3 +229,7 @@ export const slugify = s => (s || "").toLowerCase()
 export const isValidSlug = s =>
   typeof s === "string" && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(s) &&
   s.length >= 3 && s.length <= 40 && !RESERVED_SLUGS.has(s);
+
+// Template and category ids (templates/<id>, categories/<id>) follow the same pattern, without the reserved names.
+export const isValidId = s =>
+  typeof s === "string" && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(s) && s.length >= 2 && s.length <= 40;

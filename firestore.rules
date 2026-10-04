@@ -9,6 +9,44 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == 'YH9Rv09hCkcrTBKam3u0jcDwzRy2';
     }
 
+    // Editor access. The admin gives someone a PIN for one event (pins/<PIN> = { slug }); the editor page
+    // signs them in anonymously and they save { pin, slug } as editors/<their uid>. From then on they
+    // may change that event, and only that event, for as long as the pin document exists —
+    // changing or revoking the PIN in the admin deletes it, which ends their access at once.
+    function pinPath(pin) {
+      return /databases/$(database)/documents/pins/$(pin);
+    }
+    function editorPath() {
+      return /databases/$(database)/documents/editors/$(request.auth.uid);
+    }
+    function isEditorOf(slug) {
+      return request.auth != null
+        && exists(editorPath())
+        && get(editorPath()).data.slug == slug
+        && exists(pinPath(get(editorPath()).data.pin))
+        && get(pinPath(get(editorPath()).data.pin)).data.slug == slug;
+    }
+
+    // PINs are the document ids: anyone signed in can look one up (that is how a PIN is checked),
+    // so they are long and random (8 characters, see js/pin.js). Only the admin can list or change them.
+    match /pins/{pin} {
+      allow get: if request.auth != null;
+      allow list, write: if isAdmin();
+    }
+
+    // What an editor has signed in with. A browser can only claim a PIN that exists, for the event it belongs to.
+    match /editors/{uid} {
+      allow get, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['pin', 'slug'])
+        && request.resource.data.pin is string
+        && request.resource.data.pin.matches('^[A-Z0-9]{6,32}$')
+        && request.resource.data.slug is string
+        && exists(pinPath(request.resource.data.pin))
+        && get(pinPath(request.resource.data.pin)).data.slug == request.resource.data.slug;
+      allow list, write: if isAdmin();
+    }
+
     // Site-wide settings (site/settings: which wedding "/" shows). Public read, admin-only write.
     // site/config is the pre-multi-wedding invitation, kept so the admin can import it.
     match /site/{docId} {
@@ -16,29 +54,51 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // One document per wedding, keyed by its link name (weddings/arjun-meera).
-    // Guests can open a wedding they have the link to, but only the admin can list them all.
+    // Event categories (weddings, housewarmings, birthdays…), managed on the admin page.
+    match /categories/{categoryId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Invitation designs: one HTML page each. Guests' pages load the one their event uses,
+    // so anyone can get a template by id; only the admin can list, add, change or delete them.
+    match /templates/{templateId} {
+      allow get: if true;
+      allow list, write: if isAdmin();
+    }
+
+    // One document per event of any category, keyed by its link name (weddings/arjun-meera).
+    // The collection name predates categories and is kept so existing links keep working.
+    // Guests can open an event they have the link to, but only the admin can list them all.
     match /weddings/{weddingId} {
       allow get: if true;
       allow list, write: if isAdmin();
 
+      // An editor can change the details of their event, but not which category or design it uses,
+      // and cannot create or delete events.
+      allow update: if isEditorOf(weddingId)
+        && request.resource.data.get('category', 'wedding') == resource.data.get('category', 'wedding')
+        && request.resource.data.get('templateId', '') == resource.data.get('templateId', '');
+
       // Uploaded photos stored as compressed data URLs.
       match /images/{imageId} {
         allow get: if true;
-        allow list, write: if isAdmin();
+        allow list: if isAdmin();
+        allow write: if isAdmin() || isEditorOf(weddingId);
       }
 
       // Background music, split into ~900 KB chunks (docs "<version>_<index>").
       match /music/{chunkId} {
         allow get: if true;
-        allow list, write: if isAdmin();
+        allow list: if isAdmin();
+        allow write: if isAdmin() || isEditorOf(weddingId);
       }
 
       // Guest book. Guests can read visible wishes and add new ones to a wedding
       // that exists; only the admin can see hidden ones, hide/unhide, or delete.
       // The admin can also create wishes as-is (used when importing the old invitation).
+      // An editor can see hidden wishes and hide, unhide or delete them, but not rewrite them.
       match /wishes/{wishId} {
-        allow read: if resource.data.hidden == false || isAdmin();
+        allow read: if resource.data.hidden == false || isAdmin() || isEditorOf(weddingId);
 
         allow create: if isAdmin() || (
           request.resource.data.keys().hasOnly(['name', 'message', 'createdAt', 'hidden'])
@@ -53,7 +113,9 @@ service cloud.firestore {
           && exists(/databases/$(database)/documents/weddings/$(weddingId))
         );
 
-        allow update, delete: if isAdmin();
+        allow update: if isAdmin() || (isEditorOf(weddingId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hidden']));
+        allow delete: if isAdmin() || isEditorOf(weddingId);
       }
     }
 

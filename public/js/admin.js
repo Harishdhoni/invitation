@@ -1,682 +1,26 @@
-import { DEFAULT_CONFIG, clone, withDefaults, newId, tr, slugify, isValidSlug } from "./defaults.js";
+import { tr, slugify, isValidSlug, sampleFor } from "./defaults.js";
 import { isFirebaseConfigured, ADMIN_UID, SITE_URL } from "./firebase-config.js";
-import { compressImage, compressPreviewImage, kb } from "./image-utils.js";
-
-/* ---------------------------- small helpers ---------------------------- */
-const $ = id => document.getElementById(id);
-const show = (id, on = true) => { $(id).hidden = !on; };
-function el(tag, className, text){
-  const n = document.createElement(tag);
-  if(className) n.className = className;
-  if(text !== undefined) n.textContent = text;
-  return n;
-}
-const asBi = v => (v && typeof v === "object") ? { en: v.en || "", ta: v.ta || "" } : { en: v || "", ta: "" };
-
-let toastTimer;
-function toast(msg){
-  const t = $("toast");
-  t.textContent = msg;
-  t.classList.add("show");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove("show"), 3800);
-}
-
-const FALLBACK_IMG = { cover: "assets/cover-placeholder.svg", deity: "assets/emblem.svg" };
-const BI_KEYS = ["groomName", "brideName", "tagline", "heroDateLine", "accommodationText"];
-const EVENT_BI_KEYS = ["name", "date", "time", "place", "venue", "desc"];
-const eventImageId = ev => "event-" + ev.id;
-
-/* -------------------------------- state -------------------------------- */
-// admin?w=<wedding> edits that wedding; plain admin lists them all.
-// Switching wedding is a page load, so the state below always belongs to one wedding.
-const params = new URLSearchParams(location.search);
-const weddingId = params.get("w") || "";
-const shareLink = id => `${SITE_URL}/${id}`;
-const previewLink = id => `./?w=${id}`;   // works on XAMPP and Vercel alike
-const wdoc = (...path) => fb.doc(fb.db, "weddings", weddingId, ...path);
-const settingsDoc = () => fb.doc(fb.db, "site", "settings");
+import { compressPreviewImage } from "./image-utils.js";
+import { $, show, el, toast, actionBtn, copyText } from "./admin-ui.js";
+import {
+  useFirebase, loadCategories, loadTemplates, templatesIn, templateName, categoryName, templatePicker,
+  enterTemplates, enterTemplateEditor
+} from "./admin-templates.js";
+import { useFirebase as useAccessFirebase, loadPins, revokePin, accessPanel } from "./admin-access.js";
+import {
+  openEditor, normalize, coupleNames, shareLink, previewLink, musicChunkId, hasUnsavedChanges, discardChanges
+} from "./event-editor.js";
 
 let fb = null;
-let state = null;            // working copy of weddings/<weddingId>, bound to the form inputs
-let pendingImages = {};      // imageId -> { dataUrl, w, h } chosen but not yet saved
-const removedImages = new Set();
-const loadedImages = {};     // imageId -> data URL already in Firestore
-let pendingMusic = null;     // { bytes, name, type, size, url } chosen but not yet saved
-let removeMusic = false;
-let dirty = false;
-
-// Firestore caps a document at 1 MiB, so music is stored as ~900 KB chunks
-// in music/<version>_<index>, described by state.music = { v, chunks, size, type, name }.
-const MUSIC_CHUNK = 900_000;
-const MUSIC_MAX = 10 * 1024 * 1024;
-const musicChunkId = (v, i) => `${v}_${i}`;
-const mb = n => (n / 1024 / 1024).toFixed(1) + " MB";
+const params = new URLSearchParams(location.search);
+// admin?w=<event> edits that event (other views are routed in enterApp).
+const weddingId = params.get("w") || "";
+const settingsDoc = () => fb.doc(fb.db, "site", "settings");
 let appStarted = false;
-
-function setDirty(on = true){
-  dirty = on;
-  $("saveBtn").disabled = !on;
-  const s = $("saveStatus");
-  s.textContent = on ? "Unsaved changes" : "All changes saved";
-  s.classList.toggle("dirty", on);
-}
-addEventListener("beforeunload", e => { if(dirty){ e.preventDefault(); e.returnValue = ""; } });
-
-function normalize(cfg){
-  const s = withDefaults(cfg);
-  BI_KEYS.forEach(k => { s[k] = asBi(s[k]); });
-  s.images = s.images || {};
-  s.music = s.music || null;
-  s.events = (s.events || []).map(ev => {
-    const out = { mapQuery: "", mapUrl: "", ...ev, id: ev.id || newId() };
-    EVENT_BI_KEYS.forEach(k => { out[k] = asBi(ev[k]); });
-    out.icon = { type: "emoji", emoji: "✨", imageId: "", ...(ev.icon || {}) };
-    return out;
-  });
-  s.coordinators = (s.coordinators || []).map(c => ({
-    name: asBi(c.name),
-    phones: c.phones || (c.phone ? [c.phone] : [])
-  }));
-  return s;
-}
-
-/* ---------------------------- field builders ---------------------------- */
-// Every builder writes straight into the given object, so `state` is always current.
-// English edits are translated into the Tamil box after a short pause (see autoTranslate).
-// `context` tells the translator what the text is, e.g. "Event venue name".
-function biField(label, obj, key, { multiline = false, hint = "", onInput, context = label } = {}){
-  obj[key] = asBi(obj[key]);
-  const text = obj[key];
-  const wrap = el("div", "field");
-  wrap.append(el("span", "label", label));
-  const bi = el("div", "bi");
-  const box = (cls, tag) => {
-    const b = el("div", "lang " + cls);
-    b.dataset.lang = tag;
-    const input = multiline ? el("textarea") : Object.assign(el("input"), { type: "text" });
-    input.value = text[cls] || "";
-    b.append(input);
-    bi.append(b);
-    return [b, input];
-  };
-  const [, enInput] = box("en", "EN");
-  const [taBox, taInput] = box("ta", "தமிழ்");
-  taInput.placeholder = "Fills in automatically from English";
-
-  const auto = autoTranslate(text, taBox, taInput, context);
-  enInput.addEventListener("input", () => { text.en = enInput.value; setDirty(); onInput?.(); auto.schedule(); });
-  taInput.addEventListener("input", () => { text.ta = taInput.value; setDirty(); auto.manualEdit(); });
-
-  wrap.append(bi);
-  if(hint) wrap.append(el("small", "hint", hint));
-  return wrap;
-}
-
-/* ---------------------------- auto-translate ---------------------------- */
-// Uses Gemini via Firebase AI Logic (js/translate.js), loaded on first use.
-// A Tamil box typed in by hand stops following the English until "Translate again".
-let translatorModule = null;
-let translateOff = false;   // set when AI Logic isn't enabled, so we don't retry on every keystroke
-let lastTranslateToast = 0;
-const autoFields = new Set();
-const loadTranslator = () => (translatorModule ||= import("./translate.js"));
-
-function autoTranslate(text, taBox, taInput, context){
-  let timer = null, seq = 0, manual = false;
-  const again = el("button", "retranslate", "↻ Translate again");
-  again.type = "button";
-  again.hidden = true;
-  taBox.append(again);
-  const status = s => { taBox.dataset.lang = "தமிழ்" + (s ? " · " + s : ""); };
-
-  async function run(){
-    clearTimeout(timer);
-    const en = (text.en || "").trim();
-    const my = ++seq;
-    if(!en){
-      if(text.ta){ text.ta = ""; taInput.value = ""; setDirty(); }
-      status("");
-      return;
-    }
-    status("translating…");
-    try {
-      const out = await (await loadTranslator()).toTamil(en, context);
-      if(my !== seq || manual) return;
-      if(out !== text.ta){ text.ta = out; taInput.value = out; setDirty(); }
-      status("auto");
-    } catch(e){
-      if(my === seq) status("");
-      await reportTranslateError(e);
-    }
-  }
-
-  again.addEventListener("click", () => {
-    manual = false;
-    translateOff = false;
-    again.hidden = true;
-    run();
-  });
-
-  const field = {
-    schedule(){
-      if(manual || translateOff) return;
-      clearTimeout(timer);
-      // Long text goes to the slower, better model, so wait for a longer pause first.
-      timer = setTimeout(run, (text.en || "").length > 80 ? 1800 : 900);
-    },
-    manualEdit(){
-      manual = true;
-      seq++;                 // drop any translation still in flight
-      clearTimeout(timer);
-      status("edited");
-      again.hidden = false;
-    },
-    needsFill: () => !manual && !(text.ta || "").trim() && !!(text.en || "").trim(),
-    item: () => ({ text: text.en.trim(), context }),
-    apply(out){ text.ta = out; taInput.value = out; status("auto"); },
-    get connected(){ return taInput.isConnected; }
-  };
-  autoFields.add(field);
-  return field;
-}
-
-async function reportTranslateError(e){
-  console.warn("translation failed", e);
-  const kind = translatorModule ? (await translatorModule).translateErrorKind(e) : "other";
-  if(kind === "not-enabled") translateOff = true;
-  if(Date.now() - lastTranslateToast < 6000) return;
-  lastTranslateToast = Date.now();
-  toast(kind === "not-enabled"
-    ? "Auto-translate needs AI Logic switched on: Firebase console → AI Logic → Get started → Gemini Developer API."
-    : kind === "quota" ? "Translation limit reached for the moment — try again in a minute."
-    : "Couldn't translate right now: " + String(e?.message || e).slice(0, 120));
-}
-
-// Fill every empty Tamil box that has English, in a few batched requests.
-$("fillTamilBtn").addEventListener("click", async () => {
-  for(const f of autoFields) if(!f.connected) autoFields.delete(f);
-  const todo = [...autoFields].filter(f => f.needsFill());
-  if(!todo.length) return toast("Every Tamil box already has text.");
-  const btn = $("fillTamilBtn");
-  btn.disabled = true;
-  translateOff = false;
-  try {
-    const t = await loadTranslator();
-    for(let i = 0; i < todo.length; i += 15){
-      const group = todo.slice(i, i + 15);
-      btn.textContent = `Translating ${Math.min(i + 15, todo.length)}/${todo.length}…`;
-      const outs = await t.toTamilBatch(group.map(f => f.item()));
-      group.forEach((f, j) => { if(outs[j]) f.apply(outs[j]); });
-    }
-    setDirty();
-    toast(`Filled ${todo.length} Tamil field${todo.length === 1 ? "" : "s"} — check them, then Save.`);
-  } catch(e){
-    await reportTranslateError(e);
-  }
-  btn.disabled = false;
-  btn.textContent = "அ Fill missing Tamil";
-});
-
-function textField(label, obj, key, { multiline = false, hint = "", placeholder = "", onInput } = {}){
-  const wrap = el("label", "field");
-  wrap.append(el("span", "", label));
-  const input = multiline ? el("textarea") : Object.assign(el("input"), { type: "text" });
-  input.value = obj[key] || "";
-  input.placeholder = placeholder;
-  input.addEventListener("input", () => { obj[key] = input.value; setDirty(); onInput?.(); });
-  wrap.append(input);
-  if(hint) wrap.append(el("small", "hint", hint));
-  return wrap;
-}
-
-// Stored as "YYYY-MM-DDTHH:MM:00+05:30" so the countdown is right for guests in any timezone.
-function istDateTimeField(label, obj, key, hint){
-  const wrap = el("label", "field");
-  wrap.append(el("span", "", label));
-  const input = Object.assign(el("input"), { type: "datetime-local" });
-  input.value = (obj[key] || "").slice(0, 16);
-  input.addEventListener("input", () => { obj[key] = input.value ? input.value + ":00+05:30" : ""; setDirty(); });
-  wrap.append(input);
-  if(hint) wrap.append(el("small", "hint", hint));
-  return wrap;
-}
-
-function iconBtn(label, title, disabled, onClick, extra = ""){
-  const b = el("button", "icon-btn " + extra, label);
-  b.type = "button"; b.title = title; b.disabled = disabled;
-  b.addEventListener("click", onClick);
-  return b;
-}
-
-function moveItem(list, i, dir, rerender){
-  const j = i + dir;
-  if(j < 0 || j >= list.length) return;
-  [list[i], list[j]] = [list[j], list[i]];
-  setDirty();
-  rerender();
-}
-
-/* ------------------------------ form panels ------------------------------ */
-function renderDetails(){
-  $("detailsForm").replaceChildren(
-    biField("Groom's name", state, "groomName", { context: "Groom's personal name (transliterate)", hint: "Shown first. Tamil fills in automatically — clear the Tamil box to show the English name in both languages." }),
-    biField("Bride's name", state, "brideName", { context: "Bride's personal name (transliterate)" }),
-    istDateTimeField("Muhurtham date & time (India time)", state, "weddingDateTimeISO", "The countdown on the invite counts down to this moment."),
-    biField("Date line under the names", state, "heroDateLine", { context: "Wedding date and city line", hint: "Example: 💍 12th February 2027 • Chennai" }),
-    biField("Tagline / your story", state, "tagline", { multiline: true, context: "Invitation message from the couple" }),
-    textField("Hashtag", state, "hashtag", { placeholder: "#ArjunWedsMeera", hint: "Shown in the footer." }),
-    textField("Opening verse on the curtain", state, "curtainVerse", { multiline: true, hint: "Shown before guests tap to open the invite. Line breaks are kept." })
-  );
-}
-
-function renderHelp(){
-  $("helpForm").replaceChildren(
-    biField("Message for outstation guests", state, "accommodationText", { multiline: true, context: "Help message for outstation guests" })
-  );
-}
-
-function iconChooser(ev){
-  const id = eventImageId(ev);
-  const wrap = el("div", "field");
-  wrap.append(el("span", "label", "Icon"));
-  const row = el("div", "icon-choice");
-
-  const radio = (value, text) => {
-    const l = el("label");
-    const r = Object.assign(el("input"), { type: "radio", name: "icon-" + ev.id, value, checked: ev.icon.type === value });
-    r.addEventListener("change", () => { ev.icon.type = value; setDirty(); });
-    l.append(r, text);
-    return l;
-  };
-  const emoji = Object.assign(el("input"), { type: "text", value: ev.icon.emoji || "", maxLength: 12, title: "Paste any emoji" });
-  emoji.addEventListener("input", () => { ev.icon.emoji = emoji.value; ev.icon.type = "emoji"; row.querySelector("input[value=emoji]").checked = true; setDirty(); });
-
-  const preview = el("img", "icon-preview");
-  preview.alt = "";
-  preview.dataset.imgId = id;
-  const src = pendingImages[id]?.dataUrl || loadedImages[id];
-  if(src) preview.src = src; else preview.hidden = true;
-
-  const upload = el("label", "btn ghost small", "Upload image");
-  const file = Object.assign(el("input"), { type: "file", accept: "image/*", hidden: true });
-  file.addEventListener("change", async () => {
-    const f = file.files[0];
-    file.value = "";
-    if(!f) return;
-    try {
-      pendingImages[id] = await compressImage(f, { maxDim: 256, maxChars: 150_000, alpha: true });
-      ev.icon.type = "image";
-      ev.icon.imageId = id;
-      setDirty();
-      renderEvents();
-    } catch(e){ toast(e.message); }
-  });
-  upload.append(file);
-
-  row.append(radio("emoji", " Emoji"), emoji, radio("image", " Image"), preview, upload);
-  wrap.append(row);
-  return wrap;
-}
-
-function renderEvents(){
-  const list = $("eventsList");
-  list.replaceChildren();
-  state.events.forEach((ev, i) => {
-    const card = el("div", "card item");
-    const head = el("div", "item-head");
-    const title = el("h3", "", ev.name.en || "Untitled event");
-    const tools = el("div", "item-tools");
-    tools.append(
-      iconBtn("↑", "Move up", i === 0, () => moveItem(state.events, i, -1, renderEvents)),
-      iconBtn("↓", "Move down", i === state.events.length - 1, () => moveItem(state.events, i, 1, renderEvents)),
-      iconBtn("✕", "Remove event", false, () => {
-        if(!confirm(`Remove the event "${ev.name.en || "Untitled"}"?`)) return;
-        state.events.splice(i, 1);
-        delete pendingImages[eventImageId(ev)];
-        setDirty();
-        renderEvents();
-      }, "del")
-    );
-    head.append(title, tools);
-
-    const maps = el("div", "two-col");
-    maps.append(
-      textField("Google Maps search text", ev, "mapQuery", { hint: "Used by the “Get Directions” button.", placeholder: "Venue name, area, city, PIN" }),
-      textField("…or a Google Maps link (optional)", ev, "mapUrl", { hint: "Overrides the search text when filled.", placeholder: "https://maps.app.goo.gl/…" })
-    );
-
-    card.append(
-      head,
-      biField("Event name", ev, "name", { context: "Wedding event / ceremony name", onInput: () => { title.textContent = ev.name.en || "Untitled event"; } }),
-      biField("Date", ev, "date", { context: "Event date", hint: "Type it exactly as guests should read it, e.g. 12th February 2027." }),
-      biField("Time", ev, "time", { context: "Event time" }),
-      biField("Venue name", ev, "place", { context: "Venue / hall / temple name (transliterate)" }),
-      biField("Address", ev, "venue", { context: "Venue address: area, city, PIN (transliterate place names)" }),
-      biField("Short description (optional)", ev, "desc", { multiline: true, context: "Event description" }),
-      maps,
-      iconChooser(ev)
-    );
-    list.append(card);
-  });
-}
-
-function renderCoords(){
-  const list = $("coordList");
-  list.replaceChildren();
-  state.coordinators.forEach((c, i) => {
-    const card = el("div", "card item");
-    const head = el("div", "item-head");
-    const title = el("h3", "", c.name.en || "New coordinator");
-    const tools = el("div", "item-tools");
-    tools.append(
-      iconBtn("↑", "Move up", i === 0, () => moveItem(state.coordinators, i, -1, renderCoords)),
-      iconBtn("↓", "Move down", i === state.coordinators.length - 1, () => moveItem(state.coordinators, i, 1, renderCoords)),
-      iconBtn("✕", "Remove coordinator", false, () => {
-        if(!confirm(`Remove "${c.name.en || "this coordinator"}"?`)) return;
-        state.coordinators.splice(i, 1);
-        setDirty();
-        renderCoords();
-      }, "del")
-    );
-    head.append(title, tools);
-
-    const phones = el("label", "field");
-    const input = Object.assign(el("input"), { type: "tel", value: c.phones.join(", "), placeholder: "+91 90000 00000, +91 91111 11111" });
-    input.addEventListener("input", () => { c.phones = input.value.split(",").map(s => s.trim()).filter(Boolean); setDirty(); });
-    phones.append(el("span", "", "Phone numbers"), input, el("small", "hint", "Separate multiple numbers with commas. Each becomes a tap-to-call link."));
-
-    card.append(head, biField("Name", c, "name", { context: "Family coordinator's personal name (transliterate)", onInput: () => { title.textContent = c.name.en || "New coordinator"; } }), phones);
-    list.append(card);
-  });
-}
-
-$("addEventBtn").addEventListener("click", () => {
-  state.events.push(normalize({ events: [{
-    icon: { type: "emoji", emoji: "🎊" }, name: { en: "New event", ta: "" }
-  }] }).events[0]);
-  setDirty();
-  renderEvents();
-  $("eventsList").lastElementChild?.scrollIntoView({ behavior: "smooth", block: "start" });
-});
-
-$("addCoordBtn").addEventListener("click", () => {
-  state.coordinators.push({ name: { en: "", ta: "" }, phones: [] });
-  setDirty();
-  renderCoords();
-});
-
-/* --------------------------------- photos --------------------------------- */
-function refreshPhoto(id){
-  const card = document.querySelector(`.photo-card[data-image="${id}"]`);
-  const pending = pendingImages[id];
-  const hasSaved = state.images[id] && !removedImages.has(id);
-  const current = hasSaved ? loadedImages[id] : null;
-  card.querySelector(".preview").src = pending?.dataUrl || current || FALLBACK_IMG[id];
-  card.querySelector(".photo-meta").textContent =
-    pending ? `New image: ${pending.w}×${pending.h}px, ${kb(pending.dataUrl)} KB — click Save to publish`
-    : current ? `Current image (${kb(current)} KB)`
-    : hasSaved ? "Loading current image…"
-    : "Using the default image";
-}
-
-document.querySelectorAll(".photo-card").forEach(card => {
-  const id = card.dataset.image;
-  const file = card.querySelector("input[type=file]");
-  file.addEventListener("change", async () => {
-    const f = file.files[0];
-    file.value = "";
-    if(!f) return;
-    card.querySelector(".photo-meta").textContent = "Compressing…";
-    try {
-      pendingImages[id] = await compressImage(f, id === "cover" ? { maxDim: 1600 } : { maxDim: 900, alpha: true });
-      removedImages.delete(id);
-      // The cover also becomes the WhatsApp/Facebook preview image (api/og-image.js).
-      if(id === "cover"){ pendingImages.og = await compressPreviewImage(f); removedImages.delete("og"); }
-      setDirty();
-    } catch(e){ toast(e.message); }
-    refreshPhoto(id);
-  });
-  card.querySelector("[data-remove]").addEventListener("click", () => {
-    const ids = id === "cover" ? ["cover", "og"] : [id];
-    ids.forEach(i => { delete pendingImages[i]; if(state.images[i]) removedImages.add(i); });
-    setDirty();
-    refreshPhoto(id);
-  });
-});
-
-/* --------------------------------- music --------------------------------- */
-function refreshMusic(){
-  const saved = !removeMusic && state.music;
-  const preview = $("musicPreview");
-  if(pendingMusic){
-    $("musicName").textContent = pendingMusic.name;
-    $("musicMeta").textContent = `${mb(pendingMusic.size)} — new, click Save to publish`;
-    preview.src = pendingMusic.url;
-    preview.hidden = false;
-  } else if(saved){
-    $("musicName").textContent = saved.name || "Background music";
-    $("musicMeta").textContent = `${mb(saved.size || 0)} — live on the invite`;
-    if(!preview.dataset.loadedV || preview.dataset.loadedV !== String(saved.v)){ preview.hidden = true; preview.removeAttribute("src"); }
-  } else {
-    $("musicName").textContent = "No music added";
-    $("musicMeta").textContent = removeMusic ? "Music will be removed when you click Save" : "The music button stays hidden on the invite until you add a song.";
-    preview.hidden = true;
-    preview.removeAttribute("src");
-  }
-  $("musicPreviewBtn").hidden = !!pendingMusic || !saved || !preview.hidden;
-  $("musicRemoveBtn").hidden = !pendingMusic && !saved;
-}
-
-$("musicFile").addEventListener("change", async () => {
-  const f = $("musicFile").files[0];
-  $("musicFile").value = "";
-  if(!f) return;
-  if(!/^audio\//.test(f.type) && !/\.(mp3|m4a)$/i.test(f.name)) return toast("Please choose an audio file (MP3 or M4A).");
-  if(f.size > MUSIC_MAX) return toast(`That file is ${mb(f.size)}. Please use a song under 10 MB (3–5 MB is best).`);
-  if(pendingMusic) URL.revokeObjectURL(pendingMusic.url);
-  pendingMusic = {
-    bytes: new Uint8Array(await f.arrayBuffer()),
-    name: f.name,
-    type: f.type || "audio/mpeg",
-    size: f.size,
-    url: URL.createObjectURL(f)
-  };
-  removeMusic = false;
-  setDirty();
-  refreshMusic();
-});
-
-$("musicRemoveBtn").addEventListener("click", () => {
-  if(pendingMusic){ URL.revokeObjectURL(pendingMusic.url); pendingMusic = null; }
-  else removeMusic = true;
-  setDirty();
-  refreshMusic();
-});
-
-$("musicPreviewBtn").addEventListener("click", async () => {
-  const m = state.music;
-  if(!m) return;
-  $("musicPreviewBtn").disabled = true;
-  $("musicMeta").textContent = "Loading…";
-  try {
-    const parts = await Promise.all(Array.from({ length: m.chunks }, async (_, i) => {
-      const snap = await fb.getDoc(wdoc("music", musicChunkId(m.v, i)));
-      return snap.data().data.toUint8Array();
-    }));
-    const preview = $("musicPreview");
-    preview.src = URL.createObjectURL(new Blob(parts, { type: m.type || "audio/mpeg" }));
-    preview.dataset.loadedV = String(m.v);
-    preview.hidden = false;
-    preview.play().catch(() => {});
-  } catch(e){
-    toast("Couldn't load the current music: " + e.message);
-  }
-  $("musicPreviewBtn").disabled = false;
-  refreshMusic();
-});
-
-// Upload the new song's chunks (one write each — a batch can't hold several MB).
-async function uploadMusic(){
-  const { bytes, name, type, size } = pendingMusic;
-  const v = Date.now();
-  const chunks = Math.ceil(bytes.length / MUSIC_CHUNK);
-  try {
-    for(let i = 0; i < chunks; i++){
-      $("saveStatus").textContent = `Uploading music ${i + 1}/${chunks}…`;
-      await fb.setDoc(wdoc("music", musicChunkId(v, i)), {
-        data: fb.Bytes.fromUint8Array(bytes.subarray(i * MUSIC_CHUNK, (i + 1) * MUSIC_CHUNK))
-      });
-    }
-  } catch(e){
-    deleteMusicChunks({ v, chunks });
-    throw e;
-  }
-  return { v, chunks, size, type, name };
-}
-
-function deleteMusicChunks(m){
-  if(!m) return Promise.resolve();
-  return Promise.all(Array.from({ length: m.chunks }, (_, i) =>
-    fb.deleteDoc(wdoc("music", musicChunkId(m.v, i))).catch(() => {})));
-}
-
-async function loadSavedImages(){
-  const ids = Object.keys(state.images).filter(id => id !== "og"); // the preview copy isn't shown here
-  await Promise.all(ids.map(async id => {
-    try {
-      const snap = await fb.getDoc(wdoc("images", id));
-      if(snap.exists()) loadedImages[id] = snap.data().dataUrl;
-    } catch(e){ console.warn("image load failed", id, e); }
-  }));
-  refreshPhoto("cover");
-  refreshPhoto("deity");
-  document.querySelectorAll("img.icon-preview").forEach(img => {
-    const src = pendingImages[img.dataset.imgId]?.dataUrl || loadedImages[img.dataset.imgId];
-    if(src){ img.src = src; img.hidden = false; }
-  });
-}
-
-/* ---------------------------------- save ---------------------------------- */
-async function save(){
-  if(!dirty || !state) return;
-  $("saveBtn").disabled = true;
-  $("saveStatus").textContent = "Saving…";
-  const oldMusic = state.music;
-  let music = removeMusic ? null : state.music;
-  try {
-    if(pendingMusic) music = await uploadMusic();
-    $("saveStatus").textContent = "Saving…";
-
-    const batch = fb.writeBatch(fb.db);
-    const version = Date.now();
-    const images = { ...state.images };
-
-    state.events.forEach(ev => { if(ev.icon.type === "image") ev.icon.imageId = eventImageId(ev); });
-    for(const [id, img] of Object.entries(pendingImages)){
-      batch.set(wdoc("images", id), { ...img, updatedAt: fb.serverTimestamp() });
-      images[id] = version;
-    }
-
-    // Delete image docs nothing points at any more (removed photos, deleted events).
-    const keep = new Set(["cover", "deity"].filter(id => images[id] && !removedImages.has(id)));
-    if(keep.has("cover") && images.og && !removedImages.has("og")) keep.add("og");
-    state.events.forEach(ev => { if(ev.icon.type === "image" && images[eventImageId(ev)]) keep.add(eventImageId(ev)); });
-    for(const id of Object.keys(images)){
-      if(!keep.has(id)){ batch.delete(wdoc("images", id)); delete images[id]; }
-    }
-
-    batch.set(wdoc(), { ...clone(state), images, music, updatedAt: fb.serverTimestamp() });
-    try {
-      await batch.commit();
-    } catch(e){
-      if(music && music !== oldMusic) deleteMusicChunks(music); // config still points at the old song
-      throw e;
-    }
-
-    // The new config is live; the previous song's chunks are no longer referenced.
-    if(oldMusic && oldMusic !== music) deleteMusicChunks(oldMusic);
-    state.music = music;
-    if(pendingMusic){
-      const preview = $("musicPreview");
-      preview.dataset.loadedV = String(music.v); // the preview already holds this song
-      pendingMusic = null;
-    }
-    removeMusic = false;
-    refreshMusic();
-
-    state.images = images;
-    Object.entries(pendingImages).forEach(([id, img]) => { loadedImages[id] = img.dataUrl; });
-    pendingImages = {};
-    removedImages.clear();
-    setDirty(false);
-    show("firstRunBanner", false);
-    refreshPhoto("cover");
-    refreshPhoto("deity");
-    toast("Saved ✓ Guests see the changes when they open or refresh the invite.");
-  } catch(e){
-    console.error(e);
-    toast(e.code === "permission-denied"
-      ? "Permission denied — check the admin UID in firestore.rules and deploy the rules."
-      : "Save failed: " + e.message);
-    setDirty(true);
-  }
-}
-$("saveBtn").addEventListener("click", save);
-addEventListener("keydown", e => {
-  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s" && appStarted){ e.preventDefault(); save(); }
-});
-
-/* --------------------------------- wishes --------------------------------- */
-function renderWishRows(docs){
-  const body = $("wishRows");
-  body.replaceChildren();
-  let hidden = 0;
-  docs.forEach(d => {
-    const w = d.data({ serverTimestamps: "estimate" });
-    if(w.hidden) hidden++;
-    const row = el("tr", w.hidden ? "is-hidden" : "");
-    const when = w.createdAt?.toDate
-      ? w.createdAt.toDate().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "";
-    const status = el("td");
-    status.append(el("span", w.hidden ? "badge off" : "badge ok", w.hidden ? "Hidden" : "Visible"));
-
-    const acts = el("td", "acts");
-    const toggle = el("button", "btn ghost small", w.hidden ? "Show" : "Hide");
-    toggle.addEventListener("click", () =>
-      fb.updateDoc(wdoc("wishes", d.id), { hidden: !w.hidden }).catch(e => toast("Failed: " + e.message)));
-    const del = el("button", "btn danger small", "Delete");
-    del.addEventListener("click", () => {
-      if(confirm(`Delete the wish from "${w.name}" permanently?`))
-        fb.deleteDoc(wdoc("wishes", d.id)).catch(e => toast("Failed: " + e.message));
-    });
-    acts.append(toggle, del);
-
-    row.append(el("td", "when", when), el("td", "", w.name), el("td", "msg", w.message), status, acts);
-    body.append(row);
-  });
-  if(!docs.length){
-    const row = el("tr");
-    const td = el("td", "muted", "No wishes yet.");
-    td.colSpan = 5;
-    row.append(td);
-    body.append(row);
-  }
-  $("wishSummary").textContent = `${docs.length} wish${docs.length === 1 ? "" : "es"} · ${hidden} hidden from guests. Changes apply instantly.`;
-  $("wishCount").textContent = docs.length || "";
-}
-
-function watchWishes(){
-  const q = fb.query(fb.collection(wdoc(), "wishes"), fb.orderBy("createdAt", "desc"), fb.limit(500));
-  fb.onSnapshot(q, snap => renderWishRows(snap.docs),
-    e => { $("wishSummary").textContent = "Could not load wishes: " + e.message; });
-}
-
-/* ---------------------------------- tabs ---------------------------------- */
-document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => {
-  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t === tab));
-  document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.dataset.panel === tab.dataset.tab));
-}));
+let pins = new Map();        // slug -> { pin }: events that someone else may edit with a PIN
+let pinsReady = false;       // false until the rules that allow reading pins/ are deployed
+let categories = [];         // [{ id, name, order }]
+let templates = [];          // [{ id, name, categoryId, html, … }]
 
 /* ------------------------------ weddings list ------------------------------ */
 let settings = {};           // site/settings: { defaultWedding, legacyImported }
@@ -684,32 +28,12 @@ let weddings = [];           // [{ id, cfg }]
 let legacyConfig = null;     // site/config from before multi-wedding, until it's imported
 
 const SLUG_RULES = "Use 3–40 lowercase letters, numbers and dashes, like arjun-meera. " +
-  "admin, api, assets, css, js and index are used by the site itself.";
+  "admin, api, assets, css, editor, js, index and templates are used by the site itself.";
 const siteHost = () => SITE_URL.replace(/^https?:\/\//, "");
-
-function coupleNames(cfg, fallback = ""){
-  return [tr(cfg.groomName, "en"), tr(cfg.brideName, "en")].filter(Boolean).join(" & ") || fallback;
-}
 
 function weddingTime(cfg){
   const t = new Date(cfg.weddingDateTimeISO || "").getTime();
   return isNaN(t) ? null : t;
-}
-
-async function copyText(text){
-  try {
-    await navigator.clipboard.writeText(text);
-    toast("Link copied: " + text);
-  } catch {
-    prompt("Copy this link:", text);
-  }
-}
-
-function actionBtn(label, className, onClick){
-  const b = el("button", "btn small " + className, label);
-  b.type = "button";
-  b.addEventListener("click", onClick);
-  return b;
 }
 
 // Firestore batches hold at most 500 writes.
@@ -728,9 +52,12 @@ function enterList(){
   loadWeddings();
 }
 
+let categoryFilter = "all";
+const eventCategory = cfg => cfg.category || "wedding";
+
 async function loadWeddings(){
   const status = $("weddingsStatus");
-  status.textContent = "Loading weddings…";
+  status.textContent = "Loading events…";
   show("weddingsStatus");
   try {
     const [list, settingsSnap] = await Promise.all([
@@ -747,8 +74,24 @@ async function loadWeddings(){
   } catch(e){
     status.textContent = e.code === "permission-denied"
       ? "Permission denied — check the admin UID in firestore.rules and deploy the rules."
-      : "Couldn't load weddings: " + e.message;
+      : "Couldn't load events: " + e.message;
     return;
+  }
+  // Categories and templates only add labels here, so the list still works if they fail
+  // (e.g. before the new rules are deployed).
+  try {
+    [categories, templates] = await Promise.all([loadCategories(), loadTemplates()]);
+  } catch(e){
+    console.warn("categories/templates unavailable", e);
+    toast("Couldn't load templates — deploy the latest firestore.rules (see SETUP.md).");
+  }
+  try {
+    pins = await loadPins();
+    pinsReady = true;
+  } catch(e){
+    console.warn("editor PINs unavailable", e);
+    pinsReady = false;
+    toast("Couldn't load editor PINs — deploy the latest firestore.rules (see SETUP.md).");
   }
 
   if(legacyConfig && $("importForm").hidden){
@@ -759,16 +102,38 @@ async function loadWeddings(){
   renderWeddings();
 }
 
+function renderCategoryFilter(){
+  const counts = {};
+  weddings.forEach(w => { const c = eventCategory(w.cfg); counts[c] = (counts[c] || 0) + 1; });
+  const used = Object.keys(counts);
+  // Only worth showing once there's more than one kind of event.
+  if(used.length < 2){ categoryFilter = "all"; return $("categoryFilter").replaceChildren(); }
+  if(categoryFilter !== "all" && !counts[categoryFilter]) categoryFilter = "all";
+  const chip = (id, label, n) => {
+    const b = el("button", "chip", label);
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(categoryFilter === id));
+    b.append(el("span", "n", String(n)));
+    b.addEventListener("click", () => { categoryFilter = id; renderWeddings(); });
+    return b;
+  };
+  $("categoryFilter").replaceChildren(chip("all", "All", weddings.length),
+    ...used.sort((a, b) => categoryName(categories, a).localeCompare(categoryName(categories, b)))
+      .map(id => chip(id, categoryName(categories, id), counts[id])));
+}
+
 function renderWeddings(){
-  // Upcoming weddings first (soonest at the top), then past ones (most recent first).
-  // A wedding counts as upcoming until a day after its Muhurtham.
+  renderCategoryFilter();
+  // Upcoming events first (soonest at the top), then past ones (most recent first).
+  // An event counts as upcoming until a day after its main date.
   const cutoff = Date.now() - 86_400_000;
   const time = w => weddingTime(w.cfg) ?? Infinity;
-  const upcoming = weddings.filter(w => time(w) >= cutoff).sort((a, b) => time(a) - time(b));
-  const past = weddings.filter(w => time(w) < cutoff).sort((a, b) => time(b) - time(a));
+  const shown = weddings.filter(w => categoryFilter === "all" || eventCategory(w.cfg) === categoryFilter);
+  const upcoming = shown.filter(w => time(w) >= cutoff).sort((a, b) => time(a) - time(b));
+  const past = shown.filter(w => time(w) < cutoff).sort((a, b) => time(b) - time(a));
 
   $("weddingsList").replaceChildren(...upcoming.map(w => weddingCard(w, false)), ...past.map(w => weddingCard(w, true)));
-  $("weddingsStatus").textContent = weddings.length ? "" : "No weddings yet. Click ＋ New wedding to create the first one.";
+  $("weddingsStatus").textContent = weddings.length ? "" : "No events yet. Click ＋ New event to create the first one.";
   show("weddingsStatus", !weddings.length);
 }
 
@@ -779,12 +144,14 @@ function weddingCard(w, isPast){
   const isMain = settings.defaultWedding === w.id;
   if(isMain) tags.append(el("span", "badge main", "Main link"));
   if(isPast) tags.append(el("span", "badge off", "Past"));
+  tags.append(el("span", "badge cat", categoryName(categories, eventCategory(w.cfg))));
   head.append(el("h3", "", coupleNames(w.cfg, w.id)), tags);
 
   const t = weddingTime(w.cfg);
   const when = el("p", "muted", t
     ? new Date(t).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kolkata" })
-    : "No Muhurtham date set");
+    : "No date set");
+  const design = el("p", "design", "Template: " + templateName(templates, w.cfg.templateId || ""));
 
   const link = el("a", "wedding-link", `${siteHost()}/${w.id}`);
   link.href = previewLink(w.id);
@@ -798,7 +165,9 @@ function weddingCard(w, isPast){
   if(!isMain) acts.append(actionBtn("Show at main link", "ghost", () => setMainWedding(w)));
   acts.append(actionBtn("Delete", "danger", () => deleteWedding(w)));
 
-  card.append(head, when, link, acts);
+  card.append(head, when, design, link);
+  if(pinsReady) card.append(accessPanel({ slug: w.id, name: coupleNames(w.cfg, w.id), pins }));
+  card.append(acts);
   return card;
 }
 
@@ -830,6 +199,7 @@ async function deleteWedding(w){
     const wishes = await fb.getDocs(fb.collection(ref(), "wishes"));
     refs.push(...wishes.docs.map(d => d.ref));
     await inBatches(refs, (batch, r) => batch.delete(r));
+    if(pinsReady) await revokePin(w.id);   // the editor's access goes with the event
     await fb.deleteDoc(ref());   // last, so a failed delete can simply be retried
     if(settings.defaultWedding === w.id) await fb.setDoc(settingsDoc(), { defaultWedding: "" }, { merge: true });
     toast(`Deleted ${name}.`);
@@ -840,19 +210,43 @@ async function deleteWedding(w){
   loadWeddings();
 }
 
-/* ------------------------------ new wedding ------------------------------ */
+/* ------------------------------ new event ------------------------------ */
 let slugEdited = false;
+let newTemplate = "";
+const newCategory = () => $("newCategory").value || "wedding";
 const suggestSlug = () => {
-  if(!slugEdited) $("newSlug").value = slugify(`${$("newGroom").value}-${$("newBride").value}`);
+  const cat = newCategory();
+  if(!slugEdited) $("newSlug").value = slugify([$("newGroom").value, $("newBride").value, cat === "wedding" ? "" : cat].join("-"));
 };
 $("newGroom").addEventListener("input", suggestSlug);
 $("newBride").addEventListener("input", suggestSlug);
 $("newSlug").addEventListener("input", () => { slugEdited = true; });
 
+// Name labels and template choices follow the category.
+function refreshNewForm(){
+  const cat = newCategory(), wedding = cat === "wedding";
+  $("newGroomLabel").textContent = wedding ? "Groom's name" : "Name";
+  $("newBrideLabel").textContent = wedding ? "Bride's name" : "Second name (optional)";
+  $("newBride").required = wedding;
+  const list = templatesIn(templates, cat);
+  if(!list.some(t => t.id === newTemplate)) newTemplate = list[0]?.id ?? "";
+  $("newTemplatePicker").replaceChildren(templatePicker({
+    templates, category: cat, selected: newTemplate, name: "newTemplate", onChange: id => { newTemplate = id; }
+  }));
+  $("createWeddingBtn").disabled = !list.length;
+  suggestSlug();
+}
+$("newCategory").addEventListener("change", refreshNewForm);
+
 $("newWeddingBtn").addEventListener("click", () => {
   $("newWeddingForm").reset();
   $("newWeddingError").textContent = "";
   slugEdited = false;
+  const cats = categories.length ? categories : [{ id: "wedding", name: "Weddings" }];
+  $("newCategory").replaceChildren(...cats.map(c => Object.assign(el("option", "", c.name), { value: c.id })));
+  $("newCategory").value = categoryFilter !== "all" && cats.some(c => c.id === categoryFilter) ? categoryFilter : cats[0].id;
+  newTemplate = "";
+  refreshNewForm();
   show("newWeddingForm");
   $("newGroom").focus();
 });
@@ -861,20 +255,32 @@ $("cancelNewBtn").addEventListener("click", () => show("newWeddingForm", false))
 $("newWeddingForm").addEventListener("submit", async e => {
   e.preventDefault();
   const groom = $("newGroom").value.trim(), bride = $("newBride").value.trim();
+  const category = newCategory();
   const id = $("newSlug").value.trim().toLowerCase();
   const error = $("newWeddingError");
   error.textContent = "";
   if(!isValidSlug(id)){ error.textContent = SLUG_RULES; return; }
+  if(!templatesIn(templates, category).some(t => t.id === newTemplate)){
+    error.textContent = "Pick a template for this event (add one under Templates if the category has none).";
+    return;
+  }
 
   $("createWeddingBtn").disabled = true;
   try {
     const ref = fb.doc(fb.db, "weddings", id);
-    if((await fb.getDoc(ref)).exists()) throw new Error(`"${id}" is already used by another wedding. Pick a different link name.`);
-    // Start from the sample details so every section has something to edit.
-    const cfg = normalize(clone(DEFAULT_CONFIG));
+    if((await fb.getDoc(ref)).exists()) throw new Error(`"${id}" is already used by another event. Pick a different link name.`);
+    // Start from the category's sample details so every section has something to edit,
+    // with the sample's names (e.g. "Aarav turns 1!") swapped for the ones typed in.
+    const sample = sampleFor(category);
+    let text = JSON.stringify(sample);
+    [[tr(sample.groomName, "en"), groom], [tr(sample.brideName, "en"), bride]].forEach(([from, to]) => {
+      if(from && to) text = text.split(JSON.stringify(from).slice(1, -1)).join(JSON.stringify(to).slice(1, -1));
+    });
+    const cfg = normalize(JSON.parse(text));
     cfg.groomName = { en: groom, ta: "" };
     cfg.brideName = { en: bride, ta: "" };
-    cfg.hashtag = "#" + [groom, bride].map(n => n.replace(/[^\p{L}\p{N}]/gu, "")).join("Weds");
+    cfg.templateId = newTemplate;
+    cfg.hashtag = category === "wedding" ? "#" + [groom, bride].map(n => n.replace(/[^\p{L}\p{N}]/gu, "")).join("Weds") : "";
     await fb.setDoc(ref, { ...cfg, updatedAt: fb.serverTimestamp() });
     if(!settings.defaultWedding) await fb.setDoc(settingsDoc(), { defaultWedding: id }, { merge: true });
     location.href = `?w=${id}&new=1`;
@@ -980,8 +386,8 @@ $("loginForm").addEventListener("submit", async e => {
 });
 
 $("logoutBtn").addEventListener("click", async () => {
-  if(dirty && !confirm("You have unsaved changes. Log out anyway?")) return;
-  dirty = false;
+  if(hasUnsavedChanges() && !confirm("You have unsaved changes. Log out anyway?")) return;
+  discardChanges();
   await fb.signOut(fb.auth);
   location.reload();
 });
@@ -1005,46 +411,25 @@ async function enterApp(user){
     show("uidBanner");
   }
 
+  // admin?w=<event> edits an event, ?template=<id|new> edits a template,
+  // ?view=templates lists templates, and plain admin lists events.
+  const templateParam = params.get("template");
+  const onTemplates = !!templateParam || params.get("view") === "templates";
+  $(onTemplates ? "navTemplates" : "navEvents").classList.add("active");
   if(weddingId) enterEditor();
+  else if(templateParam) enterTemplateEditor(templateParam, params.get("category"));
+  else if(onTemplates) enterTemplates();
   else enterList();
 }
 
 async function enterEditor(){
-  let snap = null;
   try {
-    if(isValidSlug(weddingId)) snap = await fb.getDoc(wdoc());
+    await openEditor({ mod: fb, id: weddingId, backHref: location.pathname, firstRun: params.has("new") });
   } catch(e){
-    return backToList("Couldn't load this wedding: " + e.message);
+    return backToList(e.message);
   }
-  if(!snap?.exists()) return backToList(`There's no wedding with the link name "${weddingId}".`);
-
-  const data = snap.data();
-  delete data.updatedAt;
-  state = normalize(data);
-
-  show("editorView");
-  $("editorTitle").textContent = coupleNames(state, weddingId);
-  document.title = coupleNames(state, weddingId) + " · Wedding Admin";
-  $("backLink").href = location.pathname;
-  $("viewSiteLink").href = previewLink(weddingId);
-  if(params.has("new")){
-    show("firstRunBanner");
-    history.replaceState(null, "", "?w=" + weddingId); // don't show it again on reload
-  }
-
-  renderDetails();
-  renderHelp();
-  renderEvents();
-  renderCoords();
-  refreshPhoto("cover");
-  refreshPhoto("deity");
-  refreshMusic();
-  setDirty(false);
-  loadSavedImages();
-  watchWishes();
+  if(params.has("new")) history.replaceState(null, "", "?w=" + weddingId); // don't show the banner again on reload
 }
-
-$("copyLinkBtn").addEventListener("click", () => copyText(shareLink(weddingId)));
 
 function backToList(msg){
   history.replaceState(null, "", location.pathname);
@@ -1057,6 +442,8 @@ if(!isFirebaseConfigured){
 } else {
   import("./firebase.js").then(mod => {
     fb = mod;
+    useFirebase(mod);
+    useAccessFirebase(mod);
     fb.onAuthStateChanged(fb.auth, user => {
       if(user) enterApp(user);
       else { show("appView", false); show("loginView"); }

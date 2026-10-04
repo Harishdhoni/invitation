@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<!--
+  Template 01 — Temple Gold (wedding)
+  A template for the invitation site: js/invite.js fills in the event's names, dates, events, wishes and
+  coordinators through the hooks described in TEMPLATES.md (data-bind, <template> lists, data-i18n…).
+  Tamil temple tradition on an ivory page: a gold gopuram / thiruvachi arch frames the hero, kolam knots divide
+  the sections, arch-topped event cards, maroon temple-border bands, and carved temple doors that swing open.
+  Palette: maroon #5a0f1f / #7d1528 · antique gold #c9a227 / #f1dc9a · ivory #fbf6ea · ink #2a1414
+  Fonts:   Cinzel (names, headings) · Cormorant Garamond (body, italic) · Noto Serif Tamil (Tamil)
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#5a0f1f">
+<meta name="description" content="Together with our families, we invite you to celebrate with us.">
+<title>Temple Gold</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Noto+Serif+Tamil:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+(function () {
+  var d = document.documentElement, skip = /[?&]preview(=|&|$)/.test(location.search);
+  try { if (window.self !== window.top) skip = true; } catch (e) { skip = true; }
+  d.className += ' js ' + (skip ? 'no-intro' : 'intro-on');
+})();
+</script>
+<style>
+:root{
+  --maroon:#5a0f1f; --maroon-2:#7d1528; --maroon-deep:#3f0914;
+  --gold:#c9a227; --gold-lt:#f1dc9a; --gold-ink:#7a5c10;
+  --ivory:#fbf6ea; --ivory-2:#f5ecd6; --paper:#fffcf4; --ink:#2a1414;
+  --serif:'Cormorant Garamond', 'Noto Serif Tamil', Georgia, 'Times New Roman', serif;
+  --display:'Cinzel', 'Noto Serif Tamil', Georgia, serif;
+  --tamil:'Noto Serif Tamil', 'Latha', serif;
+  --temple:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='14' viewBox='0 0 30 14'%3E%3Cpath d='M0 13H30V14H0ZM5 14V11.5H7.5V9H10V6.5H12.5V3.5H14V1.5H16V3.5H17.5V6.5H20V9H22.5V11.5H25V14Z' fill='%235a0f1f'/%3E%3C/svg%3E");
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;background:var(--ivory);color:var(--ink);font-family:var(--serif);
+  font-size:clamp(1.14rem,1.06rem + .35vw,1.3rem);line-height:1.6;-webkit-font-smoothing:antialiased}
+html.intro-on,html.intro-on body{overflow:hidden}
+img,svg{max-width:100%}
+a{color:inherit}
+h1,h2,h3,p{margin:0}
+:focus-visible{outline:2px solid var(--maroon-2);outline-offset:3px}
+::selection{background:var(--gold-lt);color:var(--maroon)}
+[lang="ta"]{font-family:var(--tamil);letter-spacing:0;font-style:normal}
+/* wide tracking breaks Tamil letters apart: tighten the spaced-out labels when the page is in Tamil */
+html[lang="ta"] :is(.eyebrow,.hero-eyebrow,.plaque-eyebrow,.cd-label,.btn,.ec-date,.coord-who,.wish-name,.topbar button){letter-spacing:.02em}
+.verse span{display:block;text-wrap:balance}
+.verse br{display:none}
+.sprite{position:absolute;width:0;height:0;overflow:hidden}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+[hidden]{display:none!important}
+
+/* ---------- shared bits ---------- */
+.dots{background-image:radial-gradient(circle,rgba(201,162,39,.30) 1.25px,transparent 1.8px),radial-gradient(circle,rgba(201,162,39,.16) 1px,transparent 1.5px);
+  background-size:26px 26px,26px 26px;background-position:0 0,13px 13px}
+.section{position:relative;padding:clamp(72px,12vw,120px) 16px;text-align:center}
+.wrap{max-width:1040px;margin:0 auto}
+.eyebrow{font-family:var(--display);font-size:.74rem;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--gold-ink);margin-bottom:.7rem}
+.section-title{font-family:var(--display);font-weight:600;font-size:clamp(1.85rem,1.3rem + 2.6vw,2.9rem);line-height:1.15;color:var(--maroon);letter-spacing:.02em}
+.knot{display:block;width:150px;height:38px;margin:18px auto 0;color:var(--gold)}
+.section-sub{max-width:34em;margin:18px auto 0;font-style:italic;color:#5b3a2e;font-size:1.12em}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.6em;min-height:48px;padding:0 1.6em;border:0;border-radius:3px;
+  background:var(--maroon);color:var(--ivory);font-family:var(--display);font-size:.8rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;text-decoration:none;cursor:pointer;
+  box-shadow:inset 0 0 0 3px var(--maroon),inset 0 0 0 4px rgba(241,220,154,.65),0 10px 22px -12px rgba(63,9,20,.7);transition:background .25s,transform .25s}
+.btn:hover{background:var(--maroon-2);box-shadow:inset 0 0 0 3px var(--maroon-2),inset 0 0 0 4px rgba(241,220,154,.8),0 14px 26px -12px rgba(63,9,20,.7)}
+.btn:active{transform:translateY(1px)}
+.btn svg{width:16px;height:16px;fill:var(--gold-lt);flex:none}
+
+/* ---------- intro: carved temple doors ---------- */
+#curtain-overlay{display:none}
+html.intro-on #curtain-overlay{display:block;position:fixed;inset:0;z-index:100;overflow:hidden;
+  perspective:1100px;perspective-origin:50% 45%;transition:opacity .8s ease}
+.intro-glow{position:absolute;inset:0;opacity:0;transition:opacity 1.2s ease .25s;
+  background:radial-gradient(ellipse 70% 60% at 50% 46%,rgba(255,236,180,.98),rgba(250,214,130,.75) 38%,rgba(251,246,234,.0) 78%)}
+.door{position:absolute;top:0;bottom:0;width:50.1%;display:flex;flex-direction:column;gap:clamp(12px,2.2vh,22px);
+  padding:clamp(16px,3.4vw,34px) clamp(14px,3vw,30px);backface-visibility:hidden;will-change:transform;
+  transition:transform 1.9s cubic-bezier(.6,.02,.22,1) .12s;
+  background:
+    linear-gradient(90deg,rgba(0,0,0,.28),transparent 9%,transparent 91%,rgba(0,0,0,.34)),
+    repeating-linear-gradient(90deg,rgba(0,0,0,.08) 0 1px,transparent 1px 6px,rgba(255,214,190,.035) 6px 7px,transparent 7px 13px),
+    linear-gradient(180deg,#6b1527,#4b0b18 70%,#3d0813)}
+.door-l{left:0;transform-origin:0 50%;border-right:2px solid #2b050c}
+.door-r{right:0;transform-origin:100% 50%;border-left:2px solid #2b050c}
+.door-l::after,.door-r::before{content:"";position:absolute;top:0;bottom:0;width:7px;background:linear-gradient(90deg,#8a6a14,#f1dc9a 45%,#a8841f)}
+.door-l::after{right:0}.door-r::before{left:0}
+.panel{position:relative;border-radius:2px;background-color:#4c0c19;
+  box-shadow:inset 0 4px 10px rgba(0,0,0,.5),inset 0 -1px 0 rgba(255,255,255,.06),0 0 0 1px rgba(201,162,39,.7),0 0 0 6px #5c1121,0 0 0 7px rgba(201,162,39,.4)}
+.panel.top{flex:0 0 24%}
+.panel.mid{flex:1}
+.panel.bot{flex:0 0 17%}
+.studs{background-image:
+    radial-gradient(circle at 12px 12px,rgba(255,250,225,.95) 0 1.1px,transparent 1.9px),
+    radial-gradient(circle at 14px 14px,#ecd07a 0 2.3px,#b8952c 3.6px,#6a4c0d 5px,rgba(0,0,0,.45) 5.6px,transparent 6.8px);
+  background-size:28px 28px;background-repeat:space;background-origin:content-box;padding:5px}
+.panel.top svg{position:absolute;top:14%;height:72%;width:56%;color:rgba(201,162,39,.75)}
+.door-l .panel.top svg{left:6%}.door-r .panel.top svg{right:6%}
+.ring{position:absolute;top:44%;width:clamp(44px,9vw,74px);height:auto;z-index:2;filter:drop-shadow(0 6px 6px rgba(0,0,0,.5))}
+.door-l .ring{right:clamp(14px,3vw,34px)}
+.door-r .ring{left:clamp(14px,3vw,34px)}
+.ring .swing{transform-box:fill-box;transform-origin:50% 0;animation:swing 4.5s ease-in-out infinite}
+.door-r .ring .swing{animation-delay:-2s}
+@keyframes swing{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+#curtain-overlay.opening .door-l{transform:rotateY(96deg)}
+#curtain-overlay.opening .door-r{transform:rotateY(-96deg)}
+#curtain-overlay.opening .intro-glow{opacity:1}
+#curtain-overlay.opening .intro-content{opacity:0;transform:scale(.97)}
+#curtain-overlay.fade{opacity:0}
+.intro-content{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+  padding:max(6vh,26px) 16px max(7vh,36px);text-align:center;transition:opacity .45s ease,transform .45s ease}
+.plaque{position:relative;width:min(100%,460px);padding:20px 18px 18px;border-radius:4px;color:var(--maroon-deep);
+  background:linear-gradient(180deg,#f8e9b4,#e3c66e 46%,#c9a53e);
+  box-shadow:0 18px 38px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,248,220,.75),inset 0 0 0 5px rgba(201,162,39,.0),inset 0 0 0 6px rgba(106,76,13,.55)}
+.plaque::before,.plaque::after{content:"";position:absolute;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#fff6d0,#b8952c 60%,#5e430c)}
+.plaque::before{left:9px}.plaque::after{right:9px}
+.plaque-eyebrow{font-family:var(--display);font-size:.68rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:#5e430c}
+.plaque-names{font-family:var(--display);font-weight:700;font-size:clamp(1.55rem,7vw,2.3rem);line-height:1.1;margin-top:6px;letter-spacing:.03em}
+.plaque-names .hero-amp{font-family:var(--serif);font-style:italic;font-weight:500;font-size:.8em;color:#6a3a14}
+.plaque .knot{width:120px;height:30px;margin:8px auto 6px;color:#6a4c0d}
+.plaque-verse{font-size:clamp(.86rem,3.5vw,1.02rem);line-height:1.85;font-weight:500}
+.intro-cta{display:flex;flex-direction:column;align-items:center;gap:14px}
+.intro-btn{position:relative;min-height:54px;padding:0 30px;border:0;border-radius:999px;cursor:pointer;
+  font-family:var(--display);font-size:.86rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--maroon-deep);
+  background:linear-gradient(180deg,#fbeec0,#e2c25e 50%,#b8922f);
+  box-shadow:0 12px 28px rgba(0,0,0,.55),inset 0 0 0 1px rgba(255,250,225,.8),inset 0 -3px 0 rgba(94,67,12,.35)}
+.intro-btn::after{content:"";position:absolute;inset:-7px;border-radius:inherit;border:1px solid rgba(241,220,154,.7);animation:halo 2.4s ease-out infinite}
+@keyframes halo{0%{transform:scale(.94);opacity:.9}100%{transform:scale(1.18);opacity:0}}
+.intro-btn:focus-visible{outline:2px solid #fff4cf;outline-offset:6px}
+.intro-date{padding:7px 16px;border-radius:999px;background:rgba(43,5,12,.82);box-shadow:0 0 0 1px rgba(201,162,39,.45);
+  font-family:var(--display);font-size:.7rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-lt)}
+@media (max-width:599px){.panel.top{display:none}}
+
+/* ---------- hero ---------- */
+#hero{position:relative;min-height:100vh;min-height:100svh;display:flex;align-items:center;justify-content:center;
+  padding:clamp(20px,4.5vh,44px) 16px clamp(30px,5vh,52px);overflow:hidden;
+  background:radial-gradient(ellipse 58% 46% at 50% 40%,rgba(255,244,214,.95),rgba(251,246,234,0) 72%),var(--ivory)}
+#hero.dots{background-image:radial-gradient(ellipse 58% 46% at 50% 40%,rgba(255,246,222,.97),rgba(251,246,234,0) 72%),
+  radial-gradient(circle,rgba(201,162,39,.30) 1.25px,transparent 1.8px),radial-gradient(circle,rgba(201,162,39,.16) 1px,transparent 1.5px);
+  background-size:auto,26px 26px,26px 26px;background-position:0 0,0 0,13px 13px}
+.hero-arch{position:relative;width:min(100%,620px)}
+.arch-crown,.arch-base{display:block;width:100%;height:auto;overflow:visible}
+.arch-body{position:relative;display:flow-root;container-type:inline-size}
+.arch-body::before,.arch-body::after{content:"";position:absolute;top:0;bottom:0;width:3%;margin-left:-.75px;
+  border-left:1.5px solid var(--gold);border-right:1.5px solid var(--gold);
+  background:radial-gradient(circle,var(--gold) 1.1px,transparent 1.6px) center top/100% 9px repeat-y;background-size:100% max(7px,1.8cqw)}
+.arch-body::before{left:5.5%}
+.arch-body::after{right:5.5%;margin:0 -.75px 0 0}
+.arch-inner{position:relative;margin-top:-37.5%;padding:0 10.5% clamp(14px,3vw,24px);text-align:center}
+.hero-lamp{display:block;width:clamp(50px,12vw,60px);height:auto;aspect-ratio:80/150;margin:0 auto 2px}
+.hero-eyebrow{font-family:var(--display);font-size:clamp(.64rem,.58rem + .3vw,.78rem);font-weight:600;letter-spacing:.28em;text-transform:uppercase;color:var(--gold-ink);margin-top:8px}
+.couple-names{font-family:var(--display);font-weight:600;color:var(--maroon);font-size:clamp(2.5rem,1.3rem + 6vw,3.7rem);
+  line-height:1.02;letter-spacing:.03em;margin:10px 0 0;overflow-wrap:anywhere;hyphens:auto}
+.hero-names .name-part{display:block}
+.hero-names .hero-amp{display:block;font-family:var(--serif);font-style:italic;font-weight:500;color:var(--gold-ink);font-size:.56em;line-height:1.1;margin:.02em 0 .04em;letter-spacing:0}
+.hero-knot{width:130px;height:32px;margin-top:10px}
+#heroTagline{max-width:27em;margin:8px auto 0;font-style:italic;color:#4a2a22;font-size:clamp(1.06rem,1rem + .3vw,1.22rem);line-height:1.55;text-wrap:balance}
+#heroDatePill{display:inline-flex;align-items:center;justify-content:center;gap:.7em;margin-top:18px;padding:.66em 1.3em;border:1px solid var(--gold);border-radius:999px;
+  background:var(--paper);color:var(--maroon);font-family:var(--display);font-size:clamp(.66rem,.42rem + 1.05vw,.86rem);font-weight:600;letter-spacing:.1em;line-height:1.35;text-wrap:balance;
+  box-shadow:0 0 0 4px var(--ivory),0 0 0 5px rgba(201,162,39,.45)}
+#heroDatePill::before,#heroDatePill::after{content:"";width:5px;height:5px;background:var(--gold);transform:rotate(45deg);flex:none}
+.hero-verse{margin-top:18px;color:var(--maroon-2);font-size:clamp(.88rem,.84rem + .25vw,1rem);line-height:1.85}
+@media (max-width:480px){
+  #hero{padding-left:8px;padding-right:8px}
+  #heroDatePill::before,#heroDatePill::after{display:none}
+}
+.side-lamp{display:none}
+.lamp-flame{transform-box:fill-box;transform-origin:50% 100%;animation:flicker 1.6s ease-in-out infinite}
+.lamp-flame:nth-of-type(2){animation-duration:1.9s;animation-delay:-.4s}
+.lamp-flame:nth-of-type(3){animation-duration:1.4s;animation-delay:-.9s}
+.lamp-flame:nth-of-type(4){animation-duration:2.1s;animation-delay:-1.2s}
+@keyframes flicker{0%,100%{transform:scale(1,1)}30%{transform:scale(.92,1.08)}60%{transform:scale(1.05,.94)}80%{transform:scale(.97,1.04)}}
+@media (min-width:1000px){
+  .side-lamp{display:block;position:absolute;bottom:22px;width:110px;height:auto;aspect-ratio:80/150}
+  .side-lamp.l{left:-180px}.side-lamp.r{right:-180px}
+}
+
+/* ---------- couple photo ---------- */
+#coupleCover{padding:clamp(56px,10vw,96px) 16px;text-align:center}
+.cover-frame{position:relative;width:min(100%,430px);margin:0 auto;padding:12px;border-radius:999px 999px 10px 10px;background:var(--maroon);
+  box-shadow:0 0 0 1px var(--gold),0 0 0 7px var(--ivory),0 0 0 8px rgba(201,162,39,.6),0 30px 60px -28px rgba(63,9,20,.55)}
+.cover-frame::before{content:"";position:absolute;inset:5px;border-radius:999px 999px 7px 7px;border:1px solid rgba(241,220,154,.6);pointer-events:none}
+#coverImg{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;border-radius:999px 999px 4px 4px;background:var(--maroon-deep)}
+.cover-caption{margin-top:28px;font-family:var(--display);font-size:.76rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold-ink)}
+/* monogram drawn over the placeholder photo; hidden once a real photo is uploaded */
+.cover-frame{container-type:inline-size}
+.cover-mono{position:absolute;inset:12px;display:flex;align-items:center;justify-content:center;padding-top:5%;pointer-events:none;
+  font-family:Georgia,'Noto Serif Tamil',serif;font-size:10.75cqw;letter-spacing:.05em;color:#f1dc9a;white-space:pre}
+.cover-mono:has([data-bind="initial2"][style*="none"]) .sep{display:none}
+.cover-frame.has-photo .cover-mono{display:none}
+
+/* ---------- events ---------- */
+.events-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(40px,6vw,44px);max-width:880px;margin:clamp(48px,8vw,64px) auto 0}
+@media (min-width:720px){.events-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.event-card{position:relative;background:var(--paper);border:1px solid var(--gold);
+  border-radius:50% 50% 10px 10px / 128px 128px 10px 10px;padding:58px clamp(22px,5vw,34px) 34px;
+  box-shadow:0 26px 50px -30px rgba(63,9,20,.45)}
+.event-card::before{content:"";position:absolute;inset:7px;border:1px solid rgba(201,162,39,.55);pointer-events:none;
+  border-radius:50% 50% 6px 6px / 121px 121px 6px 6px}
+.ec-finial{position:absolute;top:-17px;left:50%;width:22px;height:30px;margin-left:-11px}
+.ec-icon{width:66px;height:66px;margin:0 auto 14px;color:var(--gold-ink)}
+.ec-icon svg{width:100%;height:100%}
+.ec-icon .ic-b,.event-card:nth-of-type(even) .ec-icon .ic-a{display:none}
+.event-card:nth-of-type(even) .ec-icon .ic-b{display:block}
+.ec-name{font-family:var(--display);font-weight:600;font-size:clamp(1.35rem,1.2rem + .8vw,1.7rem);color:var(--maroon);letter-spacing:.04em;line-height:1.2}
+.ec-date{margin-top:10px;font-family:var(--display);font-size:.84rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-ink)}
+.ec-time{font-style:italic;color:#4a2a22;font-size:1.08em}
+.ec-rule{width:64px;height:9px;margin:16px auto;background:radial-gradient(circle,var(--gold) 2px,transparent 2.6px) center/9px 9px repeat-x;opacity:.9}
+.ec-venue{font-family:var(--display);font-size:1rem;font-weight:600;letter-spacing:.06em;color:var(--ink)}
+.ec-addr{color:#4a2a22}
+.ec-desc{margin:14px auto 22px;max-width:22em;font-style:italic;color:#5b3a2e}
+
+/* ---------- countdown band ---------- */
+.band{position:relative;color:var(--ivory);
+  background:
+    linear-gradient(rgba(201,162,39,.85),rgba(201,162,39,.85)) left 0 top 12px/100% 1px no-repeat,
+    radial-gradient(circle,rgba(201,162,39,.9) 1.1px,transparent 1.6px) left 0 top 15px/12px 7px repeat-x,
+    linear-gradient(rgba(201,162,39,.85),rgba(201,162,39,.85)) left 0 bottom 12px/100% 1px no-repeat,
+    radial-gradient(circle,rgba(201,162,39,.9) 1.1px,transparent 1.6px) left 0 bottom 15px/12px 7px repeat-x,
+    radial-gradient(circle,rgba(241,220,154,.10) 1.2px,transparent 1.8px) 0 0/26px 26px,
+    radial-gradient(ellipse at 50% 0%,#7d1528,rgba(125,21,40,0) 70%),
+    linear-gradient(180deg,#5a0f1f,#4a0b19)}
+.band::before,.band::after{content:"";position:absolute;left:0;right:0;height:14px;background:var(--temple) center bottom/30px 14px repeat-x}
+.band::before{top:-13px}
+.band::after{bottom:-13px;transform:scaleY(-1)}
+.band .eyebrow{color:var(--gold-lt)}
+.band .section-title{color:#fff6dc}
+.band .knot{color:var(--gold)}
+.cd-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(8px,2.4vw,24px);max-width:660px;margin:clamp(36px,6vw,52px) auto 0}
+.cd-box{position:relative;padding:clamp(22px,5vw,38px) 4px clamp(12px,2.6vw,18px);border:1px solid rgba(241,220,154,.6);border-radius:999px 999px 6px 6px;
+  background:linear-gradient(180deg,rgba(0,0,0,.18),rgba(0,0,0,.05))}
+.cd-box::before{content:"";position:absolute;inset:4px;border:1px solid rgba(241,220,154,.22);border-radius:999px 999px 3px 3px}
+.cd-num{font-family:var(--display);font-weight:600;font-size:clamp(1.6rem,1rem + 4vw,3.1rem);line-height:1;color:var(--gold-lt);font-variant-numeric:tabular-nums}
+.cd-label{margin-top:10px;font-family:var(--display);font-size:clamp(.56rem,.5rem + .3vw,.74rem);font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#f3e6c4}
+.cd-note{margin-top:30px;font-style:italic;color:#f3e6c4}
+
+/* ---------- wishes ---------- */
+.wish-form{max-width:580px;margin:clamp(36px,6vw,48px) auto 0;padding:clamp(24px,5vw,38px);text-align:left;background:var(--paper);
+  border:1px solid rgba(201,162,39,.7);box-shadow:0 0 0 6px var(--paper),0 0 0 7px rgba(201,162,39,.35),0 26px 50px -34px rgba(63,9,20,.5)}
+.field{display:block;margin-bottom:20px}
+.field span{display:block;font-family:var(--display);font-size:.7rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-ink);margin-bottom:4px}
+.field input,.field textarea{width:100%;border:0;border-bottom:1px solid #b99a4c;background:transparent;padding:10px 2px;color:var(--ink);
+  font-family:var(--serif);font-size:1.15rem;line-height:1.45;border-radius:0;transition:border-color .2s}
+.field textarea{min-height:110px;resize:vertical}
+.field input::placeholder,.field textarea::placeholder{color:#8a7466;font-style:italic}
+.field input:focus,.field textarea:focus{outline:none;border-bottom-color:var(--maroon)}
+.field input:focus-visible,.field textarea:focus-visible{outline:2px solid var(--maroon-2);outline-offset:4px}
+.wish-form .btn{width:100%;margin-top:6px}
+.wishes-wall{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;max-width:1040px;margin:clamp(40px,7vw,56px) auto 0}
+@media (min-width:760px){.wishes-wall{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.wish-card{position:relative;padding:34px 24px 24px;text-align:left;background:var(--paper);border:1px solid rgba(201,162,39,.5);border-top:0;
+  background-image:linear-gradient(var(--gold),var(--gold)),radial-gradient(circle,var(--gold) 1.2px,transparent 1.7px);
+  background-size:100% 2px,10px 6px;background-position:0 0,0 6px;background-repeat:no-repeat,repeat-x}
+.wish-card::before{content:"\201C";position:absolute;top:8px;right:18px;font-family:var(--serif);font-size:4.2rem;line-height:1;color:rgba(201,162,39,.55)}
+.wish-msg{font-style:italic;font-size:1.12em;color:var(--ink);overflow-wrap:anywhere}
+.wish-name{margin-top:14px;font-family:var(--display);font-size:.78rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--maroon-2);overflow-wrap:anywhere}
+.wish-name::before{content:"";display:inline-block;width:18px;height:1px;margin:0 10px 4px 0;background:var(--gold);vertical-align:middle}
+.wishes-empty{margin-top:clamp(32px,6vw,44px);font-style:italic;color:#5b3a2e;font-size:1.1em}
+.wishes-more{margin-top:34px;background:transparent;color:var(--maroon);
+  box-shadow:inset 0 0 0 1px var(--gold),inset 0 0 0 4px var(--ivory),inset 0 0 0 5px rgba(201,162,39,.5)}
+.wishes-more:hover{background:var(--paper);box-shadow:inset 0 0 0 1px var(--maroon-2),inset 0 0 0 4px var(--paper),inset 0 0 0 5px rgba(201,162,39,.7)}
+
+/* ---------- help & support ---------- */
+#stay{background:var(--ivory-2)}
+.stay-box{max-width:720px;margin:clamp(30px,5vw,40px) auto 0}
+#stayText{font-size:1.1em;color:#3b2420}
+.coord-label{margin-top:34px}
+#coordinators{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin-top:14px}
+@media (min-width:600px){#coordinators{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.coord{display:flex;align-items:center;gap:14px;padding:16px 18px;text-align:left;text-decoration:none;background:var(--paper);
+  border:1px solid rgba(201,162,39,.6);border-radius:4px;transition:border-color .2s,box-shadow .2s;min-height:72px}
+.coord:hover{border-color:var(--maroon-2);box-shadow:0 14px 30px -20px rgba(63,9,20,.5)}
+.coord-ic{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--maroon);box-shadow:0 0 0 3px var(--paper),0 0 0 4px var(--gold)}
+.coord-ic svg{width:19px;height:19px;fill:var(--gold-lt)}
+.coord-who{display:block;font-family:var(--display);font-size:.72rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-ink)}
+.coord-num{display:block;font-size:1.22rem;font-weight:600;color:var(--maroon);letter-spacing:.02em}
+
+/* ---------- footer ---------- */
+footer{position:relative;margin-top:14px;padding:72px 16px 56px;text-align:center}
+footer .knot{color:var(--gold);margin-top:0}
+.foot-lamp{display:block;width:44px;height:auto;aspect-ratio:80/150;margin:0 auto 14px}
+#footerHashtag{margin-top:14px;font-family:var(--display);font-weight:600;font-size:clamp(1.4rem,1rem + 2.4vw,2.2rem);letter-spacing:.06em;color:var(--gold-lt);overflow-wrap:anywhere}
+.thanks{max-width:26em;margin:10px auto 0;font-style:italic;color:#f3e6c4;font-size:1.12em}
+.foot-names{margin-top:26px;font-family:var(--display);font-size:.7rem;letter-spacing:.32em;text-transform:uppercase;color:rgba(241,220,154,.75)}
+
+/* ---------- toast ---------- */
+#toast{position:fixed;left:50%;bottom:22px;z-index:90;max-width:calc(100% - 32px);padding:13px 22px;border-radius:999px;
+  background:var(--maroon);color:var(--ivory);border:1px solid var(--gold);font-size:1.02rem;text-align:center;
+  box-shadow:0 18px 40px -16px rgba(0,0,0,.6);transform:translate(-50%,160%);opacity:0;transition:transform .45s cubic-bezier(.2,.8,.2,1),opacity .3s}
+#toast.show{transform:translate(-50%,0);opacity:1}
+
+/* ---------- language / share bar + music (under the intro doors) ---------- */
+.topbar{position:fixed;top:10px;right:10px;z-index:80;display:flex;align-items:center;gap:2px;padding:3px;border-radius:999px;
+  background:rgba(63,9,20,.92);box-shadow:0 0 0 1px rgba(201,162,39,.75),0 10px 22px -12px rgba(0,0,0,.6)}
+.topbar button{min-height:30px;padding:0 10px;border:0;border-radius:999px;background:transparent;color:var(--gold-lt);cursor:pointer;
+  font-family:var(--display);font-size:.66rem;font-weight:600;letter-spacing:.1em;line-height:1;white-space:nowrap}
+.topbar .lang-btn.active{background:linear-gradient(180deg,#fbeec0,#e2c25e 55%,#c9a53e);color:var(--maroon-deep)}
+.topbar #shareBtn{margin-left:2px;padding-left:11px;border-left:1px solid rgba(201,162,39,.45);border-radius:0 999px 999px 0}
+.topbar button:hover{color:#fff6dc}
+.topbar .lang-btn.active:hover{color:var(--maroon-deep)}
+#musicToggle{position:fixed;right:14px;bottom:14px;z-index:80;width:46px;height:46px;padding:0;border:0;border-radius:50%;cursor:pointer;
+  font-size:20px;line-height:1;background:var(--maroon);color:var(--gold-lt);
+  box-shadow:0 0 0 2px var(--ivory),0 0 0 3px var(--gold),0 12px 24px -10px rgba(0,0,0,.6)}
+#musicToggle.spinning{animation:spin 5s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- reveal ---------- */
+html.js .reveal{opacity:0;transform:translateY(28px);transition:opacity .9s ease,transform .9s cubic-bezier(.2,.7,.2,1)}
+html.js .reveal.in{opacity:1;transform:none}
+.events-grid .reveal:nth-of-type(2){transition-delay:.12s}
+.wishes-wall .reveal:nth-of-type(2){transition-delay:.1s}
+.wishes-wall .reveal:nth-of-type(3){transition-delay:.2s}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  html.js .reveal{opacity:1;transform:none}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ======= SVG sprite ======= -->
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="brass" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#6e4f0f"/><stop offset=".32" stop-color="#f1dc9a"/><stop offset=".55" stop-color="#d4b04a"/><stop offset="1" stop-color="#6b4c0d"/>
+    </linearGradient>
+    <radialGradient id="flameG" cx=".5" cy=".72" r=".62">
+      <stop offset="0" stop-color="#fffbe8"/><stop offset=".42" stop-color="#ffd45c"/><stop offset="1" stop-color="#ec7a1e"/>
+    </radialGradient>
+    <radialGradient id="glowG">
+      <stop offset="0" stop-color="#ffd27a" stop-opacity=".55"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <symbol id="flame" viewBox="-5 -15 10 15"><path d="M0 0C-4.2-2.6-4.4-7.4 0-14.6C4.4-7.4 4.2-2.6 0 0Z" fill="url(#flameG)"/><path d="M0-1.2C-1.6-2.6-1.7-5 0-8C1.7-5 1.6-2.6 0-1.2Z" fill="#fffdf2"/></symbol>
+  <symbol id="lamp" viewBox="0 0 80 150">
+    <circle cx="40" cy="44" r="38" fill="url(#glowG)"/>
+    <g stroke="#5e430c" stroke-width=".6" fill="url(#brass)">
+      <path d="M40 3C44.5 9 45.5 14 40 20C34.5 14 35.5 9 40 3Z"/>
+      <ellipse cx="40" cy="21.5" rx="4.5" ry="1.8"/>
+      <path d="M38.4 23H41.6L42 47H38Z"/>
+      <ellipse cx="40" cy="33" rx="3.6" ry="2.2"/>
+      <path d="M6 45.5C9 43.8 12 44 15 45.2C24 48.6 56 48.6 65 45.2C68 44 71 43.8 74 45.5C69 58 56 62.5 40 62.5C24 62.5 11 58 6 45.5Z"/>
+      <path d="M35.5 62.5H44.5L43.2 69H36.8Z"/>
+      <ellipse cx="40" cy="72" rx="7.5" ry="3.8"/>
+      <path d="M37.2 75.5H42.8L43.8 100H36.2Z"/>
+      <ellipse cx="40" cy="102.5" rx="9.5" ry="4.2"/>
+      <path d="M34.5 106H45.5V110H34.5Z"/>
+      <path d="M40 110C33 110.5 30.5 118 25 123.5C21 127.4 15 129.6 10 131.5H70C65 129.6 59 127.4 55 123.5C49.5 118 47 110.5 40 110Z"/>
+      <path d="M6.5 131.5H73.5Q76 131.5 76 134V137Q76 139.5 73.5 139.5H6.5Q4 139.5 4 137V134Q4 131.5 6.5 131.5Z"/>
+    </g>
+    <g fill="none" stroke="#fff3c4" stroke-width=".8" opacity=".75">
+      <path d="M13 48.5C24 53 56 53 67 48.5"/><path d="M28 125C33 121 47 121 52 125"/><path d="M40 114V122M33.5 116.5L36.5 123M46.5 116.5L43.5 123"/>
+    </g>
+    <use class="lamp-flame" href="#flame" x="5" y="30" width="10" height="15"/>
+    <use class="lamp-flame" href="#flame" x="65" y="30" width="10" height="15"/>
+    <use class="lamp-flame" href="#flame" x="21" y="35" width="10" height="15"/>
+    <use class="lamp-flame" href="#flame" x="49" y="35" width="10" height="15"/>
+  </symbol>
+  <symbol id="knot" viewBox="0 0 160 40">
+    <g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 20H55M105 20H152"/>
+      <path d="M97.0 20.0L96.9 20.9L96.5 21.7L96.0 22.5L95.2 23.2L94.2 23.8L93.1 24.3L91.8 24.5L90.4 24.6L88.9 24.5L87.4 24.3L85.8 23.8L84.3 23.1L82.7 22.2L81.3 21.2L80.0 20.0L78.8 18.7L77.8 17.3L76.9 15.8L76.2 14.2L75.8 12.6L75.5 11.1L75.4 9.6L75.5 8.2L75.8 6.9L76.2 5.8L76.8 4.8L77.5 4.0L78.3 3.5L79.1 3.1L80.0 3.0L80.9 3.1L81.7 3.5L82.5 4.0L83.2 4.8L83.8 5.8L84.3 6.9L84.5 8.2L84.6 9.6L84.5 11.1L84.3 12.6L83.8 14.2L83.1 15.7L82.2 17.3L81.2 18.7L80.0 20.0L78.7 21.2L77.3 22.2L75.8 23.1L74.2 23.8L72.6 24.3L71.1 24.5L69.6 24.6L68.2 24.5L66.9 24.3L65.8 23.8L64.8 23.2L64.0 22.5L63.5 21.7L63.1 20.9L63.0 20.0L63.1 19.1L63.5 18.3L64.0 17.5L64.8 16.8L65.8 16.2L66.9 15.7L68.2 15.5L69.6 15.4L71.1 15.5L72.6 15.8L74.2 16.2L75.8 16.9L77.3 17.8L78.7 18.8L80.0 20.0L81.2 21.3L82.2 22.7L83.1 24.2L83.8 25.8L84.3 27.4L84.5 28.9L84.6 30.4L84.5 31.8L84.3 33.1L83.8 34.2L83.2 35.2L82.5 36.0L81.7 36.5L80.9 36.9L80.0 37.0L79.1 36.9L78.3 36.5L77.5 36.0L76.8 35.2L76.2 34.2L75.8 33.1L75.5 31.8L75.4 30.4L75.5 28.9L75.8 27.4L76.2 25.8L76.9 24.3L77.8 22.7L78.8 21.3L80.0 20.0L81.3 18.8L82.7 17.8L84.3 16.9L85.8 16.2L87.4 15.8L88.9 15.5L90.4 15.4L91.8 15.5L93.1 15.8L94.2 16.2L95.2 16.8L96.0 17.5L96.5 18.3L96.9 19.1L97.0 20.0Z"/>
+    </g>
+    <g fill="currentColor">
+      <circle cx="71.5" cy="11.5" r="1.7"/><circle cx="88.5" cy="11.5" r="1.7"/><circle cx="88.5" cy="28.5" r="1.7"/><circle cx="71.5" cy="28.5" r="1.7"/>
+      <circle cx="57.5" cy="20" r="1.5"/><circle cx="102.5" cy="20" r="1.5"/>
+      <path d="M2 20L6 16L10 20L6 24Z M150 20L154 16L158 20L154 24Z"/>
+      <circle cx="31" cy="20" r="1.4"/><circle cx="129" cy="20" r="1.4"/>
+    </g>
+  </symbol>
+  <symbol id="ic-garland" viewBox="0 0 64 64">
+    <g fill="none" stroke-linecap="round">
+      <path d="M13 7C11 30 20 46 32 46C44 46 53 30 51 7" stroke="currentColor" stroke-width="6.4" stroke-dasharray="0 6.6"/>
+      <path d="M13 7C11 30 20 46 32 46C44 46 53 30 51 7" stroke="#fffcf4" stroke-width="2.2" stroke-dasharray="0 6.6"/>
+      <path d="M32 50V60M29 51L27 60M35 51L37 60" stroke="currentColor" stroke-width="1.4"/>
+    </g>
+    <circle cx="32" cy="49" r="4.6" fill="#7d1528"/><circle cx="32" cy="49" r="1.7" fill="#f1dc9a"/>
+    <path d="M9 6H17M47 6H55" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ic-kalasam" viewBox="0 0 64 64">
+    <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M31 28C24 26.5 15 22.5 9.5 15.5C18 15.8 26 20.5 31 28Z" fill="#f1dc9a"/>
+      <path d="M33 28C40 26.5 49 22.5 54.5 15.5C46 15.8 38 20.5 33 28Z" fill="#f1dc9a"/>
+      <path d="M30.5 26.5C25.5 21 22 14 22 6.5C28 11 31 18.5 30.5 26.5Z" fill="#f1dc9a"/>
+      <path d="M33.5 26.5C38.5 21 42 14 42 6.5C36 11 33 18.5 33.5 26.5Z" fill="#f1dc9a"/>
+      <ellipse cx="32" cy="18.5" rx="6.6" ry="8" fill="#fffcf4"/>
+      <path d="M32 10.5C31 8 32.5 5.5 34.5 4.5"/>
+      <path d="M22.5 28H41.5"/>
+      <path d="M25 28C26.5 30 26.5 32 25 34H39C37.5 32 37.5 30 39 28"/>
+      <path d="M25 34C16 37 13 44 15.5 50.5C18.5 57.5 25 60 32 60C39 60 45.5 57.5 48.5 50.5C51 44 48 37 39 34Z" fill="#fffcf4"/>
+      <path d="M15.6 44.5H48.4"/>
+    </g>
+    <g fill="#7d1528"><circle cx="21" cy="49.5" r="1.6"/><circle cx="27" cy="50.5" r="1.6"/><circle cx="32" cy="50.8" r="1.6"/><circle cx="37" cy="50.5" r="1.6"/><circle cx="43" cy="49.5" r="1.6"/></g>
+    <path d="M28.5 39.5L32 36.5L35.5 39.5L32 42.5Z" fill="#7d1528"/>
+  </symbol>
+  <symbol id="finial" viewBox="0 0 22 30">
+    <path d="M11 1C14 6 15 10 11 14C7 10 8 6 11 1Z" fill="#c9a227"/>
+    <path d="M4 18C4 14 18 14 18 18C18 22 15 24 11 24C7 24 4 22 4 18Z" fill="#fbf6ea" stroke="#c9a227" stroke-width="1.2"/>
+    <path d="M2 28H20M5 24.5H17" stroke="#c9a227" stroke-width="1.2" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ic-phone" viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></symbol>
+  <symbol id="ic-pin" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.6A2.6 2.6 0 1 1 12 6.4a2.6 2.6 0 0 1 0 5.2z"/></symbol>
+  <symbol id="ring" viewBox="0 0 60 104">
+    <g stroke="#5e430c" stroke-width=".7">
+      <g fill="url(#brass)">
+        <path d="M30 3l4 7 8-2-2 8 7 4-7 4 2 8-8-2-4 7-4-7-8 2 2-8-7-4 7-4-2-8 8 2z"/>
+      </g>
+      <circle cx="30" cy="20" r="7.5" fill="#d9b85a"/>
+      <circle cx="30" cy="20" r="3.4" fill="#f6e6ad"/>
+      <g class="swing">
+        <path d="M27 33h6v8h-6z" fill="url(#brass)"/>
+        <circle cx="30" cy="68" r="25" fill="none" stroke="url(#brass)" stroke-width="7"/>
+        <circle cx="30" cy="68" r="28.5" fill="none" stroke="#5e430c" stroke-width=".7"/>
+        <circle cx="30" cy="68" r="21.5" fill="none" stroke="#5e430c" stroke-width=".7"/>
+        <circle cx="30" cy="43" r="4.2" fill="url(#brass)"/>
+      </g>
+    </g>
+  </symbol>
+</svg>
+
+<!-- ======= INTRO: carved temple doors ======= -->
+<div id="curtain-overlay" data-hide-after="2600">
+  <div class="intro-glow" aria-hidden="true"></div>
+  <div class="door door-l" aria-hidden="true">
+    <div class="panel top"><svg viewBox="0 0 100 60" preserveAspectRatio="xMidYMid meet"><use href="#knot" x="0" y="10" width="100" height="40"/></svg></div>
+    <div class="panel mid studs"></div>
+    <div class="panel bot studs"></div>
+    <svg class="ring" viewBox="0 0 60 104"><use href="#ring"/></svg>
+  </div>
+  <div class="door door-r" aria-hidden="true">
+    <div class="panel top"><svg viewBox="0 0 100 60" preserveAspectRatio="xMidYMid meet"><use href="#knot" x="0" y="10" width="100" height="40"/></svg></div>
+    <div class="panel mid studs"></div>
+    <div class="panel bot studs"></div>
+    <svg class="ring" viewBox="0 0 60 104"><use href="#ring"/></svg>
+  </div>
+  <div class="intro-content">
+    <div class="plaque">
+      <p class="plaque-eyebrow">The wedding of</p>
+      <p class="plaque-names" data-bind="names"></p>
+      <svg class="knot" aria-hidden="true"><use href="#knot"/></svg>
+      <p class="plaque-verse verse" lang="ta" data-bind="verse"></p>
+    </div>
+    <div class="intro-cta">
+      <button type="button" class="intro-btn" id="openCurtainBtn">Open the Doors</button>
+      <p class="intro-date" data-bind="dateLine"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ======= language + share ======= -->
+<div class="topbar">
+  <button type="button" class="lang-btn" data-lang="en">EN</button><button type="button" class="lang-btn" data-lang="ta" lang="ta">தமிழ்</button><button type="button" id="shareBtn" data-i18n="shareBtn">Copy link</button>
+</div>
+
+<!-- ======= HERO ======= -->
+<header id="hero" class="dots">
+  <div class="hero-arch">
+    <svg class="arch-crown" viewBox="0 0 400 230" aria-hidden="true" focusable="false">
+      <g fill="#c9a227">
+        <path id="flamesL" d="M20.8 163.2C15.2 163.9 12 158.6 9.1 153.7C13.9 156.4 16.8 152.8 22.1 154.5ZM24.4 146.6C20.5 146.2 19.4 141.9 18.3 138C21.1 140.7 23.7 138.7 26.9 140.7ZM30.9 133.5C25.6 131.5 25.2 125.3 24.8 119.6C27.9 124.3 32.1 122.4 36 126.3ZM41.4 120.4C38 118.4 38.7 114 39.2 110C40.7 113.6 43.9 112.7 46 115.9ZM52.2 110.7C47.7 107.2 49.3 101.2 50.6 95.6C52.1 101 56.7 100.5 59.2 105.4ZM66 101C63.1 98.4 64.7 94.2 66.2 90.4C66.8 94.3 70.1 94.2 71.5 97.7ZM78.5 93.9C74.7 89.7 77.3 84 79.6 78.8C80.2 84.3 84.7 84.6 86.4 89.9ZM93.6 86.6C91.1 83.6 93.3 79.7 95.2 76.1C95.3 80 98.6 80.4 99.5 84.1ZM106.9 81.1C103.5 76.5 106.7 71.2 109.5 66.2C109.5 71.8 114 72.6 115.1 78ZM122.5 75.4C120.3 72.2 122.8 68.5 125 65.1C124.8 69 128 69.6 128.6 73.4ZM136.3 71C133.2 66.2 136.8 61 139.9 56.3C139.5 61.9 144 63 144.7 68.4ZM152.3 66.3C150.2 63 152.9 59.4 155.3 56.2C154.9 60 158.1 60.8 158.4 64.6Z"/>
+        <use href="#flamesL" transform="matrix(-1 0 0 1 400 0)"/>
+      </g>
+      <g fill="none" stroke="#c9a227" stroke-linecap="round" stroke-linejoin="round">
+        <path vector-effect="non-scaling-stroke" stroke-width="1.6" d="M22 230V168C22 104 116 74 200 56C284 74 378 104 378 168V230"/>
+        <path vector-effect="non-scaling-stroke" stroke-width="1.2" d="M34 230V170C34 112 120 86 200 70C280 86 366 112 366 170V230"/>
+        <path stroke-width="2.3" stroke-dasharray="0 7.2" d="M28 166C28 108 118 77 200 63C282 77 372 108 372 166"/>
+        <path stroke-width="1.6" stroke-dasharray="0 7.2" d="M28 181.5V230M372 181.5V230"/>
+      </g>
+      <g fill="#fbf6ea" stroke="#c9a227" stroke-linejoin="round">
+        <path vector-effect="non-scaling-stroke" stroke-width="1.2" d="M14 165H42V171H14ZM17 171H39V177H17Z"/>
+        <path vector-effect="non-scaling-stroke" stroke-width="1.2" d="M358 165H386V171H358ZM361 171H383V177H361Z"/>
+        <!-- gopuram tiers -->
+        <path vector-effect="non-scaling-stroke" stroke-width="1.2" d="M168 52H232V60H168Z"/>
+        <path vector-effect="non-scaling-stroke" stroke-width="1.2" d="M171 52L177 39H223L229 52Z"/>
+        <path vector-effect="non-scaling-stroke" stroke-width="1.2" d="M175 39H225V36H175Z"/>
+        <path vector-effect="non-scaling-stroke" stroke-width="1.2" d="M179 36L184 26H216L221 36Z"/>
+        <path vector-effect="non-scaling-stroke" stroke-width="1.2" d="M182 26H218V23H182Z"/>
+        <path vector-effect="non-scaling-stroke" stroke-width="1.2" d="M186 23L190 15H210L214 23Z"/>
+        <path vector-effect="non-scaling-stroke" stroke-width="1.2" d="M187 15C187 7 193 4.5 200 4.5C207 4.5 213 7 213 15Z"/>
+      </g>
+      <g fill="none" stroke="#c9a227" stroke-linecap="round">
+        <path vector-effect="non-scaling-stroke" stroke-width="1" d="M196.5 52V46.5Q200 42.5 203.5 46.5V52M186 52V46M214 52V46M197.5 36V31.5Q200 29 202.5 31.5V36M198.5 23V20Q200 18.6 201.5 20V23"/>
+      </g>
+      <g fill="#c9a227">
+        <circle cx="193" cy="2.6" r="1.5"/><circle cx="200" cy="1.6" r="1.7"/><circle cx="207" cy="2.6" r="1.5"/>
+        <circle cx="168" cy="56" r="1.6"/><circle cx="232" cy="56" r="1.6"/>
+      </g>
+    </svg>
+    <div class="arch-body">
+      <div class="arch-inner">
+        <svg class="hero-lamp" viewBox="0 0 80 150" aria-hidden="true"><use href="#lamp"/></svg>
+        <p class="hero-eyebrow" data-i18n="heroEyebrow">Together with our families</p>
+        <h1 class="hero-names couple-names" data-bind="names"></h1>
+        <svg class="knot hero-knot" aria-hidden="true"><use href="#knot"/></svg>
+        <p class="hero-tagline" id="heroTagline" data-bind="tagline"></p>
+        <p class="hero-date-pill" id="heroDatePill" data-bind="dateLine"></p>
+        <p class="hero-verse verse" lang="ta" data-bind="verse"></p>
+      </div>
+    </div>
+    <svg class="arch-base" viewBox="0 0 400 30" aria-hidden="true" focusable="false">
+      <g fill="#fbf6ea" stroke="#c9a227" stroke-linejoin="round">
+        <path vector-effect="non-scaling-stroke" stroke-width="1.2" d="M17 0H39V6H17ZM13 6H43V12H13ZM361 0H383V6H361ZM357 6H387V12H357Z"/>
+      </g>
+      <g fill="none" stroke="#c9a227" stroke-linecap="round">
+        <path vector-effect="non-scaling-stroke" stroke-width="1.4" d="M2 12H398"/>
+        <path vector-effect="non-scaling-stroke" stroke-width="1" d="M8 17H392"/>
+        <path stroke-width="2.2" stroke-dasharray="0 8" d="M14 24H386"/>
+      </g>
+    </svg>
+    <svg class="side-lamp l" viewBox="0 0 80 150" aria-hidden="true"><use href="#lamp"/></svg>
+    <svg class="side-lamp r" viewBox="0 0 80 150" aria-hidden="true"><use href="#lamp"/></svg>
+  </div>
+</header>
+
+<main>
+<!-- ======= COUPLE PHOTO ======= -->
+<section id="coupleCover" aria-label="The couple">
+  <div class="cover-frame reveal">
+    <img id="coverImg" alt="The couple" width="800" height="1000" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 1000'%3E%3Cdefs%3E%3CradialGradient id='g' cx='50%25' cy='44%25' r='70%25'%3E%3Cstop offset='0' stop-color='%2386203a'/%3E%3Cstop offset='1' stop-color='%233f0914'/%3E%3C/radialGradient%3E%3Cpattern id='d' width='40' height='40' patternUnits='userSpaceOnUse'%3E%3Ccircle cx='20' cy='20' r='2' fill='%23c9a227' fill-opacity='.3'/%3E%3Ccircle cx='0' cy='0' r='1.4' fill='%23c9a227' fill-opacity='.18'/%3E%3Ccircle cx='40' cy='0' r='1.4' fill='%23c9a227' fill-opacity='.18'/%3E%3Ccircle cx='0' cy='40' r='1.4' fill='%23c9a227' fill-opacity='.18'/%3E%3Ccircle cx='40' cy='40' r='1.4' fill='%23c9a227' fill-opacity='.18'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='800' height='1000' fill='url(%23g)'/%3E%3Crect width='800' height='1000' fill='url(%23d)'/%3E%3Cg fill='none' stroke='%23c9a227'%3E%3Ccircle cx='400' cy='520' r='150' stroke-width='3'/%3E%3Ccircle cx='400' cy='520' r='136' stroke-width='1.2' stroke-opacity='.6'/%3E%3Cpath d='M250 520H150M550 520H650' stroke-width='1.5' stroke-opacity='.7'/%3E%3C/g%3E%3Cg fill='%23c9a227'%3E%3Cpath d='M400 362l9 9-9 9-9-9z'/%3E%3Cpath d='M400 660l9 9-9 9-9-9z'/%3E%3Ccircle cx='140' cy='520' r='4'/%3E%3Ccircle cx='660' cy='520' r='4'/%3E%3C/g%3E%3Ctext x='400' y='760' text-anchor='middle' font-family='Georgia,serif' font-size='24' letter-spacing='9' fill='%23f1dc9a' fill-opacity='.85'%3ECOUPLE PHOTO%3C/text%3E%3C/svg%3E">
+    <div class="cover-mono" aria-hidden="true"><span data-bind="initial1"></span><span class="sep"> | </span><span data-bind="initial2"></span></div>
+  </div>
+  <p class="cover-caption reveal" data-bind="names"></p>
+</section>
+
+<!-- ======= EVENTS ======= -->
+<section id="events" class="section">
+  <div class="wrap">
+    <p class="eyebrow" data-i18n="eventsEyebrow">Save The Dates</p>
+    <h2 class="section-title" data-i18n="eventsTitle">Wedding Events</h2>
+    <svg class="knot" aria-hidden="true"><use href="#knot"/></svg>
+    <p class="section-sub" data-i18n="eventsSub">We would be delighted to have you join us at each of these celebrations.</p>
+    <!-- translated label copied into the event buttons (list items are built after the page is translated) -->
+    <span id="dirLabel" data-i18n="getDirections" hidden>Get Directions</span>
+    <div class="events-grid" id="eventsGrid">
+      <template>
+      <article class="event-card reveal">
+        <svg class="ec-finial" aria-hidden="true"><use href="#finial"/></svg>
+        <div class="ec-icon" aria-hidden="true"><svg class="ic-a" viewBox="0 0 64 64"><use href="#ic-garland"/></svg><svg class="ic-b" viewBox="0 0 64 64"><use href="#ic-kalasam"/></svg></div>
+        <h3 class="ec-name" data-field="name"></h3>
+        <p class="ec-date" data-field="date"></p>
+        <p class="ec-time" data-field="time"></p>
+        <div class="ec-rule" aria-hidden="true"></div>
+        <p class="ec-venue" data-field="place"></p>
+        <p class="ec-addr" data-field="venue"></p>
+        <p class="ec-desc" data-field="desc"></p>
+        <a class="btn" data-href="map" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#ic-pin"/></svg><span class="dir-label">Get Directions</span></a>
+      </article>
+      </template>
+    </div>
+  </div>
+</section>
+
+<!-- ======= COUNTDOWN ======= -->
+<section id="countdown" class="section band">
+  <div class="wrap">
+    <p class="eyebrow" data-i18n="countdownEyebrow">Almost Time</p>
+    <h2 class="section-title" data-i18n="countdownTitle">Counting Down To Our Muhurtham</h2>
+    <svg class="knot" aria-hidden="true"><use href="#knot"/></svg>
+    <div class="cd-grid reveal" role="timer" aria-label="Time left until the Muhurtham">
+      <div class="cd-box"><div class="cd-num" id="cdDays">00</div><div class="cd-label" data-i18n="cdDays">Days</div></div>
+      <div class="cd-box"><div class="cd-num" id="cdHours">00</div><div class="cd-label" data-i18n="cdHours">Hours</div></div>
+      <div class="cd-box"><div class="cd-num" id="cdMins">00</div><div class="cd-label" data-i18n="cdMins">Minutes</div></div>
+      <div class="cd-box"><div class="cd-num" id="cdSecs">00</div><div class="cd-label" data-i18n="cdSecs">Seconds</div></div>
+    </div>
+    <p class="cd-note"><span data-bind="dateLong"></span> · <span data-bind="time"></span></p>
+  </div>
+</section>
+
+<!-- ======= WISHES ======= -->
+<section id="wishes" class="section dots">
+  <div class="wrap">
+    <p class="eyebrow" data-i18n="wishesEyebrow">Guest Book</p>
+    <h2 class="section-title" data-i18n="wishesTitle">Leave Us Your Wishes</h2>
+    <svg class="knot" aria-hidden="true"><use href="#knot"/></svg>
+    <p class="section-sub" data-i18n="wishesSub">Your blessings mean the world to us — leave a little note below.</p>
+    <form class="wish-form reveal" id="wishForm">
+      <label class="field"><span>Your name</span><input type="text" id="wishName" maxlength="60" placeholder="Your name" data-i18n-placeholder="wishNamePh" autocomplete="name" required></label>
+      <label class="field"><span>Your wishes</span><textarea id="wishMessage" maxlength="500" placeholder="Write your wishes for the couple…" data-i18n-placeholder="wishMsgPh" required></textarea></label>
+      <button type="submit" class="btn" data-i18n="sendWishes">Send Wishes</button>
+    </form>
+    <p class="wishes-empty" id="wishesEmpty" data-i18n="noWishes" hidden>Be the first to leave your blessings 💛</p>
+    <div class="wishes-wall" id="wishesWall">
+      <template>
+      <article class="wish-card reveal"><p class="wish-msg" data-field="message"></p><p class="wish-name" data-field="name"></p></article>
+      </template>
+    </div>
+    <button type="button" class="btn wishes-more" id="wishesMore" data-i18n="showMore" hidden>Show more wishes</button>
+  </div>
+</section>
+
+<!-- ======= HELP & SUPPORT ======= -->
+<section id="stay" class="section">
+  <div class="wrap">
+    <p class="eyebrow" data-i18n="stayEyebrow">For Our Guests</p>
+    <h2 class="section-title" data-i18n="stayTitle">Help &amp; Support</h2>
+    <svg class="knot" aria-hidden="true"><use href="#knot"/></svg>
+    <div class="stay-box reveal">
+      <p id="stayText" data-bind="help"></p>
+      <p class="eyebrow coord-label" data-i18n="coordinatorsLabel">Coordinators</p>
+      <div id="coordinators">
+        <template>
+        <a class="coord" data-href="tel"><span class="coord-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#ic-phone"/></svg></span><span><span class="coord-who" data-field="name"></span><span class="coord-num" data-field="phone"></span></span></a>
+        </template>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="band">
+  <svg class="foot-lamp" viewBox="0 0 80 150" aria-hidden="true"><use href="#lamp"/></svg>
+  <svg class="knot" aria-hidden="true"><use href="#knot"/></svg>
+  <p class="hashtag" id="footerHashtag" data-bind="hashtag"></p>
+  <p class="thanks" data-i18n="footerThanks">With gratitude and love, we thank you for being part of our story.</p>
+  <p class="foot-names"><span data-bind="names"></span> · <span data-bind="day"></span> · <span data-bind="monthNum"></span> · <span data-bind="year"></span></p>
+</footer>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<audio id="bgMusic" loop preload="auto"></audio>
+<button type="button" id="musicToggle" aria-label="Toggle background music" data-i18n-title="musicHint" hidden>🎵</button>
+
+<script>
+(function () {
+  var html = document.documentElement;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- intro doors ---- */
+  var overlay = document.getElementById('curtain-overlay');
+  var openBtn = document.getElementById('openCurtainBtn');
+  function finishIntro() {
+    if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    html.classList.remove('intro-on');
+  }
+  if (html.classList.contains('no-intro')) {
+    finishIntro();
+  } else if (overlay && openBtn) {
+    openBtn.addEventListener('click', function () {
+      openBtn.disabled = true;
+      if (reduce) { finishIntro(); return; }
+      overlay.classList.add('opening');
+      setTimeout(function () { overlay.classList.add('fade'); html.classList.remove('intro-on'); }, 1750);
+      setTimeout(finishIntro, 2600);
+    });
+  }
+
+  /* ---- monogram over the placeholder photo: only until a real photo is set ---- */
+  var cover = document.getElementById('coverImg');
+  if (cover) {
+    var placeholder = cover.getAttribute('src');
+    var syncCover = function () { cover.parentNode.classList.toggle('has-photo', cover.getAttribute('src') !== placeholder); };
+    new MutationObserver(syncCover).observe(cover, { attributes: true, attributeFilter: ['src'] });
+    syncCover();
+  }
+
+  /* ---- event buttons: use the translated "Get Directions" label ---- */
+  var grid = document.getElementById('eventsGrid');
+  function dirLabels() {
+    var label = document.getElementById('dirLabel');
+    if (!label || !grid) return;
+    grid.querySelectorAll('.dir-label').forEach(function (n) { n.textContent = label.textContent; });
+  }
+  document.addEventListener('invite:render', dirLabels);
+  if (grid) new MutationObserver(dirLabels).observe(grid, { childList: true });
+})();
+</script>
+</body>
+</html>

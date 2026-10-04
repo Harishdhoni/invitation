@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<title>Wedding Admin</title>
+<title>Invitation Admin</title>
 <link rel="icon" href="assets/emblem.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,7 +32,7 @@
 <section id="loginView" class="center-view" hidden>
   <form id="loginForm" class="card narrow">
     <img src="assets/emblem.svg" alt="" class="logo">
-    <h1>Wedding Admin</h1>
+    <h1>Invitation Admin</h1>
     <label class="field"><span>Email</span><input type="email" id="loginEmail" autocomplete="username" required></label>
     <label class="field"><span>Password</span><input type="password" id="loginPassword" autocomplete="current-password" required></label>
     <button type="submit" class="btn primary block" id="loginBtn">Log in</button>
@@ -43,7 +43,11 @@
 <!-- APP -->
 <div id="appView" hidden>
   <header class="topbar">
-    <div class="brand"><img src="assets/emblem.svg" alt=""> Wedding Admin</div>
+    <div class="brand"><img src="assets/emblem.svg" alt=""> Invitation Admin</div>
+    <nav class="mainnav" aria-label="Admin sections">
+      <a href="?" id="navEvents">Events</a>
+      <a href="?view=templates" id="navTemplates">Templates</a>
+    </nav>
     <div class="top-actions">
       <span class="who" id="whoAmI"></span>
       <button class="btn ghost" id="logoutBtn">Log out</button>
@@ -52,11 +56,11 @@
 
   <div class="banner warn" id="uidBanner" hidden></div>
 
-  <!-- WEDDINGS LIST (admin page with no ?w=) -->
+  <!-- EVENTS LIST (admin page with no ?w=) -->
   <main id="weddingsView" class="list-main" hidden>
     <div class="list-head">
-      <h1 class="page-title">Weddings</h1>
-      <button class="btn primary" id="newWeddingBtn">＋ New wedding</button>
+      <h1 class="page-title">Events</h1>
+      <button class="btn primary" id="newWeddingBtn">＋ New event</button>
     </div>
 
     <form class="card form-card" id="importForm" hidden>
@@ -71,10 +75,16 @@
     </form>
 
     <form class="card form-card" id="newWeddingForm" hidden>
-      <h2>New wedding</h2>
+      <h2>New event</h2>
+      <label class="field"><span>Category</span><select id="newCategory"></select></label>
       <div class="two-col">
-        <label class="field"><span>Groom's name</span><input type="text" id="newGroom" required></label>
-        <label class="field"><span>Bride's name</span><input type="text" id="newBride" required></label>
+        <label class="field"><span id="newGroomLabel">Groom's name</span><input type="text" id="newGroom" required></label>
+        <label class="field"><span id="newBrideLabel">Bride's name</span><input type="text" id="newBride"></label>
+      </div>
+      <div class="field">
+        <span class="label">Template</span>
+        <div id="newTemplatePicker"></div>
+        <small class="hint">You can change the design later in the event's Design tab.</small>
       </div>
       <label class="field"><span>Link name</span>
         <span class="slug-input"><span class="slug-prefix"></span><input type="text" id="newSlug" required></span>
@@ -82,115 +92,110 @@
       </label>
       <p class="error" id="newWeddingError" role="alert"></p>
       <div class="row">
-        <button type="submit" class="btn primary" id="createWeddingBtn">Create wedding</button>
+        <button type="submit" class="btn primary" id="createWeddingBtn">Create event</button>
         <button type="button" class="btn ghost" id="cancelNewBtn">Cancel</button>
       </div>
     </form>
 
-    <p class="muted" id="weddingsStatus">Loading weddings…</p>
+    <div class="chips" id="categoryFilter" role="group" aria-label="Filter by category"></div>
+    <p class="muted" id="weddingsStatus">Loading events…</p>
     <div class="wedding-list" id="weddingsList"></div>
   </main>
 
-  <!-- EDITOR (admin page with ?w=<wedding>) -->
-  <div id="editorView" hidden>
-    <div class="editor-head">
-      <a class="back" id="backLink" href="#">← All weddings</a>
-      <h1 id="editorTitle"></h1>
+  <!-- TEMPLATES (admin page with ?view=templates) -->
+  <main id="templatesView" class="list-main wide" hidden>
+    <div class="list-head">
+      <h1 class="page-title">Templates</h1>
       <div class="row">
-        <button class="btn ghost small" id="copyLinkBtn">Copy link</button>
-        <a class="btn ghost small" id="viewSiteLink" target="_blank" rel="noopener">View site ↗</a>
+        <button class="btn ghost" id="startersBtn" hidden>Add starter templates</button>
+        <button class="btn ghost" id="newCategoryBtn">＋ New category</button>
       </div>
     </div>
+    <p class="muted intro">Each template is one HTML page. Every event that uses it shows its own names, dates, photos and wishes in it,
+      at the event's own link. Preview links show a template with sample details.</p>
 
-    <div class="banner info" id="firstRunBanner" hidden>Sample events and contacts are filled in to start from. Replace them with this wedding's details, use <b>அ Fill missing Tamil</b> for the names, and click <b>Save changes</b>.</div>
+    <form class="card form-card" id="newCategoryForm" hidden>
+      <h2>New category</h2>
+      <label class="field"><span>Name</span><input type="text" id="newCategoryName" placeholder="Baby Shower" required></label>
+      <p class="error" id="newCategoryError" role="alert"></p>
+      <div class="row">
+        <button type="submit" class="btn primary">Add category</button>
+        <button type="button" class="btn ghost" id="cancelCategoryBtn">Cancel</button>
+      </div>
+    </form>
 
-    <nav class="tabs" role="tablist">
-      <button class="tab active" data-tab="details">Couple &amp; Hero</button>
-      <button class="tab" data-tab="photos">Photos &amp; Music</button>
-      <button class="tab" data-tab="events">Events</button>
-      <button class="tab" data-tab="contacts">Help &amp; Contacts</button>
-      <button class="tab" data-tab="wishes">Wishes <span class="count" id="wishCount"></span></button>
-    </nav>
+    <p class="muted" id="templatesStatus">Loading templates…</p>
+    <div id="templateGroups"></div>
+  </main>
 
-    <main>
-      <section class="panel active" data-panel="details">
-        <div class="card" id="detailsForm"></div>
-      </section>
-
-      <section class="panel" data-panel="photos">
-        <div class="photo-grid">
-          <div class="card photo-card" data-image="cover">
-            <h2>Couple cover photo</h2>
-            <p class="muted">Shown full-width below the names. Landscape works best.</p>
-            <img class="preview" alt="">
-            <div class="photo-meta muted"></div>
-            <div class="row">
-              <label class="btn primary">Choose photo<input type="file" accept="image/*" hidden></label>
-              <button class="btn ghost" data-remove>Use default</button>
-            </div>
+  <!-- TEMPLATE EDITOR (admin page with ?template=<id> or ?template=new) -->
+  <div id="templateEditorView" hidden>
+    <div class="editor-head wide">
+      <a class="back" href="?view=templates">← All templates</a>
+      <h1 id="tplTitle"></h1>
+      <div class="row" id="tplLinks" hidden>
+        <a class="btn ghost small" id="tplPreviewLink" target="_blank" rel="noopener">Preview ↗</a>
+      </div>
+    </div>
+    <main class="wide">
+      <div class="tpl-layout">
+        <div class="card tpl-form">
+          <div class="two-col">
+            <label class="field"><span>Name</span><input type="text" id="tplName" placeholder="Temple Gold"></label>
+            <label class="field"><span>Category</span><select id="tplCategory"></select></label>
           </div>
-          <div class="card photo-card" data-image="deity">
-            <h2>Deity / emblem image</h2>
-            <p class="muted">Shown at the top with a golden glow. A PNG with a transparent background looks best.</p>
-            <img class="preview" alt="">
-            <div class="photo-meta muted"></div>
-            <div class="row">
-              <label class="btn primary">Choose image<input type="file" accept="image/*" hidden></label>
-              <button class="btn ghost" data-remove>Use default</button>
-            </div>
+          <label class="field"><span>Description</span><input type="text" id="tplDesc" placeholder="Shown on the template card"></label>
+          <p class="muted live-link" id="tplLiveLinkRow">Live preview: <a id="tplLiveLink" target="_blank" rel="noopener"></a></p>
+          <label class="field">
+            <span>HTML</span>
+            <textarea id="tplHtml" class="code" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+            <small class="hint" id="tplSize"></small>
+          </label>
+          <div class="row">
+            <label class="btn ghost small">Upload .html<input type="file" id="tplUpload" accept=".html,.htm,text/html" hidden></label>
+            <button type="button" class="btn ghost small" id="tplDownloadBtn">Download .html</button>
           </div>
-          <div class="card music-card">
-            <h2>Background music</h2>
-            <p class="muted">Starts when guests open the invitation, and loops. MP3 up to 10 MB — 3–5 MB is best so it loads fast on mobile data.</p>
-            <div class="music-box">
-              <div class="music-icon" aria-hidden="true">🎵</div>
-              <div class="music-info">
-                <div class="music-name" id="musicName">No music added</div>
-                <div class="muted" id="musicMeta"></div>
+          <details class="hooks">
+            <summary>Hooks — how a template shows each event's details</summary>
+            <p>The site fills these in for each event; leave out any you don't need. Full details are in <code>TEMPLATES.md</code>.</p>
+            <ul>
+              <li><code>data-bind="names"</code> (both names), <code>name1</code>, <code>name2</code>, <code>initial1</code>, <code>initial2</code>, <code>title</code>,
+                <code>tagline</code>, <code>dateLine</code>, <code>verse</code>, <code>help</code>, <code>hashtag</code>.</li>
+              <li>Main date: <code>day</code>, <code>month</code>, <code>mon</code>, <code>year</code>, <code>weekday</code>, <code>time</code>, <code>dateLong</code>.</li>
+              <li>Photos: <code>&lt;img id="coverImg"&gt;</code>, <code>&lt;img id="deityImg"&gt;</code>.</li>
+              <li>Lists: a <code>&lt;template&gt;</code> inside <code>#eventsGrid</code> (fields <code>name date time place venue desc icon number day mon year</code>,
+                <code>data-href="map"</code>), <code>#wishesWall</code> (<code>message name</code>), <code>#coordinators</code> (<code>name phone phones</code>, <code>data-href="tel"</code>).
+                <code>data-if="field"</code> hides an element when that field is empty.</li>
+              <li>Countdown <code>#cdDays #cdHours #cdMins #cdSecs</code> · wish form <code>#wishForm #wishName #wishMessage</code> ·
+                intro <code>#curtain-overlay</code> opened by <code>#openCurtainBtn</code> or <code>[data-open-invite]</code> · <code>.reveal</code> gets <code>.in</code> on scroll ·
+                language buttons <code>.lang-btn[data-lang=en|ta]</code>.</li>
+            </ul>
+          </details>
+        </div>
+        <div class="card tpl-preview">
+          <div class="preview-head">
+            <b>Preview <span class="muted">with sample details</span></b>
+            <div class="row">
+              <div class="seg" id="tplDevice" role="group" aria-label="Preview size">
+                <button type="button" data-device="phone" aria-pressed="true">Phone</button>
+                <button type="button" data-device="desktop" aria-pressed="false">Desktop</button>
               </div>
-            </div>
-            <audio id="musicPreview" controls preload="none" hidden></audio>
-            <div class="row">
-              <label class="btn primary">Choose music<input type="file" id="musicFile" accept="audio/mpeg,audio/mp3,audio/mp4,audio/aac,audio/x-m4a,.mp3,.m4a" hidden></label>
-              <button class="btn ghost" id="musicPreviewBtn" hidden>▶ Play current</button>
-              <button class="btn ghost" id="musicRemoveBtn" hidden>Remove music</button>
+              <button type="button" class="btn ghost small" id="tplRefreshBtn">↻ Refresh</button>
             </div>
           </div>
+          <div class="stage" id="tplStage"><iframe id="tplFrame" title="Template preview"></iframe></div>
         </div>
-        <p class="muted note">Photos are compressed in your browser before upload so each one fits in Firestore (≈ under 700 KB). Music is split into small pieces and uploaded when you click Save.</p>
-      </section>
-
-      <section class="panel" data-panel="events">
-        <div id="eventsList"></div>
-        <button class="btn ghost add" id="addEventBtn">＋ Add event</button>
-      </section>
-
-      <section class="panel" data-panel="contacts">
-        <div class="card" id="helpForm"></div>
-        <h2 class="list-title">Coordinators</h2>
-        <div id="coordList"></div>
-        <button class="btn ghost add" id="addCoordBtn">＋ Add coordinator</button>
-      </section>
-
-      <section class="panel" data-panel="wishes">
-        <div class="card">
-          <p class="muted" id="wishSummary">Loading wishes…</p>
-          <div class="table-wrap">
-            <table class="wish-table">
-              <thead><tr><th>When</th><th>Name</th><th>Wish</th><th>Status</th><th></th></tr></thead>
-              <tbody id="wishRows"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+      </div>
     </main>
-
-    <footer class="savebar" id="saveBar">
-      <button class="btn ghost fill-tamil" id="fillTamilBtn" title="Translate every empty Tamil box from its English text">அ Fill missing Tamil</button>
-      <span class="save-status" id="saveStatus">All changes saved</span>
-      <button class="btn primary" id="saveBtn" disabled>Save changes</button>
+    <footer class="savebar">
+      <button class="btn danger" id="tplDeleteBtn">Delete template</button>
+      <span class="save-status" id="tplSaveStatus">All changes saved</span>
+      <button class="btn primary" id="tplSaveBtn" disabled>Save template</button>
     </footer>
   </div>
+
+  <!-- EVENT EDITOR (admin page with ?w=<event>); its markup is built by js/event-editor.js -->
+  <div id="editorView" data-admin hidden></div>
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>

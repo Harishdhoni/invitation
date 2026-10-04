@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<!--
+  Twinkle Little Star (from Template 09 — Celestial Night)
+  A kids' birthday template for the invitation site; it follows TEMPLATES.md, and js/invite.js fills in the
+  title ("Aarav turns 1!"), the birthday star's name, the date, events, wishes and coordinators.
+  A gentle night-sky invitation: twinkling star field, crescent moon, a constellation around the birthday
+  star's initial, frosted-glass party panels and a moon-phase countdown.
+  Palette: midnight #070818 · deep indigo #0f1033 / #1b1d4f · starlight gold #e6c36a ·
+           moonlight silver #e8e6f0 · soft lavender #9fa2d8
+  Fonts:   Italiana (title, headings) · Raleway (body) · Noto Sans Tamil (Tamil)
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070818">
+<meta name="description" content="Twinkle, twinkle, little star — you're invited to a birthday celebration.">
+<title>Birthday — Twinkle Little Star</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Italiana&family=Raleway:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Sans+Tamil:wght@400;500&display=swap" rel="stylesheet">
+<!-- Italiana's ampersand reads like an "e", so only the "&" glyph comes from Playfair Display italic -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@1&amp;text=%26&amp;display=swap" rel="stylesheet">
+<!-- Italiana's "1" reads like an "ı" at title size, so the title's digits come from Cinzel -->
+<link href="https://fonts.googleapis.com/css2?family=Cinzel&amp;text=0123456789&amp;display=swap" rel="stylesheet">
+<script>
+  /* Runs before paint: mark JS, and decide whether the intro overlay is shown. */
+  (function () {
+    var d = document.documentElement, skip = /[?&]preview/.test(location.search);
+    try { skip = skip || window.self !== window.top; } catch (e) { skip = true; }
+    d.className += ' js' + (skip ? '' : ' intro-open');
+  })();
+</script>
+<style>
+:root{
+  --mid:#070818; --ind:#0f1033; --ind2:#1b1d4f; --gold:#e6c36a; --silver:#e8e6f0; --lav:#9fa2d8;
+  --gold-line:rgba(230,195,106,.55); --gold-soft:rgba(230,195,106,.2);
+  --glass:linear-gradient(160deg,rgba(232,230,240,.11) 0%,rgba(159,162,216,.06) 42%,rgba(27,29,79,.32) 100%);
+  --serif:'Playfair Display','Italiana','Noto Sans Tamil','Didot','Bodoni MT','Times New Roman',serif;
+  --sans:'Raleway','Noto Sans Tamil',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --ta:'Noto Sans Tamil','Latha','Tamil Sangam MN',sans-serif;
+  --ease:cubic-bezier(.22,.7,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+html.intro-open,html.intro-open body{overflow:hidden}
+body{
+  margin:0;min-height:100vh;font-family:var(--sans);font-size:1rem;line-height:1.7;color:var(--silver);
+  background-color:var(--mid);
+  background-image:
+    radial-gradient(ellipse 70% 38% at 88% 4%,rgba(159,162,216,.18),transparent 70%),
+    radial-gradient(ellipse 60% 30% at 6% 34%,rgba(92,82,180,.16),transparent 70%),
+    radial-gradient(ellipse 80% 30% at 90% 62%,rgba(159,162,216,.10),transparent 70%),
+    radial-gradient(ellipse 70% 26% at 12% 88%,rgba(92,82,180,.14),transparent 70%),
+    linear-gradient(180deg,#070818 0%,#0f1033 16%,#1b1d4f 44%,#141640 66%,#0f1033 84%,#070818 100%);
+}
+img{display:block;max-width:100%}
+a{color:inherit}
+h1,h2,h3{font-weight:400;margin:0}
+p{margin:0}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+:focus-visible{outline:2px solid var(--gold);outline-offset:4px;border-radius:8px}
+[lang="ta"]{font-family:var(--ta);letter-spacing:0!important;text-transform:none!important}
+
+/* ---------- sky: star layers (box-shadows built by JS), shooting stars ---------- */
+.sky{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.sky i{position:absolute;left:0;top:0;width:1px;height:1px;border-radius:50%;opacity:.9}
+.sky .l3,.sky .l4{width:1.5px;height:1.5px}
+.sky .l5{width:2px;height:2px}
+.sky .l6{width:2.5px;height:2.5px}
+.sky .l1{animation:tw 3.4s ease-in-out infinite alternate}
+.sky .l2{animation:tw 5.2s ease-in-out -1.7s infinite alternate}
+.sky .l3{animation:tw 4.1s ease-in-out -.6s infinite alternate}
+.sky .l4{animation:tw 6.3s ease-in-out -2.9s infinite alternate}
+.sky .l5{animation:tw 3.8s ease-in-out -1.1s infinite alternate}
+.sky .l6{animation:tw 5.7s ease-in-out -3.3s infinite alternate}
+@keyframes tw{from{opacity:.95}to{opacity:.3}}
+.shoot{position:absolute;width:150px;height:1.5px;border-radius:2px;opacity:0;
+  background:linear-gradient(90deg,rgba(232,230,240,0),rgba(232,230,240,.85));}
+.shoot::after{content:"";position:absolute;right:-2px;top:50%;width:4px;height:4px;margin-top:-2px;border-radius:50%;
+  background:#fff;box-shadow:0 0 10px 3px rgba(232,230,240,.75)}
+.shoot.a{top:9%;left:54%;animation:shoot 12s linear 3s infinite}
+.shoot.b{top:46%;left:6%;animation:shoot 19s linear 10s infinite}
+@keyframes shoot{
+  0%{opacity:0;transform:rotate(24deg) translateX(0)}
+  1.2%{opacity:1}
+  7%{opacity:0;transform:rotate(24deg) translateX(380px)}
+  100%{opacity:0;transform:rotate(24deg) translateX(380px)}
+}
+header,main,footer{position:relative;z-index:1}
+
+/* ---------- shared bits ---------- */
+.eyebrow{font-family:var(--sans);font-weight:600;font-size:.72rem;letter-spacing:.34em;text-transform:uppercase;color:var(--lav)}
+.rule{display:flex;align-items:center;justify-content:center;gap:14px;color:var(--gold)}
+.rule::before,.rule::after{content:"";width:clamp(40px,10vw,74px);height:1px;background:linear-gradient(90deg,transparent,var(--gold-line))}
+.rule::after{transform:scaleX(-1)}
+.rule svg{width:14px;height:14px;flex:none}
+.section{padding:clamp(64px,9vw,112px) 20px}
+.sec-head{text-align:center;max-width:680px;margin:0 auto clamp(36px,6vw,60px)}
+.sec-title{font-family:var(--serif);font-size:clamp(2.3rem,7.6vw,3.7rem);line-height:1.1;color:var(--silver);margin:.32em 0 .38em;letter-spacing:.02em}
+.sec-sub{color:rgba(232,230,240,.82);margin-top:18px;font-size:1.02rem}
+.glass{background:var(--glass);border:1px solid var(--gold-line);-webkit-backdrop-filter:blur(14px) saturate(125%);backdrop-filter:blur(14px) saturate(125%);
+  box-shadow:0 30px 70px -36px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.09)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.65em;min-height:46px;padding:.75em 1.6em;border-radius:999px;
+  border:1px solid var(--gold);color:var(--gold);background:rgba(7,8,24,.25);font:600 .74rem/1 var(--sans);letter-spacing:.22em;text-transform:uppercase;
+  text-decoration:none;cursor:pointer;transition:background .3s,color .3s,box-shadow .3s}
+.btn svg{width:16px;height:16px;flex:none}
+.btn:hover{background:var(--gold);color:var(--mid);box-shadow:0 0 28px rgba(230,195,106,.35)}
+.btn-solid{background:var(--gold);color:var(--mid)}
+.btn-solid:hover{background:#f1d68c}
+.btn[hidden]{display:none}
+
+/* ---------- reveal ---------- */
+.js .reveal{opacity:0;transform:translateY(26px);transition:opacity 1s var(--ease),transform 1s var(--ease)}
+.js .reveal.in{opacity:1;transform:none}
+.js .reveal.d2,.js .event-card.reveal:nth-of-type(even),.js .wish.reveal:nth-of-type(3n+2){transition-delay:.14s}
+.js .reveal.d3,.js .wish.reveal:nth-of-type(3n){transition-delay:.28s}
+
+/* ---------- hero ---------- */
+#hero{min-height:100vh;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  padding:96px 20px 104px;overflow:clip}
+.hero-moon{position:absolute;top:22px;right:18px;width:62px;height:62px;
+  filter:drop-shadow(0 0 16px rgba(230,195,106,.45)) drop-shadow(0 0 46px rgba(232,230,240,.2));animation:drift 10s ease-in-out infinite}
+.hero-moon svg{width:100%;height:100%;display:block}
+@keyframes drift{50%{transform:translateY(-8px) rotate(-3deg)}}
+.hero-verse{font-size:clamp(.9rem,3.7vw,1.06rem);line-height:1.95;color:var(--lav);margin-bottom:16px}
+#hero .rule{margin-bottom:20px}
+/* the title ("Aarav turns 1!") is the big heading; without a title the name takes its place */
+.hero-title,
+#hero.no-title .hero-star .nm{font-family:'Playfair Display','Cinzel',var(--serif);color:var(--gold);line-height:1.04;font-size:clamp(2.6rem,12vw,6.6rem);letter-spacing:.03em;
+  max-width:100%;overflow-wrap:break-word;margin:.3em 0 0;text-shadow:0 0 30px rgba(230,195,106,.32),0 0 2px rgba(230,195,106,.4)}
+.constellation{display:block;width:clamp(200px,58vw,250px);height:auto;margin:.5em auto .1em;overflow:visible}
+.c-line{fill:none;stroke:rgba(232,230,240,.62);stroke-width:.9;stroke-linecap:round;stroke-dasharray:320;stroke-dashoffset:0}
+.c-dot{fill:var(--silver)}
+.c-lbl{font-family:var(--serif);font-size:26px;fill:var(--gold);letter-spacing:.06em}
+.c-star{transform-box:fill-box;transform-origin:center;animation:pulse 3.2s ease-in-out infinite}
+.c-star.m{animation-delay:-1.6s}
+@keyframes pulse{50%{transform:scale(.72);opacity:.75}}
+.hero-star{display:flex;flex-direction:column;align-items:center;gap:.2em;margin-top:.2em}
+.hero-star .lbl{font-size:.68rem;font-weight:600;letter-spacing:.34em;text-transform:uppercase;color:var(--lav)}
+.hero-star .nm{display:block;font-family:var(--serif);font-size:clamp(2.1rem,9vw,3.2rem);line-height:1.1;color:var(--silver);letter-spacing:.04em;
+  max-width:100%;overflow-wrap:anywhere;text-shadow:0 0 22px rgba(232,230,240,.25)}
+.hero-star .hero-amp{color:var(--gold);font-size:.7em;margin:0 .1em}
+.hero-star .sg{display:inline}.hero-star .pl{display:none}
+.hero-star:has(.hero-amp) .sg{display:none}.hero-star:has(.hero-amp) .pl{display:inline}
+#hero.no-title .hero-star .nm{color:var(--gold)}
+#heroTagline{max-width:34ch;margin:22px auto 0;font-size:clamp(1rem,2.9vw,1.14rem);line-height:1.75;color:rgba(232,230,240,.9)}
+#heroDatePill{display:inline-flex;align-items:center;gap:.8em;margin-top:28px;padding:.85em 1.7em;border-radius:999px;
+  font-weight:600;font-size:clamp(.7rem,2.6vw,.8rem);letter-spacing:.2em;text-transform:uppercase;color:var(--silver);
+  background:rgba(27,29,79,.42);border:1px solid var(--gold-line);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.scroll-cue{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;
+  font-size:.64rem;letter-spacing:.38em;text-transform:uppercase;color:var(--lav);text-decoration:none;padding:6px 10px;min-height:44px}
+.scroll-cue i{position:relative;width:1px;height:38px;background:linear-gradient(rgba(159,162,216,.6),transparent);overflow:hidden}
+.scroll-cue i::after{content:"";position:absolute;left:-1px;top:-8px;width:3px;height:8px;border-radius:2px;background:var(--gold);animation:fall 2.4s ease-in infinite}
+@keyframes fall{to{top:40px}}
+/* hero entrance (starts once the intro has gone) */
+.js:not(.intro-open) .rise{animation:rise 1.3s var(--ease) both}
+.intro-open .rise{opacity:0}
+.rise.r2{animation-delay:.15s!important}.rise.r3{animation-delay:.3s!important}.rise.r4{animation-delay:.48s!important}.rise.r5{animation-delay:.64s!important}
+@keyframes rise{from{opacity:0;transform:translateY(22px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+.js:not(.intro-open) .c-line{animation:draw 2s .5s ease both}
+@keyframes draw{from{stroke-dashoffset:320}to{stroke-dashoffset:0}}
+@media (min-width:640px){
+  .hero-moon{top:7vh;right:8vw;width:108px;height:108px}
+  #hero{padding-top:110px}
+}
+
+/* ---------- cover photo ---------- */
+#coverPhoto{display:flex;justify-content:center;overflow-x:clip;padding:clamp(24px,5vw,56px) 20px clamp(56px,9vw,110px)}
+.orbit{position:relative;width:min(88vw,540px);aspect-ratio:1}
+.orbit>svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.orbit-text{animation:spin 140s linear infinite reverse}
+.orbit-text text{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.16em;fill:var(--lav);text-transform:uppercase}
+.orbit-track circle.track{fill:none;stroke:rgba(230,195,106,.35);stroke-width:.8;stroke-dasharray:2 5}
+.orbit-track .planet-g{transform-origin:200px 200px;animation:spin 38s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.photo{position:absolute;inset:11.5%;border-radius:50%;padding:7px;border:1px solid var(--gold-line);
+  background:radial-gradient(circle,rgba(27,29,79,.6),rgba(7,8,24,.6));
+  box-shadow:0 0 0 7px rgba(7,8,24,.35),0 0 90px -8px rgba(159,162,216,.55),0 0 160px -30px rgba(230,195,106,.4)}
+.photo img{width:100%;height:100%;border-radius:50%;object-fit:cover;background:var(--ind2)}
+
+/* ---------- events ---------- */
+.events-grid{display:grid;gap:clamp(22px,3vw,34px);max-width:1040px;margin:0 auto}
+@media (min-width:820px){.events-grid{grid-template-columns:1fr 1fr}}
+.event-card{position:relative;display:flex;flex-direction:column;align-items:center;border-radius:28px;padding:clamp(34px,5vw,48px) clamp(22px,4vw,44px) clamp(32px,4.5vw,44px);text-align:center}
+.event-card::before{content:"";position:absolute;inset:9px;border-radius:21px;border:1px solid rgba(230,195,106,.16);pointer-events:none}
+.event-card .spark{position:absolute;width:13px;height:13px;color:var(--gold);opacity:.75}
+.event-card .spark.tl{top:22px;left:22px}.event-card .spark.br{bottom:22px;right:22px}
+.ev-icon{width:82px;height:82px;margin:0 auto 18px;border-radius:50%;display:grid;place-items:center;color:var(--gold);font-size:2.3rem;line-height:1;
+  border:1px solid var(--gold-line);background:radial-gradient(circle at 50% 35%,rgba(230,195,106,.16),rgba(7,8,24,.2) 70%);
+  box-shadow:0 0 36px -6px rgba(230,195,106,.35)}
+.ev-icon img{width:44px;height:44px;object-fit:contain}
+.ev-when{font-size:.7rem;font-weight:600;letter-spacing:.32em;text-transform:uppercase;color:var(--lav)}
+.ev-title{font-family:var(--serif);font-size:clamp(2.2rem,7vw,2.9rem);line-height:1.1;color:var(--silver);margin:.22em 0 .32em}
+.ev-meta{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.35em .9em;font-weight:500;color:var(--silver);font-size:1rem}
+.ev-meta .dot{width:5px;height:5px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold)}
+.ev-sep{width:120px;height:1px;margin:22px auto;background:linear-gradient(90deg,transparent,var(--gold-line),transparent)}
+.ev-venue{font-family:var(--serif);font-size:1.55rem;color:var(--gold);line-height:1.2}
+.ev-addr{color:var(--lav);font-size:.95rem;margin-top:4px}
+.ev-desc{font-style:italic;color:rgba(232,230,240,.86);max-width:32ch;margin:18px auto 0}
+.event-card .btn{margin-top:26px}
+
+/* ---------- countdown: moon phases ---------- */
+.moons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(8px,3vw,40px);max-width:780px;margin:0 auto}
+.mu{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0}
+.phase{position:relative;width:100%;max-width:152px;aspect-ratio:1;display:grid;place-items:center}
+.phase svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.phase .disc{fill:rgba(7,8,24,.45);stroke:rgba(232,230,240,.42);stroke-width:.8}
+.phase .lit{fill:url(#litGrad)}
+.phase .halo{fill:none;stroke:rgba(230,195,106,.22);stroke-width:.6;stroke-dasharray:1.5 4}
+.cd-num{position:relative;font-family:var(--serif);font-size:clamp(1.55rem,7.4vw,3.3rem);line-height:1;color:var(--gold);
+  font-variant-numeric:tabular-nums;text-shadow:0 0 14px rgba(7,8,24,.9),0 0 22px rgba(230,195,106,.3)}
+.cd-lbl{font-size:clamp(.58rem,2.4vw,.72rem);font-weight:600;letter-spacing:.26em;text-transform:uppercase;color:var(--lav);text-align:center}
+.cd-note{text-align:center;margin-top:clamp(30px,5vw,46px);font-size:.95rem;color:rgba(232,230,240,.82)}
+.cd-note b{font-weight:600;color:var(--gold)}
+
+/* ---------- wishes ---------- */
+.wish-form{max-width:640px;margin:0 auto;border-radius:26px;padding:clamp(24px,5vw,40px);display:grid;gap:20px}
+.field{display:grid;gap:8px;text-align:left}
+.field label{font-size:.7rem;font-weight:600;letter-spacing:.28em;text-transform:uppercase;color:var(--lav)}
+.field input,.field textarea{width:100%;font:inherit;color:var(--silver);background:rgba(7,8,24,.35);border:1px solid rgba(159,162,216,.38);
+  border-radius:14px;padding:13px 16px;min-height:48px;transition:border-color .25s,box-shadow .25s}
+.field textarea{min-height:120px;resize:vertical}
+.field input::placeholder,.field textarea::placeholder{color:rgba(159,162,216,.75)}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(230,195,106,.18)}
+.wish-form .btn{justify-self:center;margin-top:4px}
+.wishes-wall{display:grid;gap:20px;max-width:1080px;margin:clamp(40px,6vw,60px) auto 0}
+@media (min-width:760px){.wishes-wall{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.wish{position:relative;border-radius:22px;padding:30px 26px 24px;display:flex;flex-direction:column;gap:16px;overflow-wrap:anywhere}
+.wish svg{width:16px;height:16px;color:var(--gold)}
+.wish p{font-style:italic;color:rgba(232,230,240,.92);line-height:1.7;white-space:pre-line}
+.wish .who{font-family:var(--serif);font-style:normal;font-size:1.35rem;color:var(--gold);margin-top:auto}
+.wishes-empty{text-align:center;font-style:italic;color:rgba(232,230,240,.82);margin:clamp(30px,5vw,46px) auto 0}
+.wishes-empty[hidden]{display:none}
+.wishes-more{display:flex;justify-content:center;margin-top:clamp(28px,4vw,40px)}
+
+/* ---------- help & support ---------- */
+.stay-box{max-width:760px;margin:0 auto;border-radius:28px;padding:clamp(28px,5vw,48px);text-align:center}
+#stayText{color:rgba(232,230,240,.9);font-size:1.04rem;max-width:56ch;margin:0 auto}
+.stay-box .eyebrow{margin:30px 0 16px}
+#coordinators{display:grid;gap:14px;justify-content:center}
+@media (min-width:640px){#coordinators{grid-template-columns:repeat(auto-fit,250px)}}
+.coord{display:flex;align-items:center;gap:14px;text-align:left;text-decoration:none;padding:12px 18px 12px 12px;min-height:60px;border-radius:999px;
+  border:1px solid rgba(230,195,106,.4);background:rgba(7,8,24,.3);transition:border-color .25s,background .25s}
+.coord:hover{border-color:var(--gold);background:rgba(230,195,106,.08)}
+.coord-ic{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--gold);color:var(--mid)}
+.coord-ic svg{width:18px;height:18px}
+.coord-role{display:block;font-size:.68rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--lav)}
+.coord-num{display:block;font-size:1.05rem;font-weight:500;color:var(--silver);letter-spacing:.04em;white-space:nowrap}
+
+/* ---------- footer ---------- */
+footer{text-align:center;padding:clamp(60px,9vw,100px) 20px 56px;overflow:clip}
+footer::before{content:"";position:absolute;left:50%;bottom:-40%;width:160%;max-width:1800px;aspect-ratio:3/1;transform:translateX(-50%);border-radius:50%;
+  background:radial-gradient(ellipse at 50% 0%,rgba(159,162,216,.22),rgba(27,29,79,0) 60%);border-top:1px solid rgba(159,162,216,.22);pointer-events:none;z-index:-1}
+.foot-moon{width:44px;height:44px;margin:0 auto 18px;filter:drop-shadow(0 0 14px rgba(230,195,106,.5))}
+.hashtag{font-family:var(--serif);font-size:clamp(2rem,7vw,3rem);color:var(--gold);letter-spacing:.03em;overflow-wrap:anywhere}
+.thanks{max-width:40ch;margin:14px auto 0;color:rgba(232,230,240,.86)}
+.foot-mini{margin-top:26px;font-size:.68rem;font-weight:600;letter-spacing:.34em;text-transform:uppercase;color:var(--lav)}
+.foot-mini .hero-amp{margin:0 .2em}
+footer .btn{margin-top:26px}
+
+/* ---------- music ---------- */
+#musicToggle{position:fixed;right:16px;bottom:16px;z-index:50;width:50px;height:50px;border-radius:50%;display:grid;place-items:center;
+  font-size:1.2rem;line-height:1;cursor:pointer;color:var(--gold);border:1px solid var(--gold-line);background:rgba(15,16,51,.72);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 0 26px -4px rgba(230,195,106,.45)}
+#musicToggle[hidden]{display:none}
+#musicToggle.spinning{animation:spin 5s linear infinite}
+
+/* ---------- toast ---------- */
+#toast{position:fixed;left:50%;bottom:22px;z-index:60;transform:translate(-50%,24px);opacity:0;pointer-events:none;max-width:calc(100vw - 32px);
+  padding:13px 22px;border-radius:999px;font-size:.88rem;color:var(--silver);background:rgba(15,16,51,.88);border:1px solid var(--gold-line);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 14px 40px rgba(0,0,0,.5);transition:opacity .35s,transform .35s;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- intro: tap the moon ---------- */
+#curtain-overlay{position:fixed;inset:0;z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:clamp(20px,4vh,34px);padding:28px 22px;text-align:center;overflow:hidden;
+  background:radial-gradient(ellipse 90% 70% at 50% 46%,#1b1d4f 0%,#0f1033 42%,#070818 100%)}
+.intro-open #curtain-overlay,#curtain-overlay.fade{display:flex}
+#curtain-overlay.hidden{display:none!important}
+#curtain-overlay .sky{position:absolute}
+#curtain-overlay>*:not(.sky){position:relative}
+.intro-verse{font-size:clamp(.92rem,3.9vw,1.12rem);line-height:1.95;color:var(--lav)}
+.moon-btn{position:relative;width:clamp(156px,46vw,230px);aspect-ratio:1;padding:0;border:0;border-radius:50%;background:none;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;box-shadow:0 0 46px 8px rgba(232,230,240,.26),0 0 140px 36px rgba(230,195,106,.14);
+  transition:transform 1.1s var(--ease),filter 1.1s,box-shadow 1.1s;animation:breathe 4.6s ease-in-out infinite}
+.moon-btn svg{position:relative;display:block;width:100%;height:100%}
+.moon-btn::before,.moon-btn::after{content:"";position:absolute;inset:-16px;border-radius:50%;border:1px solid rgba(230,195,106,.45);animation:halo 3.6s ease-out infinite;pointer-events:none}
+.moon-btn::after{animation-delay:1.8s}
+.moon-btn:focus-visible{outline-offset:22px;border-radius:50%}
+.moon-flash{position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:0;
+  background:radial-gradient(circle,#fffdf4 0%,rgba(244,240,255,.92) 28%,rgba(230,195,106,.35) 52%,rgba(232,230,240,0) 70%)}
+@keyframes breathe{50%{box-shadow:0 0 60px 14px rgba(232,230,240,.34),0 0 170px 50px rgba(230,195,106,.18)}}
+@keyframes halo{from{transform:scale(.92);opacity:.9}to{transform:scale(1.42);opacity:0}}
+.intro-hint{font-size:.74rem;font-weight:600;letter-spacing:.36em;text-transform:uppercase;color:var(--silver);display:flex;align-items:center;gap:12px}
+.intro-hint::before,.intro-hint::after{content:"";width:26px;height:1px;background:var(--gold-line)}
+.intro-names{font-family:var(--serif);font-size:clamp(1.9rem,8vw,2.8rem);color:var(--gold);line-height:1.1}
+.intro-names .hero-amp{font-size:.6em;color:var(--lav);margin:0 .1em}
+.intro-verse,.intro-hint,.intro-names{transition:opacity .6s}
+#curtain-overlay.opening .intro-verse,#curtain-overlay.opening .intro-hint,#curtain-overlay.opening .intro-names{opacity:0}
+#curtain-overlay.opening .moon-btn{animation:none;transform:scale(1.16);filter:brightness(1.3);
+  box-shadow:0 0 90px 36px rgba(255,251,238,.6),0 0 240px 90px rgba(230,195,106,.32)}
+#curtain-overlay.opening .moon-btn::before,#curtain-overlay.opening .moon-btn::after{display:none}
+#curtain-overlay.opening .moon-flash{animation:flash 1.5s ease-in forwards}
+#curtain-overlay.fade{opacity:0;transition:opacity .75s ease}
+@keyframes flash{0%{opacity:0;transform:scale(.6)}40%{opacity:1}100%{opacity:1;transform:scale(14)}}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  .js .reveal,.js .rise,.js.intro-open .rise{opacity:1!important;transform:none!important;filter:none!important}
+  .shoot{display:none}
+  .c-line{stroke-dashoffset:0!important}
+}
+</style>
+</head>
+<body>
+
+<!-- shared SVG defs -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <path id="spk" d="M12 0C12.9 7.3 16.7 11.1 24 12 16.7 12.9 12.9 16.7 12 24 11.1 16.7 7.3 12.9 0 12 7.3 11.1 11.1 7.3 12 0Z"/>
+    <radialGradient id="litGrad" cx="62%" cy="40%" r="75%">
+      <stop offset="0" stop-color="#f4f1ff" stop-opacity=".42"/>
+      <stop offset=".7" stop-color="#c9c7e6" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#9fa2d8" stop-opacity=".14"/>
+    </radialGradient>
+    <radialGradient id="glowGrad">
+      <stop offset="0" stop-color="#fff6d8"/>
+      <stop offset=".35" stop-color="#e6c36a" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#e6c36a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="crescentGrad" cx="38%" cy="40%" r="70%">
+      <stop offset="0" stop-color="#fffaf0"/>
+      <stop offset=".55" stop-color="#f1e4c0"/>
+      <stop offset="1" stop-color="#e6c36a"/>
+    </radialGradient>
+  </defs>
+</svg>
+
+<div class="sky" id="sky" aria-hidden="true"><span class="shoot a"></span><span class="shoot b"></span></div>
+
+<!-- ============ INTRO: tap the moon ============ -->
+<div id="curtain-overlay" data-hide-after="1750">
+  <div class="sky" aria-hidden="true"><span class="shoot a"></span></div>
+  <p class="intro-verse" lang="ta" data-bind="verse"></p>
+  <button type="button" class="moon-btn" id="openMoonBtn" data-open-invite aria-label="Tap the moon to open the invitation">
+    <span class="moon-flash" aria-hidden="true"></span>
+    <svg viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+      <defs>
+        <radialGradient id="fullMoon" cx="40%" cy="36%" r="70%">
+          <stop offset="0" stop-color="#fffdf6"/><stop offset=".5" stop-color="#efe9dc"/><stop offset="1" stop-color="#cdc8e2"/>
+        </radialGradient>
+        <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.4"/></filter>
+      </defs>
+      <circle cx="100" cy="100" r="100" fill="url(#fullMoon)"/>
+      <g fill="#a9a3c4" opacity=".32" filter="url(#soft)">
+        <ellipse cx="72" cy="78" rx="22" ry="17"/><ellipse cx="122" cy="58" rx="12" ry="9"/><ellipse cx="128" cy="122" rx="26" ry="20"/>
+        <ellipse cx="78" cy="138" rx="12" ry="10"/><ellipse cx="102" cy="96" rx="8" ry="7"/><ellipse cx="150" cy="92" rx="9" ry="12"/>
+      </g>
+      <g fill="none" stroke="#b7b1cf" stroke-opacity=".45" stroke-width="1.2">
+        <circle cx="58" cy="112" r="5"/><circle cx="140" cy="150" r="4"/><circle cx="96" cy="40" r="3.5"/>
+      </g>
+    </svg>
+  </button>
+  <p class="intro-hint">Tap the moon to open</p>
+  <p class="intro-names" data-bind="names"></p>
+</div>
+
+<!-- ============ HERO ============ -->
+<header id="hero">
+  <div class="hero-moon rise" aria-hidden="true">
+    <svg viewBox="0 0 120 120" focusable="false">
+      <mask id="crescentMask"><rect width="120" height="120" fill="#fff"/><circle cx="80" cy="46" r="44" fill="#000"/></mask>
+      <circle cx="60" cy="60" r="48" fill="url(#crescentGrad)" mask="url(#crescentMask)"/>
+    </svg>
+  </div>
+
+  <p class="hero-verse rise" lang="ta" data-bind="verse"></p>
+  <div class="rule rise r2" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#spk" fill="currentColor"/></svg></div>
+  <p class="eyebrow rise r2">Twinkle, twinkle, little star</p>
+
+  <h1 class="hero-title rise r3" data-bind="title"></h1>
+
+  <!-- a little constellation around the birthday star's initial -->
+  <svg class="constellation rise r3" viewBox="0 0 260 110" aria-hidden="true" focusable="false">
+    <path class="c-line" d="M22 74 L60 54 L98 66 L130 30 L162 66 L200 54 L238 74"/>
+    <path class="c-line" d="M130 30 L122 6"/>
+    <circle class="c-dot" cx="60" cy="54" r="1.9"/><circle class="c-dot" cx="98" cy="66" r="1.7"/>
+    <circle class="c-dot" cx="162" cy="66" r="1.7"/><circle class="c-dot" cx="200" cy="54" r="1.9"/>
+    <circle class="c-dot" cx="122" cy="6" r="1.5" opacity=".8"/>
+    <circle cx="22" cy="74" r="8" fill="url(#glowGrad)"/><circle class="c-dot" cx="22" cy="74" r="2.2"/>
+    <g transform="translate(232 68) scale(.5)"><use class="c-star m" href="#spk" fill="#fff6dc"/></g>
+    <circle cx="130" cy="30" r="18" fill="url(#glowGrad)"/>
+    <g transform="translate(120.4 20.4) scale(.8)"><use class="c-star" href="#spk" fill="#fff6dc"/></g>
+    <text class="c-lbl" x="130" y="80" text-anchor="middle" data-bind="initial1"></text>
+  </svg>
+
+  <div class="hero-star rise r3">
+    <span class="lbl"><span class="sg">The star of the show</span><span class="pl">The stars of the show</span></span>
+    <span class="nm" data-bind="names"></span>
+  </div>
+
+  <p id="heroTagline" class="rise r4" data-bind="tagline"></p>
+  <p id="heroDatePill" class="rise r5" data-bind="dateLine"></p>
+
+  <a class="scroll-cue rise r5" href="#coverPhoto"><span>Scroll</span><i aria-hidden="true"></i></a>
+</header>
+
+<main>
+<!-- ============ COVER PHOTO ============ -->
+<section id="coverPhoto" aria-label="Photo">
+  <div class="orbit reveal">
+    <svg class="orbit-text" viewBox="0 0 400 400" aria-hidden="true" focusable="false">
+      <defs><path id="ringPath" d="M200 200 m-188 0 a188 188 0 1 1 376 0 a188 188 0 1 1 -376 0"/></defs>
+      <text><textPath href="#ringPath" textLength="1170" lengthAdjust="spacing">TWINKLE, TWINKLE, LITTLE STAR · <tspan data-bind="name1"></tspan> · <tspan data-bind="day"></tspan> . <tspan data-bind="monthNum"></tspan> . <tspan data-bind="year"></tspan> · TWINKLE, TWINKLE, LITTLE STAR · <tspan data-bind="name1"></tspan> · <tspan data-bind="day"></tspan> . <tspan data-bind="monthNum"></tspan> . <tspan data-bind="year"></tspan> ·</textPath></text>
+    </svg>
+    <svg class="orbit-track" viewBox="0 0 400 400" aria-hidden="true" focusable="false">
+      <circle class="track" cx="200" cy="200" r="168"/>
+      <g class="planet-g"><circle cx="368" cy="200" r="9" fill="url(#glowGrad)"/><circle cx="368" cy="200" r="3.4" fill="#fff3cf"/></g>
+    </svg>
+    <div class="photo"><img id="coverImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 1000'%3E%3Cdefs%3E%3CradialGradient id='b' cx='50%25' cy='38%25' r='72%25'%3E%3Cstop offset='0' stop-color='%232c2f73'/%3E%3Cstop offset='.55' stop-color='%231b1d4f'/%3E%3Cstop offset='1' stop-color='%23090a22'/%3E%3C/radialGradient%3E%3CradialGradient id='h' cx='50%25' cy='100%25' r='62%25'%3E%3Cstop offset='0' stop-color='%239fa2d8' stop-opacity='.42'/%3E%3Cstop offset='1' stop-color='%239fa2d8' stop-opacity='0'/%3E%3C/radialGradient%3E%3CradialGradient id='m' cx='40%25' cy='38%25' r='70%25'%3E%3Cstop offset='0' stop-color='%23fffaf0'/%3E%3Cstop offset='.6' stop-color='%23efe2bd'/%3E%3Cstop offset='1' stop-color='%23e6c36a'/%3E%3C/radialGradient%3E%3Cmask id='c'%3E%3Crect width='1000' height='1000' fill='%23fff'/%3E%3Ccircle cx='724' cy='232' r='64' fill='%23000'/%3E%3C/mask%3E%3C/defs%3E%3Crect width='1000' height='1000' fill='url(%23b)'/%3E%3Crect width='1000' height='1000' fill='url(%23h)'/%3E%3Cg fill='%23e8e6f0'%3E%3Ccircle cx='180' cy='210' r='3' opacity='.9'/%3E%3Ccircle cx='262' cy='330' r='2' opacity='.6'/%3E%3Ccircle cx='340' cy='170' r='2.5' opacity='.8'/%3E%3Ccircle cx='452' cy='250' r='1.8' opacity='.5'/%3E%3Ccircle cx='560' cy='150' r='2.4' opacity='.7'/%3E%3Ccircle cx='830' cy='380' r='2.6' opacity='.8'/%3E%3Ccircle cx='880' cy='190' r='1.8' opacity='.5'/%3E%3Ccircle cx='130' cy='420' r='2' opacity='.6'/%3E%3Ccircle cx='210' cy='560' r='1.6' opacity='.5'/%3E%3Ccircle cx='800' cy='560' r='2' opacity='.6'/%3E%3Ccircle cx='900' cy='470' r='1.6' opacity='.5'/%3E%3Ccircle cx='610' cy='320' r='1.6' opacity='.5'/%3E%3C/g%3E%3Cpath d='M300 180 L340 170 L380 205 L452 250' fill='none' stroke='%23e8e6f0' stroke-opacity='.35' stroke-width='2'/%3E%3Ccircle cx='700' cy='250' r='70' fill='url(%23m)' mask='url(%23c)'/%3E%3Cpath d='M0 820 Q180 760 360 800 T720 790 T1000 770 V1000 H0Z' fill='%23141640'/%3E%3Cpath d='M0 880 Q260 830 520 870 T1000 850 V1000 H0Z' fill='%230d0e2e'/%3E%3Ccircle cx='500' cy='500' r='190' fill='none' stroke='%23e6c36a' stroke-opacity='.55' stroke-width='2'/%3E%3Ccircle cx='500' cy='500' r='176' fill='none' stroke='%23e6c36a' stroke-opacity='.25' stroke-width='1.5'/%3E%3Cg transform='translate(500 470) scale(4.4) translate(-12 -12)'%3E%3Cpath d='M12 0C12.9 7.3 16.7 11.1 24 12 16.7 12.9 12.9 16.7 12 24 11.1 16.7 7.3 12.9 0 12 7.3 11.1 11.1 7.3 12 0Z' fill='%23e6c36a'/%3E%3C/g%3E%3Cg fill='none' stroke='%239fa2d8' stroke-width='3' stroke-linejoin='round' transform='translate(470 590)'%3E%3Crect x='0' y='8' width='60' height='42' rx='7'/%3E%3Cpath d='M18 8 l6-8 h12 l6 8'/%3E%3Ccircle cx='30' cy='29' r='11'/%3E%3C/g%3E%3Ctext x='500' y='700' text-anchor='middle' font-family='Helvetica, Arial, sans-serif' font-size='26' fill='%23c9cbee' letter-spacing='9'%3EBIRTHDAY PHOTO%3C/text%3E%3C/svg%3E" alt="The birthday star" width="1000" height="1000"></div>
+  </div>
+</section>
+
+<!-- ============ EVENTS ============ -->
+<section id="events" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow">Save The Date</p>
+    <h2 class="sec-title">Party Details</h2>
+    <div class="rule" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#spk" fill="currentColor"/></svg></div>
+    <p class="sec-sub">Come and celebrate with us — we can't wait to see you there!</p>
+  </div>
+
+  <div class="events-grid" id="eventsGrid">
+    <template>
+      <article class="event-card glass reveal">
+        <svg class="spark tl" viewBox="0 0 24 24" aria-hidden="true"><use href="#spk" fill="currentColor"/></svg>
+        <svg class="spark br" viewBox="0 0 24 24" aria-hidden="true"><use href="#spk" fill="currentColor"/></svg>
+        <div class="ev-icon" aria-hidden="true" data-field="icon"></div>
+        <p class="ev-when" data-field="weekday"></p>
+        <h3 class="ev-title" data-field="name"></h3>
+        <p class="ev-meta"><span data-field="date"></span><span class="dot" aria-hidden="true" data-if="time"></span><span data-field="time"></span></p>
+        <div class="ev-sep" aria-hidden="true"></div>
+        <p class="ev-venue" data-field="place"></p>
+        <p class="ev-addr" data-field="venue"></p>
+        <p class="ev-desc" data-field="desc"></p>
+        <a class="btn" data-href="map">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+          Get Directions
+        </a>
+      </article>
+    </template>
+  </div>
+</section>
+
+<!-- ============ COUNTDOWN: moon phases ============ -->
+<section id="countdown" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow">Almost Time</p>
+    <h2 class="sec-title">Counting Down To The Party</h2>
+    <div class="rule" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#spk" fill="currentColor"/></svg></div>
+  </div>
+  <div class="moons reveal" role="timer" aria-label="Time left until the party">
+    <div class="mu">
+      <div class="phase">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><circle class="halo" cx="50" cy="50" r="56"/><circle class="disc" cx="50" cy="50" r="48"/><path class="lit" d="M50 2A48 48 0 0 1 50 98A30 48 0 0 0 50 2Z"/></svg>
+        <span class="cd-num" id="cdDays">00</span>
+      </div>
+      <span class="cd-lbl">Days</span>
+    </div>
+    <div class="mu">
+      <div class="phase">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><circle class="halo" cx="50" cy="50" r="56"/><circle class="disc" cx="50" cy="50" r="48"/><path class="lit" d="M50 2A48 48 0 0 1 50 98Z"/></svg>
+        <span class="cd-num" id="cdHours">00</span>
+      </div>
+      <span class="cd-lbl">Hours</span>
+    </div>
+    <div class="mu">
+      <div class="phase">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><circle class="halo" cx="50" cy="50" r="56"/><circle class="disc" cx="50" cy="50" r="48"/><path class="lit" d="M50 2A48 48 0 0 1 50 98A30 48 0 0 1 50 2Z"/></svg>
+        <span class="cd-num" id="cdMins">00</span>
+      </div>
+      <span class="cd-lbl">Minutes</span>
+    </div>
+    <div class="mu">
+      <div class="phase">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><circle class="halo" cx="50" cy="50" r="56"/><circle class="disc" cx="50" cy="50" r="48"/><circle class="lit" cx="50" cy="50" r="48"/></svg>
+        <span class="cd-num" id="cdSecs">00</span>
+      </div>
+      <span class="cd-lbl">Seconds</span>
+    </div>
+  </div>
+  <p class="cd-note reveal">The fun begins at <b data-bind="time"></b> on <b data-bind="dateLong"></b></p>
+</section>
+
+<!-- ============ WISHES ============ -->
+<section id="wishes" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow">Guest Book</p>
+    <h2 class="sec-title">Send Birthday Wishes</h2>
+    <div class="rule" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#spk" fill="currentColor"/></svg></div>
+    <p class="sec-sub">Leave a little note for the birthday star below.</p>
+  </div>
+
+  <form class="wish-form glass reveal" id="wishForm">
+    <div class="field">
+      <label for="wishName">Your name</label>
+      <input type="text" id="wishName" name="name" maxlength="60" autocomplete="name" placeholder="Your name" required>
+    </div>
+    <div class="field">
+      <label for="wishMessage">Your wishes</label>
+      <textarea id="wishMessage" name="message" maxlength="500" rows="4" placeholder="Write your birthday wishes…" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-solid">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#spk" fill="currentColor"/></svg>
+      Send Your Wishes
+    </button>
+  </form>
+
+  <div class="wishes-wall" id="wishesWall">
+    <template>
+      <article class="wish glass reveal">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#spk" fill="currentColor"/></svg>
+        <p data-field="message"></p>
+        <p class="who">— <span data-field="name"></span></p>
+      </article>
+    </template>
+  </div>
+  <p class="wishes-empty" id="wishesEmpty" hidden>Be the first to send a birthday wish ✨</p>
+  <div class="wishes-more"><button type="button" class="btn" id="wishesMore" hidden>Show more wishes</button></div>
+</section>
+
+<!-- ============ HELP & SUPPORT ============ -->
+<section id="stay" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow">For Our Guests</p>
+    <h2 class="sec-title">Help &amp; Support</h2>
+    <div class="rule" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#spk" fill="currentColor"/></svg></div>
+  </div>
+  <div class="stay-box glass reveal">
+    <p id="stayText" data-bind="help"></p>
+    <p class="eyebrow">Coordinators</p>
+    <div id="coordinators">
+      <template>
+        <a class="coord" data-href="tel">
+          <span class="coord-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3.5h3.2l1.6 4.2-2.1 1.4a11 11 0 0 0 5.2 5.2l1.4-2.1 4.2 1.6V17a3 3 0 0 1-3.2 3A15.5 15.5 0 0 1 2 6.7a3 3 0 0 1 3-3.2Z"/></svg></span>
+          <span><span class="coord-role" data-field="name"></span><span class="coord-num" data-field="phone"></span></span>
+        </a>
+      </template>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <svg class="foot-moon" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+    <mask id="crescentMask2"><rect width="120" height="120" fill="#fff"/><circle cx="80" cy="46" r="44" fill="#000"/></mask>
+    <circle cx="60" cy="60" r="48" fill="url(#crescentGrad)" mask="url(#crescentMask2)"/>
+  </svg>
+  <p class="hashtag" data-bind="hashtag"></p>
+  <p class="thanks">With love and a sky full of twinkles, thank you for celebrating with us.</p>
+  <p class="foot-mini"><span data-bind="names"></span> · <span data-bind="day"></span> . <span data-bind="monthNum"></span> . <span data-bind="year"></span></p>
+  <button type="button" class="btn" id="shareBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg>
+    Copy link
+  </button>
+</footer>
+
+<button type="button" id="musicToggle" aria-label="Toggle background music" title="Toggle background music" hidden>🎵</button>
+<audio id="bgMusic" loop preload="auto"></audio>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  var d = document, html = d.documentElement;
+  var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  /* ---- star field: six twinkling layers of box-shadow stars (deterministic) ---- */
+  function seeded(s) { return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+  function fillSky(sky, seed) {
+    if (!sky) return;
+    var rnd = seeded(seed);
+    var layers = [[42, '232,230,240', 0], [38, '232,230,240', 0], [26, '190,192,235', 1], [18, '232,230,240', 1], [12, '230,195,106', 2], [8, '255,255,255', 3]];
+    layers.forEach(function (L, i) {
+      var el = d.createElement('i'), sh = [];
+      el.className = 'l' + (i + 1);
+      for (var k = 0; k < L[0]; k++) {
+        sh.push((rnd() * 100).toFixed(2) + 'vw ' + (rnd() * 100).toFixed(2) + 'vh ' + L[2] + 'px 0 rgba(' + L[1] + ',' + (0.55 + rnd() * 0.45).toFixed(2) + ')');
+      }
+      el.style.boxShadow = sh.join(',');
+      sky.insertBefore(el, sky.firstChild);
+    });
+  }
+  fillSky(d.getElementById('sky'), 20270212);
+
+  /* ---- intro overlay: the moon glows and fades. The site's script also opens it ([data-open-invite]). ---- */
+  var overlay = d.getElementById('curtain-overlay');
+  if (!html.classList.contains('intro-open')) {
+    if (overlay) overlay.parentNode.removeChild(overlay);
+  } else if (overlay) {
+    fillSky(overlay.querySelector('.sky'), 1102);
+    var moonBtn = d.getElementById('openMoonBtn');
+    moonBtn.addEventListener('click', function () {
+      if (overlay.classList.contains('opening')) return;
+      overlay.classList.add('opening');
+      var unlock = reduce ? 0 : 950, gone = reduce ? 60 : 1750;
+      setTimeout(function () { overlay.classList.add('fade'); html.classList.remove('intro-open'); }, unlock);
+      setTimeout(function () { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, gone);
+    });
+  }
+
+  /* ---- after the details are filled in: without a title, the name becomes the big heading ---- */
+  d.addEventListener('invite:render', function () {
+    var hero = d.getElementById('hero'), title = hero.querySelector('[data-bind="title"]');
+    hero.classList.toggle('no-title', !title || title.style.display === 'none' || !title.textContent.trim());
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Invitation Editor</title>
+<link rel="icon" href="assets/emblem.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Noto+Sans+Tamil:wght@400;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<!-- Shown when js/firebase-config.js still has placeholder values -->
+<section id="setupView" class="center-view" hidden>
+  <div class="card narrow">
+    <img src="assets/emblem.svg" alt="" class="logo">
+    <h1>Not set up yet</h1>
+    <p>This site isn't connected to Firebase yet. Please ask the person who manages it.</p>
+  </div>
+</section>
+
+<!-- PIN: the only thing this page asks for -->
+<section id="pinView" class="center-view" hidden>
+  <form id="pinForm" class="card narrow" autocomplete="off">
+    <img src="assets/emblem.svg" alt="" class="logo">
+    <h1>Invitation Editor</h1>
+    <label class="field"><span>Enter your PIN</span>
+      <input type="text" id="pinInput" class="pin-input" inputmode="text" autocapitalize="characters" autocorrect="off"
+        spellcheck="false" maxlength="12" placeholder="ABCD-EFGH" required autofocus>
+    </label>
+    <button type="submit" class="btn primary block" id="pinBtn">Open editor</button>
+    <p class="error" id="pinError" role="alert"></p>
+  </form>
+</section>
+
+<!-- EDITOR: one invitation, the one the PIN belongs to. Its markup is built by js/event-editor.js -->
+<div id="appView" hidden>
+  <header class="topbar">
+    <div class="brand"><img src="assets/emblem.svg" alt=""> Invitation Editor</div>
+    <div class="top-actions">
+      <button class="btn ghost" id="leaveBtn">Leave editor</button>
+    </div>
+  </header>
+  <div id="editorView" hidden></div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="js/editor.js"></script>
+</body>
+</html>

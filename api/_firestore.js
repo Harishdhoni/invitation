@@ -1,13 +1,14 @@
 // Minimal read-only Firestore REST client for the link-preview functions.
 // Files starting with "_" in api/ are helpers, not endpoints.
-// Reads need no credentials: the rules allow anyone to get a wedding and its images.
+// Reads need no credentials: the rules allow anyone to get an event, its images and a template.
 
 // Must match projectId in public/js/firebase-config.js.
 const PROJECT_ID = "wedding-invitation-769fc";
 const BASE = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/`;
 
-// Same rule as isValidSlug in public/js/defaults.js.
+// Same rules as isValidSlug and isValidId in public/js/defaults.js.
 const isValidSlug = s => typeof s === "string" && s.length >= 3 && s.length <= 40 && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(s);
+const isValidId = s => typeof s === "string" && s.length >= 2 && s.length <= 40 && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(s);
 
 // Firestore REST values ({ stringValue: "x" }, { mapValue: { fields } }, ...) to plain JS.
 function plain(v){
@@ -32,4 +33,4 @@ async function getDoc(path, fields = []){
   return plain({ mapValue: { fields: (await r.json()).fields || {} } });
 }
 
-module.exports = { getDoc, isValidSlug };
+module.exports = { getDoc, isValidSlug, isValidId };

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<!--
+  Template 06 — Midnight Art Deco
+  Invitation template for the site: follows TEMPLATES.md (data-bind / data-field hooks, filled by js/invite.js).
+  1920s Gatsby glamour: navy and gold, sunburst rays, stepped deco corners, octagonal frames, chevron bands
+  and deco countdown tiles. Intro: two navy gates with gold sunburst inlays that slide apart.
+  Palette: navy #0b1a2e / #13294b, near-black #070d17, gold #d4af37 / #b8902c / #f7e7a1, champagne #f3e5c0
+  Fonts:   Limelight (names) · Poiret One (large headings) · Josefin Sans (body) · Noto Sans Tamil (Tamil)
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>You're invited — Midnight Art Deco</title>
+<meta name="description" content="Together with our families, we invite you to celebrate with us.">
+<meta name="theme-color" content="#0b1a2e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Limelight&family=Poiret+One&family=Josefin+Sans:wght@300;400;600;700&family=Noto+Sans+Tamil:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0b1a2e; --navy-2:#13294b; --night:#070d17; --gold:#d4af37; --gold-d:#b8902c; --gold-l:#f7e7a1; --champ:#f3e5c0;
+  --text:#e9dfc4; --muted:#b9b29c;
+  --names:'Limelight', 'Noto Sans Tamil', Georgia, serif; --head:'Poiret One', 'Noto Sans Tamil', sans-serif; --sans:'Josefin Sans', 'Noto Sans Tamil', system-ui, sans-serif; --tamil:'Noto Sans Tamil', sans-serif;
+  --gut:clamp(16px, 5vw, 44px);
+  --gold-text:linear-gradient(180deg, var(--gold-l) 0%, var(--gold) 55%, var(--gold-d) 100%);
+  --oct:polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px);
+  --oct-in:polygon(13px 0, calc(100% - 13px) 0, 100% 13px, 100% calc(100% - 13px), calc(100% - 13px) 100%, 13px 100%, 0 calc(100% - 13px), 0 13px);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
+body{font-family:var(--sans);font-weight:300;color:var(--text);background:var(--navy);line-height:1.7;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+body.locked{overflow:hidden;}
+img,svg{display:block;max-width:100%;}
+a{color:inherit;}
+button{font:inherit;cursor:pointer;}
+:focus-visible{outline:2px solid var(--gold-l);outline-offset:3px;}
+[lang="ta"]{font-family:var(--tamil);letter-spacing:0;}
+
+.section{position:relative;padding:clamp(70px, 10vw, 118px) var(--gut);}
+.inner{max-width:1080px;margin:0 auto;}
+.eyebrow{font-weight:600;font-size:.74rem;letter-spacing:.36em;text-transform:uppercase;color:var(--gold);text-align:center;}
+.section-title{font-family:var(--head);font-weight:400;font-size:clamp(2.3rem, 7vw, 3.6rem);line-height:1.1;text-align:center;margin:.3rem 0 0;
+  background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.section-sub{text-align:center;max-width:520px;margin:0 auto;color:var(--muted);font-size:1.05rem;}
+.fan{width:70px;height:36px;margin:18px auto 22px;}
+.chevron{height:12px;background:
+  linear-gradient(135deg, var(--gold) 25%, transparent 25%) -6px 0/12px 12px,
+  linear-gradient(225deg, var(--gold) 25%, transparent 25%) -6px 0/12px 12px;opacity:.85;}
+.lines{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(90deg, rgba(212,175,55,.05) 0 1px, transparent 1px 64px);}
+
+/* Octagonal gold outline: wrapper is gold, child is the fill */
+.oct{padding:1.5px;background:var(--gold);clip-path:var(--oct);}
+.oct > .oct-fill{clip-path:var(--oct-in);}
+
+/* Stepped corner ornaments, placed by .corners on a positioned box */
+.corners > .c{position:absolute;width:44px;height:44px;color:var(--gold);pointer-events:none;}
+.corners > .c.tl{top:-7px;left:-7px;} .corners > .c.tr{top:-7px;right:-7px;transform:scaleX(-1);}
+.corners > .c.bl{bottom:-7px;left:-7px;transform:scaleY(-1);} .corners > .c.br{bottom:-7px;right:-7px;transform:scale(-1);}
+
+.js .reveal{opacity:0;transform:translateY(24px);transition:opacity .9s ease, transform .9s ease;}
+.js .reveal.in{opacity:1;transform:none;}
+
+/* ============================== INTRO: deco gates ============================== */
+#curtain-overlay{position:fixed;inset:0;z-index:1000;overflow:hidden;}
+.gate{
+  position:absolute;top:0;bottom:0;width:50.5%;transition:transform 1.4s cubic-bezier(.7,0,.2,1);
+  background:
+    radial-gradient(circle at var(--x) 50%, transparent 0 96px, var(--gold) 96px 98px, transparent 98px 118px, rgba(212,175,55,.6) 118px 119px, transparent 119px),
+    repeating-conic-gradient(from 0deg at var(--x) 50%, rgba(212,175,55,.16) 0 .8deg, transparent .8deg 6deg),
+    repeating-linear-gradient(90deg, rgba(212,175,55,.06) 0 1px, transparent 1px 48px),
+    linear-gradient(180deg, var(--navy-2), var(--navy) 50%, var(--night));
+}
+.gate.left{left:0;--x:100%;border-right:3px double var(--gold);}
+.gate.right{right:0;--x:0%;border-left:3px double var(--gold);}
+#curtain-overlay.open .gate.left{transform:translateX(-101%);}
+#curtain-overlay.open .gate.right{transform:translateX(101%);}
+.gate-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  padding:24px 16px;text-align:center;transition:opacity .5s ease;
+}
+#curtain-overlay.open .gate-center{opacity:0;pointer-events:none;}
+.intro-verse{color:var(--champ);font-size:clamp(.82rem, 3.5vw, 1.08rem);line-height:1.9;background:rgba(7,13,23,.72);padding:8px 14px;}
+.intro-names{font-family:var(--names);font-size:clamp(2rem, 8.5vw, 3rem);line-height:1.1;background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 2px 8px rgba(0,0,0,.6));}
+.btn-enter{border:0;background:none;padding:0;}
+.btn-enter .oct-fill{display:block;padding:14px 30px;background:var(--night);color:var(--gold-l);font-weight:600;font-size:.82rem;letter-spacing:.32em;text-transform:uppercase;}
+.btn-enter:hover .oct-fill{background:var(--navy-2);}
+.intro-hint{font-size:.74rem;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);background:rgba(7,13,23,.6);padding:4px 10px;}
+
+/* ================================== HERO ================================== */
+#hero{
+  position:relative;min-height:100vh;min-height:100svh;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;
+  padding:clamp(40px, 8vw, 80px) var(--gut);
+  background:
+    repeating-conic-gradient(from -90deg at 50% 108%, rgba(212,175,55,.08) 0 .8deg, transparent .8deg 5deg),
+    radial-gradient(ellipse at 50% 100%, rgba(212,175,55,.18), transparent 60%),
+    linear-gradient(180deg, var(--night), var(--navy) 45%, var(--navy-2));
+}
+.deco-frame{position:relative;max-width:720px;width:100%;padding:clamp(40px, 7vw, 64px) clamp(20px, 5vw, 56px);border:1px solid var(--gold);outline:1px solid rgba(212,175,55,.55);outline-offset:7px;background:rgba(7,13,23,.55);backdrop-filter:blur(2px);}
+.hero-verse{color:var(--champ);font-size:clamp(.8rem, 3.4vw, 1.05rem);line-height:1.9;margin-bottom:20px;}
+.vl{display:block;text-wrap:balance;}
+.hero-eyebrow{font-weight:600;font-size:.74rem;letter-spacing:.38em;text-transform:uppercase;color:var(--gold);}
+.hero-names{font-family:var(--names);font-weight:400;font-size:clamp(2.8rem, 11vw, 5.4rem);line-height:1.08;margin:.45rem 0 .7rem;
+  background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 18px rgba(212,175,55,.25));}
+.hero-amp{font-family:var(--head);font-size:.62em;margin:0 .15em;}
+.hero-tagline{color:var(--text);max-width:520px;margin:0 auto 28px;font-size:clamp(1rem, 3.4vw, 1.1rem);}
+.hero-date-pill{display:inline-block;}
+.hero-date-pill .oct-fill{display:block;padding:13px 26px;background:var(--night);color:var(--gold-l);font-weight:600;letter-spacing:.16em;text-transform:uppercase;font-size:.84rem;}
+@media (max-width:640px){
+  .hero-names .name-part{display:block;}
+  .hero-amp{display:block;margin:.05em 0;}
+  .hero-date-pill .oct-fill{padding:12px 16px;letter-spacing:.08em;font-size:.78rem;}
+}
+
+/* ================================ COUPLE PHOTO ================================ */
+#coupleCover{position:relative;padding:clamp(56px, 9vw, 104px) var(--gut);background:var(--night);}
+.cover-frame{position:relative;max-width:1000px;margin:0 auto;padding:12px;border:1px solid var(--gold);}
+.cover-frame img{width:100%;height:auto;outline:1px solid rgba(212,175,55,.5);}
+
+/* ================================== EVENTS ================================== */
+#events{background:linear-gradient(180deg, var(--navy), var(--navy-2));}
+.events-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(min(300px, 100%), 1fr));gap:34px;max-width:900px;margin:44px auto 0;}
+.event-card{position:relative;text-align:center;padding:44px 26px 34px;background:rgba(7,13,23,.55);border:1px solid var(--gold);outline:1px solid rgba(212,175,55,.4);outline-offset:-9px;}
+.event-icon{width:46px;height:46px;margin:0 auto 12px;color:var(--gold);}
+.event-name{font-family:var(--head);font-weight:400;font-size:2.2rem;line-height:1.1;background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.event-name small{display:block;font-family:var(--sans);font-weight:600;font-size:.7rem;letter-spacing:.34em;text-transform:uppercase;color:var(--muted);-webkit-text-fill-color:var(--muted);margin-top:6px;}
+.event-rule{height:10px;width:120px;margin:18px auto;background:linear-gradient(135deg, var(--gold) 25%, transparent 25%) -5px 0/10px 10px, linear-gradient(225deg, var(--gold) 25%, transparent 25%) -5px 0/10px 10px;}
+.event-dt{display:grid;gap:2px;margin-bottom:14px;}
+.event-dt b{font-weight:600;font-size:1.08rem;color:var(--champ);letter-spacing:.06em;}
+.event-dt span{color:var(--gold-l);font-weight:400;}
+.event-place{font-weight:600;color:var(--champ);letter-spacing:.04em;}
+.event-venue{color:var(--muted);font-size:.96rem;}
+.event-desc{color:var(--text);margin:12px 0 22px;}
+.btn-dir{display:inline-block;text-decoration:none;}
+.btn-dir .oct-fill{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 20px;background:var(--navy);color:var(--gold-l);font-weight:600;font-size:.74rem;letter-spacing:.24em;text-transform:uppercase;}
+.btn-dir:hover .oct-fill{background:var(--gold);color:var(--night);}
+.btn-dir svg{width:14px;height:14px;}
+
+/* ================================= COUNTDOWN ================================= */
+#countdown{text-align:center;overflow:hidden;
+  background:repeating-conic-gradient(from 0deg at 50% 50%, rgba(212,175,55,.06) 0 2deg, transparent 2deg 10deg), radial-gradient(circle at 50% 50%, var(--navy-2), var(--night) 70%);}
+.cd-grid{display:flex;justify-content:center;gap:clamp(8px, 2.4vw, 22px);margin-top:6px;}
+.cd-box{flex:0 1 128px;}
+.cd-box .oct-fill{display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:4/5;background:linear-gradient(180deg, var(--navy-2), var(--night));}
+.cd-num{font-family:var(--names);font-size:clamp(1.5rem, 6vw, 2.8rem);line-height:1;background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.cd-label{font-size:clamp(.55rem, 1.9vw, .7rem);font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:8px;}
+.cd-note{margin-top:28px;color:var(--champ);letter-spacing:.1em;}
+
+/* ================================== WISHES ================================== */
+#wishes{background:var(--navy);}
+.wish-form{position:relative;max-width:560px;margin:40px auto 44px;display:grid;gap:18px;padding:clamp(24px, 5vw, 36px);border:1px solid var(--gold);background:rgba(7,13,23,.5);}
+.field{display:grid;gap:4px;}
+.field label{font-weight:600;font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);}
+.wish-form input,.wish-form textarea{width:100%;font:inherit;font-weight:400;color:var(--champ);background:transparent;border:0;border-bottom:1px solid rgba(212,175,55,.6);padding:10px 2px;}
+.wish-form textarea{min-height:96px;resize:vertical;}
+.wish-form input:focus,.wish-form textarea:focus{outline:none;border-bottom-color:var(--gold-l);box-shadow:0 1px 0 var(--gold-l);}
+.wish-form ::placeholder{color:#8c8a80;}
+.btn-send{border:0;padding:0;background:none;justify-self:center;margin-top:6px;}
+.btn-send .oct-fill{display:block;padding:14px 34px;background:var(--gold);color:var(--night);font-weight:700;font-size:.8rem;letter-spacing:.3em;text-transform:uppercase;}
+.btn-send:hover .oct-fill{background:var(--gold-l);}
+.wishes-wall{display:grid;grid-template-columns:repeat(auto-fit, minmax(min(260px, 100%), 1fr));gap:20px;max-width:1000px;margin:0 auto;}
+.wish-card{display:block;}
+.wish-card .oct-fill{height:100%;padding:26px 22px 22px;background:linear-gradient(180deg, var(--navy-2), var(--navy));overflow-wrap:anywhere;}
+.wish-card p{font-size:1.04rem;color:var(--champ);margin-bottom:12px;white-space:pre-line;}
+.wish-card span{font-weight:600;font-size:.74rem;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);}
+
+/* =============================== HELP & SUPPORT =============================== */
+#stay{background:var(--champ);color:var(--navy);}
+#stay .eyebrow{color:var(--gold-d);}
+#stay .section-title{background:none;color:var(--navy);-webkit-text-fill-color:var(--navy);}
+.stay-box{position:relative;max-width:620px;margin:40px auto 0;text-align:center;padding:clamp(28px, 6vw, 44px);border:1px solid var(--navy);outline:1px solid var(--gold-d);outline-offset:-8px;background:#f8eed3;}
+.stay-box .corners > .c{color:var(--gold-d);}
+#stayText{font-weight:400;color:#2a3550;margin-bottom:22px;}
+.coord-label{font-weight:700;font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold-d);margin-bottom:10px;}
+#coordinators{display:grid;gap:10px;}
+.coord{display:flex;align-items:center;justify-content:space-between;gap:6px 12px;flex-wrap:wrap;min-height:52px;padding:10px 16px;text-decoration:none;background:var(--navy);color:var(--champ);}
+.coord:hover{background:var(--navy-2);}
+.coord-role{font-weight:600;letter-spacing:.08em;}
+.coord-phone{color:var(--gold-l);font-weight:600;letter-spacing:.06em;white-space:nowrap;}
+@media (max-width:440px){ .coord{flex-direction:column;justify-content:center;gap:0;} }
+
+/* ================================== FOOTER ================================== */
+footer{position:relative;text-align:center;padding:56px var(--gut) 64px;background:var(--night);overflow:hidden;}
+.hashtag{font-family:var(--names);font-size:clamp(1.6rem, 6.4vw, 2.6rem);background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent;overflow-wrap:anywhere;}
+.thanks{max-width:460px;margin:8px auto 0;color:var(--muted);}
+
+#toast{
+  position:fixed;left:50%;bottom:22px;transform:translate(-50%, 20px);z-index:1100;opacity:0;pointer-events:none;
+  background:var(--night);color:var(--gold-l);border:1px solid var(--gold);padding:12px 22px;font-size:.9rem;letter-spacing:.04em;
+  max-width:calc(100vw - 32px);text-align:center;transition:.35s;
+}
+#toast.show{opacity:1;transform:translate(-50%, 0);}
+
+[hidden]{display:none !important;}
+/* Tamil: no wide letter-spacing (it pulls the vowel signs apart) */
+html[lang="ta"] body *{letter-spacing:0 !important;}
+/* the runtime fills names as name-part / hero-amp spans: keep the intro names on one line */
+.intro-names .hero-amp{display:inline;font-family:inherit;font-size:1em;margin:0;}
+.intro-names .name-part{display:inline;}
+.hero-date-pill:has(> .oct-fill[style*="none"]){display:none;}
+.event-icon.ev-emoji{display:grid;place-items:center;font-size:36px;line-height:1;}
+.event-icon.ev-emoji img{width:46px;height:46px;object-fit:contain;}
+
+/* guest book extras */
+.wishes-empty{max-width:560px;margin:0 auto;text-align:center;padding:18px 22px;border:1px dashed rgba(212,175,55,.55);color:var(--champ);font-size:1.04rem;}
+.wishes-more{display:block;margin:30px auto 0;border:0;padding:0;background:none;}
+.wishes-more .oct-fill{display:block;padding:13px 30px;background:var(--night);color:var(--gold-l);font-weight:600;font-size:.76rem;letter-spacing:.28em;text-transform:uppercase;}
+.wishes-more:hover .oct-fill{background:var(--navy-2);}
+
+/* language bar, share, music */
+.top-bar{position:fixed;top:10px;right:10px;z-index:900;display:flex;align-items:stretch;padding:1.5px;background:var(--gold);clip-path:var(--oct);
+  --oct:polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);}
+.top-bar .bar-fill{display:flex;align-items:center;gap:2px;padding:3px;background:rgba(7,13,23,.94);
+  clip-path:polygon(7px 0, calc(100% - 7px) 0, 100% 7px, 100% calc(100% - 7px), calc(100% - 7px) 100%, 7px 100%, 0 calc(100% - 7px), 0 7px);}
+.top-bar button{min-height:30px;padding:2px 11px 0;border:0;background:transparent;color:var(--gold-l);font-weight:600;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;}
+.top-bar .lang-btn[data-lang="ta"]{font-family:var(--tamil);letter-spacing:0;font-size:.74rem;padding-top:0;}
+.top-bar .lang-btn.active{background:var(--gold);color:var(--night);}
+.top-bar .share-btn{border-left:1px solid rgba(212,175,55,.45);margin-left:4px;}
+.top-bar button:hover:not(.active){color:#fff;}
+#musicToggle{position:fixed;right:14px;bottom:14px;z-index:900;width:48px;height:48px;padding:0;border-radius:50%;
+  display:grid;place-items:center;font-size:20px;line-height:1;
+  background:radial-gradient(circle, var(--navy-2), var(--night));border:1.5px solid var(--gold);
+  box-shadow:inset 0 0 0 4px var(--night), inset 0 0 0 5px rgba(212,175,55,.55), 0 8px 20px -8px rgba(0,0,0,.7);}
+#musicToggle.spinning{animation:spin 6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important;}
+  .js .reveal{opacity:1;transform:none;}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- stepped deco corner -->
+    <symbol id="corner" viewBox="0 0 44 44"><path d="M2 42V16H9V9H16V2H42" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 42V22H15V15H22V8H42" fill="none" stroke="currentColor" stroke-width="1"/><path d="M2 2h6v6H2z" fill="currentColor"/></symbol>
+    <!-- deco fan / shell -->
+    <symbol id="fan" viewBox="0 0 70 36">
+      <path d="M2 35A33 33 0 0 1 68 35" fill="none" stroke="#d4af37" stroke-width="1.4"/>
+      <path d="M12 35A23 23 0 0 1 58 35" fill="none" stroke="#d4af37" stroke-width="1"/>
+      <g stroke="#d4af37" stroke-width="1"><path d="M35 35V3"/><path d="M35 35L12 12"/><path d="M35 35L58 12"/><path d="M35 35L4 24"/><path d="M35 35L66 24"/><path d="M35 35L23 5"/><path d="M35 35L47 5"/></g>
+      <path d="M27 35A8 8 0 0 1 43 35Z" fill="#d4af37"/>
+    </symbol>
+    <symbol id="iArrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"/></symbol>
+  </defs>
+</svg>
+
+<!-- ============================== INTRO ============================== -->
+<div id="curtain-overlay">
+  <div class="gate left"></div>
+  <div class="gate right"></div>
+  <div class="gate-center">
+    <p class="intro-verse" lang="ta" data-bind="verse"></p>
+    <div class="intro-names couple-names" data-bind="names"></div>
+    <button type="button" class="btn-enter oct" id="openCurtainBtn"><span class="oct-fill">Enter</span></button>
+    <p class="intro-hint">The gates await</p>
+  </div>
+</div>
+
+<!-- ============================== HERO ============================== -->
+<header id="hero">
+  <div class="lines" aria-hidden="true"></div>
+  <div class="deco-frame corners">
+    <svg class="c tl" aria-hidden="true"><use href="#corner"/></svg><svg class="c tr" aria-hidden="true"><use href="#corner"/></svg>
+    <svg class="c bl" aria-hidden="true"><use href="#corner"/></svg><svg class="c br" aria-hidden="true"><use href="#corner"/></svg>
+    <svg class="fan" viewBox="0 0 70 36" aria-hidden="true" style="margin-top:0"><use href="#fan"/></svg>
+    <p class="hero-verse" lang="ta" data-bind="verse"></p>
+    <div class="hero-eyebrow" data-i18n="heroEyebrow">Together with our families</div>
+    <h1 class="hero-names couple-names" data-bind="names"></h1>
+    <p class="hero-tagline" id="heroTagline" data-bind="tagline"></p>
+    <div class="hero-date-pill oct"><span class="oct-fill" data-bind="dateLine"></span></div>
+  </div>
+</header>
+
+<div class="chevron" aria-hidden="true"></div>
+
+<main>
+<!-- ============================== COUPLE PHOTO ============================== -->
+<section id="coupleCover">
+  <div class="lines" aria-hidden="true"></div>
+  <figure class="cover-frame corners reveal">
+    <svg class="c tl" aria-hidden="true"><use href="#corner"/></svg><svg class="c tr" aria-hidden="true"><use href="#corner"/></svg>
+    <svg class="c bl" aria-hidden="true"><use href="#corner"/></svg><svg class="c br" aria-hidden="true"><use href="#corner"/></svg>
+    <img id="coverImg" alt="Cover photo" width="1200" height="760" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 760'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%2313294b'/%3E%3Cstop offset='1' stop-color='%23070d17'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1200' height='760' fill='url(%23g)'/%3E%3Cg stroke='%23d4af37' stroke-width='1.2' opacity='.35'%3E%3Cpath d='M600 760L600 120'/%3E%3Cpath d='M600 760L420 140'/%3E%3Cpath d='M600 760L780 140'/%3E%3Cpath d='M600 760L260 210'/%3E%3Cpath d='M600 760L940 210'/%3E%3Cpath d='M600 760L130 330'/%3E%3Cpath d='M600 760L1070 330'/%3E%3Cpath d='M600 760L40 480'/%3E%3Cpath d='M600 760L1160 480'/%3E%3C/g%3E%3Cpath d='M380 760A220 220 0 0 1 820 760' fill='none' stroke='%23d4af37' stroke-width='2'/%3E%3Cpath d='M420 760A180 180 0 0 1 780 760' fill='%23070d17' stroke='%23d4af37' stroke-width='1'/%3E%3Cpath d='M600 190l20 20-20 20-20-20z' fill='%23d4af37'/%3E%3Cpath d='M600 262l92 92-92 92-92-92z' fill='none' stroke='%23d4af37' stroke-width='2'/%3E%3Cpath d='M600 290l64 64-64 64-64-64z' fill='%23f7e7a1' fill-opacity='.08' stroke='%23d4af37' stroke-width='1'/%3E%3Cpath d='M600 330l24 24-24 24-24-24z' fill='%23f7e7a1'/%3E%3Ctext x='600' y='718' text-anchor='middle' font-family='Arial, sans-serif' font-size='22' letter-spacing='9' fill='%23d4af37'%3ECOVER PHOTO%3C/text%3E%3C/svg%3E">
+  </figure>
+</section>
+
+<div class="chevron" aria-hidden="true"></div>
+
+<!-- ============================== EVENTS ============================== -->
+<section id="events" class="section">
+  <div class="lines" aria-hidden="true"></div>
+  <div class="inner" style="position:relative">
+    <div class="eyebrow" data-i18n="eventsEyebrow">Save The Dates</div>
+    <h2 class="section-title" data-i18n="eventsTitle">Wedding Events</h2>
+    <svg class="fan" viewBox="0 0 70 36" aria-hidden="true"><use href="#fan"/></svg>
+    <p class="section-sub" data-i18n="eventsSub">We would be delighted to have you join us at each of these celebrations.</p>
+    <div class="events-grid" id="eventsGrid">
+      <template>
+        <article class="event-card corners reveal">
+          <svg class="c tl" aria-hidden="true"><use href="#corner"/></svg><svg class="c tr" aria-hidden="true"><use href="#corner"/></svg>
+          <svg class="c bl" aria-hidden="true"><use href="#corner"/></svg><svg class="c br" aria-hidden="true"><use href="#corner"/></svg>
+          <span class="event-icon ev-emoji" data-field="icon" aria-hidden="true"></span>
+          <h3 class="event-name" data-field="name"></h3>
+          <div class="event-rule" aria-hidden="true"></div>
+          <div class="event-dt"><b data-field="date"></b><span data-field="time"></span></div>
+          <p class="event-place" data-field="place"></p>
+          <p class="event-venue" data-field="venue"></p>
+          <p class="event-desc" data-field="desc"></p>
+          <a class="btn-dir oct" data-href="map" href="#" target="_blank" rel="noopener"><span class="oct-fill"><span data-i18n="getDirections">Get Directions</span> <svg aria-hidden="true"><use href="#iArrow"/></svg></span></a>
+        </article>
+      </template>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== COUNTDOWN ============================== -->
+<section id="countdown" class="section">
+  <div class="inner">
+    <div class="eyebrow" data-i18n="countdownEyebrow">Almost Time</div>
+    <h2 class="section-title" data-i18n="countdownTitle">Counting Down To Our Muhurtham</h2>
+    <svg class="fan" viewBox="0 0 70 36" aria-hidden="true"><use href="#fan"/></svg>
+    <div class="cd-grid reveal">
+      <div class="cd-box oct"><div class="oct-fill"><div class="cd-num" id="cdDays">00</div><div class="cd-label" data-i18n="cdDays">Days</div></div></div>
+      <div class="cd-box oct"><div class="oct-fill"><div class="cd-num" id="cdHours">00</div><div class="cd-label" data-i18n="cdHours">Hours</div></div></div>
+      <div class="cd-box oct"><div class="oct-fill"><div class="cd-num" id="cdMins">00</div><div class="cd-label" data-i18n="cdMins">Minutes</div></div></div>
+      <div class="cd-box oct"><div class="oct-fill"><div class="cd-num" id="cdSecs">00</div><div class="cd-label" data-i18n="cdSecs">Seconds</div></div></div>
+    </div>
+    <p class="cd-note"><span data-bind="dateLong"></span> · <span data-bind="time"></span></p>
+  </div>
+</section>
+
+<div class="chevron" aria-hidden="true"></div>
+
+<!-- ============================== WISHES ============================== -->
+<section id="wishes" class="section">
+  <div class="lines" aria-hidden="true"></div>
+  <div class="inner" style="position:relative">
+    <div class="eyebrow" data-i18n="wishesEyebrow">Guest Book</div>
+    <h2 class="section-title" data-i18n="wishesTitle">Leave Us Your Wishes</h2>
+    <svg class="fan" viewBox="0 0 70 36" aria-hidden="true"><use href="#fan"/></svg>
+    <p class="section-sub" data-i18n="wishesSub">Your blessings mean the world to us — leave a little note below.</p>
+    <form class="wish-form corners reveal" id="wishForm">
+      <svg class="c tl" aria-hidden="true"><use href="#corner"/></svg><svg class="c tr" aria-hidden="true"><use href="#corner"/></svg>
+      <svg class="c bl" aria-hidden="true"><use href="#corner"/></svg><svg class="c br" aria-hidden="true"><use href="#corner"/></svg>
+      <div class="field"><label for="wishName" data-i18n="wishNamePh">Your name</label><input type="text" id="wishName" maxlength="60" placeholder="Your name" data-i18n-placeholder="wishNamePh" required></div>
+      <div class="field"><label for="wishMessage">Your wishes</label><textarea id="wishMessage" maxlength="500" placeholder="Write your wishes for the couple..." data-i18n-placeholder="wishMsgPh" required></textarea></div>
+      <button type="submit" class="btn-send oct"><span class="oct-fill" data-i18n="sendWishes">Send Wishes</span></button>
+    </form>
+    <div class="wishes-wall" id="wishesWall" aria-live="polite">
+      <template>
+        <article class="wish-card oct"><div class="oct-fill"><p data-field="message"></p><span data-field="name"></span></div></article>
+      </template>
+    </div>
+    <p class="wishes-empty" id="wishesEmpty" data-i18n="noWishes" hidden>Be the first to leave your blessings</p>
+    <button type="button" class="wishes-more oct" id="wishesMore" hidden><span class="oct-fill" data-i18n="showMore">Show more wishes</span></button>
+  </div>
+</section>
+
+<!-- ============================== HELP & SUPPORT ============================== -->
+<section id="stay" class="section">
+  <div class="inner">
+    <div class="eyebrow" data-i18n="stayEyebrow">For Our Guests</div>
+    <h2 class="section-title" data-i18n="stayTitle">Help &amp; Support</h2>
+    <div class="stay-box corners reveal">
+      <svg class="c tl" aria-hidden="true"><use href="#corner"/></svg><svg class="c tr" aria-hidden="true"><use href="#corner"/></svg>
+      <svg class="c bl" aria-hidden="true"><use href="#corner"/></svg><svg class="c br" aria-hidden="true"><use href="#corner"/></svg>
+      <p id="stayText" data-bind="help"></p>
+      <div class="coord-label" data-i18n="coordinatorsLabel">Coordinators</div>
+      <div id="coordinators">
+        <template>
+          <a class="coord" data-href="tel" href="#"><span class="coord-role" data-field="name"></span><span class="coord-phone" data-field="phone"></span></a>
+        </template>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<div class="chevron" aria-hidden="true"></div>
+<footer>
+  <div class="lines" aria-hidden="true"></div>
+  <svg class="fan" viewBox="0 0 70 36" aria-hidden="true" style="margin-top:0"><use href="#fan"/></svg>
+  <div class="hashtag" id="footerHashtag" data-bind="hashtag"></div>
+  <p class="thanks" data-i18n="footerThanks">With gratitude and love, we thank you for being part of our story.</p>
+</footer>
+
+<!-- labels for list items (the runtime translates these; the script copies them into the items) -->
+<div class="i18n-src" hidden><span data-i18n="getDirections">Get Directions</span></div>
+
+<div class="top-bar" role="group" aria-label="Language and sharing"><div class="bar-fill">
+  <button type="button" class="lang-btn active" data-lang="en">EN</button><button type="button" class="lang-btn" data-lang="ta" lang="ta">தமிழ்</button><button type="button" class="share-btn" id="shareBtn" data-i18n="shareBtn">Copy link</button>
+</div></div>
+
+<audio id="bgMusic" loop preload="auto"></audio>
+<button type="button" id="musicToggle" aria-label="Toggle background music" data-i18n-title="musicHint" hidden>🎵</button>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* Intro: skipped in previews and iframes. The runtime opens the gates (adds .open) on the Enter tap. */
+  var overlay = document.getElementById('curtain-overlay');
+  if (/[?&]preview/.test(location.search) || window.self !== window.top) {
+    overlay.remove();
+  } else {
+    document.body.classList.add('locked');
+    document.getElementById('openCurtainBtn').addEventListener('click', function(){
+      overlay.classList.add('open');
+      document.body.classList.remove('locked');
+      setTimeout(function(){ overlay.remove(); }, reduce ? 0 : 1500);
+    });
+  }
+
+  /* List items are rendered after the page's labels are translated: copy the translated labels in. */
+  document.addEventListener('invite:render', function(){
+    document.querySelectorAll('.i18n-src [data-i18n]').forEach(function(src){
+      document.querySelectorAll('#eventsGrid [data-i18n="' + src.getAttribute('data-i18n') + '"]').forEach(function(n){ n.textContent = src.textContent; });
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -24,6 +24,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Noto+Sans+Tamil:wght@400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/invite.css">
+<!-- Hidden until js/invite.js knows whether this event uses Classic or another template,
+     so guests don't see one design flash before the other. Shown anyway after 4 s. -->
+<style>html.booting body{visibility:hidden;}</style>
+<script>document.documentElement.classList.add("booting");setTimeout(function(){document.documentElement.classList.remove("booting");},4000);</script>
 </head>
 <body class="locked">
 

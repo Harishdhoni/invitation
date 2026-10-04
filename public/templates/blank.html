@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<!--
+  Blank starter template. New templates in the admin start from this page.
+  It uses every hook from TEMPLATES.md (data-bind, the list <template>s, countdown, wishes, intro)
+  with plain styling, so you can restyle it or copy the parts you need into your own design.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invitation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=Noto+Sans+Tamil:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#faf7f2; --paper:#fff; --ink:#26211d; --muted:#6b625a; --accent:#9b4a2f; --line:#e7ded3;
+  --display:'Fraunces','Noto Sans Tamil',Georgia,serif; --body:'Inter','Noto Sans Tamil',system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.65;overflow-x:hidden;}
+body.locked{overflow:hidden;}
+img{display:block;max-width:100%;}
+a{color:inherit;}
+button{font:inherit;cursor:pointer;}
+
+.js .reveal{opacity:0;transform:translateY(20px);transition:opacity .7s ease,transform .7s ease;}
+.js .reveal.in{opacity:1;transform:none;}
+
+/* Intro */
+#curtain-overlay{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  padding:24px 16px;text-align:center;background:var(--ink);color:var(--bg);transition:opacity .8s ease;}
+#curtain-overlay.open{opacity:0;pointer-events:none;}
+#curtain-overlay.hidden{display:none;}
+.intro-names{font-family:var(--display);font-size:clamp(2rem,9vw,3.4rem);line-height:1.1;}
+.intro-verse{opacity:.75;font-size:.95rem;}
+#openCurtainBtn{min-height:48px;padding:0 28px;border:1px solid var(--bg);border-radius:999px;background:none;color:var(--bg);letter-spacing:.12em;text-transform:uppercase;font-size:.8rem;}
+
+/* Top bar */
+.topbar{position:fixed;top:12px;right:12px;z-index:50;display:flex;gap:6px;}
+.topbar button{min-height:36px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.9);font-size:.8rem;}
+.lang-btn.active{background:var(--ink);color:var(--bg);border-color:var(--ink);}
+
+/* Sections */
+section,header{padding:clamp(56px,10vw,96px) 16px;}
+.inner{max-width:880px;margin:0 auto;}
+.eyebrow{font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);text-align:center;}
+h2{font-family:var(--display);font-weight:600;font-size:clamp(1.8rem,6vw,2.6rem);text-align:center;margin:.2rem 0 1.6rem;}
+
+#hero{min-height:100vh;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;}
+.hero-title{font-family:var(--display);font-size:clamp(1.2rem,4vw,1.6rem);color:var(--accent);}
+.hero-names{font-family:var(--display);font-weight:600;font-size:clamp(2.8rem,12vw,5.2rem);line-height:1.05;}
+.hero-amp{color:var(--accent);font-style:italic;}
+#heroTagline{max-width:540px;color:var(--muted);}
+#heroDatePill{border:1px solid var(--line);border-radius:999px;padding:8px 18px;background:var(--paper);}
+
+#coupleCover img{width:100%;max-width:880px;margin:0 auto;border-radius:16px;}
+
+.events-grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));}
+.event-card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:22px;}
+.event-icon{font-size:1.8rem;}
+.event-icon img{width:44px;height:44px;object-fit:contain;}
+.event-name{font-family:var(--display);font-size:1.4rem;margin:6px 0 8px;}
+.event-meta{color:var(--muted);font-size:.95rem;}
+.event-desc{margin-top:8px;font-size:.95rem;}
+.btn-dir{display:inline-flex;align-items:center;min-height:44px;margin-top:12px;padding:0 16px;border-radius:999px;background:var(--ink);color:var(--bg);text-decoration:none;font-size:.85rem;}
+
+#countdown{text-align:center;background:var(--paper);}
+.cd-grid{display:flex;justify-content:center;gap:clamp(8px,3vw,20px);}
+.cd-box{min-width:clamp(64px,18vw,96px);padding:12px 6px;border:1px solid var(--line);border-radius:12px;}
+.cd-num{font-family:var(--display);font-size:clamp(1.6rem,7vw,2.6rem);line-height:1;}
+.cd-label{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:6px;}
+.cd-note{margin-top:20px;color:var(--muted);}
+
+.wish-form{display:grid;gap:10px;max-width:520px;margin:0 auto 28px;}
+.wish-form input,.wish-form textarea{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font:inherit;background:var(--paper);}
+.wish-form textarea{min-height:110px;resize:vertical;}
+.wish-form button,#wishesMore{min-height:46px;border:0;border-radius:999px;background:var(--accent);color:#fff;font-weight:600;}
+.wishes-wall{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));}
+.wish-card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px;overflow-wrap:anywhere;}
+.wish-card p{white-space:pre-line;}
+.wish-card span{display:block;margin-top:8px;color:var(--accent);font-size:.9rem;}
+#wishesMore{display:block;margin:20px auto 0;padding:0 24px;}
+#wishesEmpty{text-align:center;color:var(--muted);}
+
+.stay-box{max-width:620px;margin:0 auto;text-align:center;}
+#coordinators{display:grid;gap:8px;margin-top:16px;}
+.coord a{color:var(--accent);font-weight:600;}
+
+footer{padding:48px 16px 64px;text-align:center;background:var(--ink);color:var(--bg);}
+#footerHashtag{font-family:var(--display);font-size:1.6rem;}
+
+#musicToggle{position:fixed;right:16px;bottom:16px;z-index:60;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--paper);font-size:20px;}
+#musicToggle.spinning{animation:spin 4s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);z-index:200;opacity:0;pointer-events:none;transition:.3s;
+  background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;max-width:calc(100vw - 32px);text-align:center;}
+#toast.show{opacity:1;transform:translate(-50%,0);}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important;animation:none !important;} .js .reveal{opacity:1;transform:none;} }
+</style>
+</head>
+<body class="locked">
+
+<div id="curtain-overlay">
+  <p class="intro-verse" lang="ta" data-bind="verse"></p>
+  <div class="intro-names" data-bind="names"></div>
+  <button id="openCurtainBtn" type="button">Open the invitation</button>
+</div>
+
+<div class="topbar">
+  <button class="lang-btn" data-lang="en" type="button">EN</button>
+  <button class="lang-btn" data-lang="ta" type="button">தமிழ்</button>
+  <button id="shareBtn" type="button" data-i18n="shareBtn">Copy link</button>
+</div>
+
+<header id="hero">
+  <div class="hero-title" data-bind="title"></div>
+  <h1 class="hero-names" data-bind="names"></h1>
+  <p id="heroTagline"></p>
+  <div id="heroDatePill"></div>
+</header>
+
+<section id="coupleCover">
+  <img id="coverImg" class="reveal" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 700'%3E%3Crect width='1200' height='700' fill='%23ece4d9'/%3E%3Ctext x='600' y='365' text-anchor='middle' font-family='Georgia' font-size='40' fill='%239b8f82'%3EPhoto%3C/text%3E%3C/svg%3E">
+</section>
+
+<section id="events">
+  <div class="inner">
+    <div class="eyebrow">Save the date</div>
+    <h2>Events</h2>
+    <div class="events-grid" id="eventsGrid">
+      <template>
+        <article class="event-card reveal">
+          <div class="event-icon" data-field="icon"></div>
+          <h3 class="event-name" data-field="name"></h3>
+          <div class="event-meta">
+            <div><b data-field="date"></b> · <span data-field="time"></span></div>
+            <div data-field="place"></div>
+            <div data-field="venue"></div>
+          </div>
+          <p class="event-desc" data-field="desc"></p>
+          <a class="btn-dir" data-href="map" data-i18n="getDirections">Get Directions</a>
+        </article>
+      </template>
+    </div>
+  </div>
+</section>
+
+<section id="countdown">
+  <div class="inner">
+    <div class="eyebrow">Counting down</div>
+    <h2>Almost time</h2>
+    <div class="cd-grid">
+      <div class="cd-box"><div class="cd-num" id="cdDays">00</div><div class="cd-label">Days</div></div>
+      <div class="cd-box"><div class="cd-num" id="cdHours">00</div><div class="cd-label">Hours</div></div>
+      <div class="cd-box"><div class="cd-num" id="cdMins">00</div><div class="cd-label">Minutes</div></div>
+      <div class="cd-box"><div class="cd-num" id="cdSecs">00</div><div class="cd-label">Seconds</div></div>
+    </div>
+    <p class="cd-note"><span data-bind="dateLong"></span> · <span data-bind="time"></span></p>
+  </div>
+</section>
+
+<section id="wishes">
+  <div class="inner">
+    <div class="eyebrow">Guest book</div>
+    <h2>Leave a wish</h2>
+    <form class="wish-form" id="wishForm">
+      <input type="text" id="wishName" maxlength="60" placeholder="Your name" data-i18n-placeholder="wishNamePh" required>
+      <textarea id="wishMessage" maxlength="500" placeholder="Write your wishes..." data-i18n-placeholder="wishMsgPh" required></textarea>
+      <button type="submit">Send wishes</button>
+    </form>
+    <p id="wishesEmpty" hidden>Be the first to leave a wish.</p>
+    <div class="wishes-wall" id="wishesWall">
+      <template>
+        <article class="wish-card"><p data-field="message"></p><span data-field="name"></span></article>
+      </template>
+    </div>
+    <button id="wishesMore" type="button" hidden>Show more wishes</button>
+  </div>
+</section>
+
+<section id="stay">
+  <div class="stay-box">
+    <div class="eyebrow">For our guests</div>
+    <h2>Need help?</h2>
+    <p id="stayText"></p>
+    <div id="coordinators">
+      <template>
+        <div class="coord"><b data-field="name"></b> — <span data-field="phones"></span></div>
+      </template>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div id="footerHashtag"></div>
+</footer>
+
+<button id="musicToggle" type="button" aria-label="Toggle background music" hidden>🎵</button>
+<audio id="bgMusic" loop preload="auto"></audio>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+  // Previews in the admin show the page without the intro.
+  if (window.self !== window.top) {
+    document.getElementById('curtain-overlay').remove();
+    document.body.classList.remove('locked');
+  }
+</script>
+</body>
+</html>
