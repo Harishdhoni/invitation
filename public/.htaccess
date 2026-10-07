@@ -1,0 +1,7 @@
+# Local Apache (XAMPP) only: the same no-cache rule vercel.json sets on Vercel, so edited pages,
+# scripts and styles show up on a normal reload instead of a stale cached copy.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|js|css|json)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>

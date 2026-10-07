@@ -206,6 +206,7 @@ Without a build step there is no shared config, so these are duplicated on purpo
 | Reserved slugs | `RESERVED_SLUGS` in `defaults.js`. Add every new top-level page or folder in `public/` |
 | Firebase SDK version | `firebase.js` · `editor-firebase.js` · `translate.js` |
 | Template hooks | `invite.js` (the implementation) · `TEMPLATES.md` · the Hooks `<details>` in `admin.html` · `templates/blank.html` |
+| No-cache headers for html/js/css | `vercel.json` `headers` (Vercel) · `public/.htaccess` (local Apache, so edits show on a normal reload) |
 | Wish limits (60 / 500) | `firestore.rules` (both wish blocks) · `maxlength` in templates and `index.html` · `sendWish()` in `invite.js` |
 | Size limits | Images: `image-utils.js` (900K-char data URL). Music: `MUSIC_*` in `event-editor.js` (900 KB chunks, 10 MB saved, 60 MB source). Template: `MAX_HTML` in `admin-templates.js` (900 KB) |
 | Setup steps | `SETUP.md`, whenever rules, Firebase console steps or admin buttons change |

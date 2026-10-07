@@ -113,6 +113,13 @@
     </div>
     <p class="muted intro">Each template is one HTML page. Every event that uses it shows its own names, dates, photos and wishes in it,
       at the event's own link. Preview links show a template with sample details.</p>
+    <div class="tpl-toolbar">
+      <label class="select-pill" for="templateCategory">
+        <span class="select-label">Category</span>
+        <select id="templateCategory"><option value="all">All categories</option></select>
+      </label>
+      <p class="tpl-count" id="templateCount" aria-live="polite"></p>
+    </div>
 
     <form class="card form-card" id="newCategoryForm" hidden>
       <h2>New category</h2>
@@ -197,6 +204,8 @@
   <!-- EVENT EDITOR (admin page with ?w=<event>); its markup is built by js/event-editor.js -->
   <div id="editorView" data-admin hidden></div>
 </div>
+
+<footer class="site-credit"><span>© 2026</span><span class="sep" aria-hidden="true">✦</span><span>Powered by <b>Harish S</b></span></footer>
 
 <div id="toast" role="status" aria-live="polite"></div>
 

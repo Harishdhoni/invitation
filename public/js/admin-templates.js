@@ -114,8 +114,19 @@ let categories = [];
 let templates = [];
 let events = [];          // [{ id, cfg }] — to show and check which events use a template or category
 
+// The category the Templates page shows ("all" or a category id). Kept for the browser tab, so it
+// survives a trip to the template editor and back.
+const CATEGORY_KEY = "wi:templatesCategory";
+let shownCategory = "all";
+try { shownCategory = sessionStorage.getItem(CATEGORY_KEY) || "all"; } catch(e){}
+
 export async function enterTemplates(){
   show("templatesView");
+  $("templateCategory").addEventListener("change", e => {
+    shownCategory = e.target.value;
+    try { sessionStorage.setItem(CATEGORY_KEY, shownCategory); } catch(err){}
+    renderTemplateGroups();
+  });
   $("newCategoryBtn").addEventListener("click", () => {
     $("newCategoryForm").reset();
     $("newCategoryError").textContent = "";
@@ -154,10 +165,26 @@ const eventsIn = catId => events.filter(e => (e.cfg.category || "wedding") === c
 
 function renderTemplateGroups(){
   const known = new Set(categories.map(c => c.id));
-  const groups = categories.map(c => templateGroup(c, templatesIn(templates, c.id)));
+  const groups = categories.map(c => ({ cat: c, list: templatesIn(templates, c.id) }));
   const orphans = templates.filter(t => !known.has(t.categoryId));
-  if(orphans.length) groups.push(templateGroup({ id: "", name: "No category" }, orphans));
-  $("templateGroups").replaceChildren(...groups);
+  if(orphans.length) groups.push({ cat: { id: "", name: "No category" }, list: orphans });
+  renderCategorySelect(groups);
+  const shown = shownCategory === "all" ? groups : groups.filter(g => g.cat.id === shownCategory);
+  $("templateGroups").replaceChildren(...shown.map(g => templateGroup(g.cat, g.list)));
+}
+
+// The category dropdown lists every category with its template count. If the chosen category
+// is gone (deleted or renamed away), the page goes back to showing all of them.
+function renderCategorySelect(groups){
+  if(shownCategory !== "all" && !groups.some(g => g.cat.id === shownCategory)) shownCategory = "all";
+  const option = (value, label) => Object.assign(el("option", "", label), { value });
+  const total = groups.reduce((n, g) => n + g.list.length, 0);
+  $("templateCategory").replaceChildren(option("all", `All categories (${total})`),
+    ...groups.map(g => option(g.cat.id, `${g.cat.name} (${g.list.length})`)));
+  $("templateCategory").value = shownCategory;
+  const picked = groups.find(g => g.cat.id === shownCategory);
+  const n = picked ? picked.list.length : total;
+  $("templateCount").textContent = `Showing ${n} template${n === 1 ? "" : "s"}` + (picked ? ` in ${picked.cat.name}` : " in all categories");
 }
 
 function templateGroup(cat, list){
