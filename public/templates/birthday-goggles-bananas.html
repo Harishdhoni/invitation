@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<!--
+  Goggles & Bananas — birthday template
+  A sunny yellow-and-denim invitation for kids 2–8 who love little helpers. The page itself is dressed for the job:
+  a banana you tap to peel open, a sunshine-yellow hero where a black goggle strap runs across the screen and one giant
+  silver goggle frames the birthday child's photo, then the page turns into denim overalls — twill texture, stitched seams,
+  a bib with metal buttons, pocket-shaped event cards, a goggle countdown, yellow "banana notes" and a cuffed hem.
+  Palette: sunshine #ffd52e / #f5b800 · denim #2f5fa8 / #1f3f73 / #5b86c9 · goggle silver #c9ced6 / #8a929e ·
+           strap #232323 · banana #ffe14d with tips #7a5a1a · white
+  Fonts:   Luckiest Guy (headings) · Nunito (body) · Noto Sans Tamil (Tamil)
+  A birthday template for the invitation site; it follows TEMPLATES.md, and js/invite.js fills in the names, title,
+  date, photo, events, countdown, wishes and contacts. Labels with data-ta switch to Tamil with the தமிழ் button.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffd52e">
+<title>Diya turns 4! — Goggles &amp; Bananas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Nunito:wght@400;600;700;800;900&family=Noto+Sans+Tamil:wght@500;700&display=swap" rel="stylesheet">
+<script>
+  /* Runs before paint: mark JS, and decide whether the intro overlay is shown (not in admin previews or frames). */
+  (function(){
+    var d=document.documentElement, skip=/[?&]preview/.test(location.search);
+    try{ skip=skip||window.self!==window.top; }catch(e){ skip=true; }
+    d.className+=" js"+(skip?"":" intro-open");
+  })();
+</script>
+<style>
+:root{
+  --sun:#ffd52e; --sun-d:#f5b800; --sun-l:#fff3b8;
+  --denim:#2f5fa8; --denim-d:#1f3f73; --denim-l:#5b86c9; --denim-dd:#16305a;
+  --silver:#c9ced6; --silver-d:#8a929e; --silver-l:#eef0f3; --strap:#232323;
+  --banana:#ffe14d; --tip:#7a5a1a; --white:#fff;
+  --display:'Luckiest Guy','Noto Sans Tamil',system-ui,sans-serif;
+  --body:'Nunito','Noto Sans Tamil',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --bounce:cubic-bezier(.34,1.56,.64,1);
+  --twill:repeating-linear-gradient(135deg,rgba(255,255,255,.07) 0 1.5px,transparent 1.5px 5px),
+          repeating-linear-gradient(45deg,rgba(8,22,52,.12) 0 1px,transparent 1px 7px);
+  --denim-bg:var(--twill),radial-gradient(ellipse 120% 60% at 50% 0,rgba(255,255,255,.10),transparent 70%),var(--denim);
+  --rays:repeating-conic-gradient(from 0deg at 50% 38%,rgba(255,255,255,.16) 0 9deg,transparent 9deg 18deg);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+html.intro-open,html.intro-open body{overflow:hidden}
+body{
+  margin:0;min-height:100vh;overflow-x:hidden;font-family:var(--body);font-size:1.0625rem;line-height:1.6;color:var(--denim-d);
+  background:var(--sun);
+}
+h1,h2,h3,p{margin:0}
+a{color:inherit}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--denim-d);outline-offset:3px;border-radius:12px}
+[lang="ta"]{font-family:'Noto Sans Tamil',var(--body)}
+.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- shared bits ---------- */
+.section{position:relative;padding:clamp(60px,10vw,100px) 16px;overflow:hidden}
+.sec-head{position:relative;z-index:1;text-align:center;max-width:620px;margin:0 auto clamp(30px,5vw,46px)}
+.eyebrow{font-weight:900;font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;color:var(--sun)}
+.sec-title{
+  font-family:var(--display);font-weight:400;font-size:clamp(2.2rem,8.5vw,3.3rem);line-height:1.05;margin-top:8px;letter-spacing:.01em;
+  color:var(--sun);text-shadow:0 4px 0 var(--denim-dd),0 8px 18px rgba(8,22,52,.35);
+}
+.sec-sub{margin-top:12px;color:#e3ecfa}
+.on-sun .eyebrow{color:var(--denim)}
+.on-sun .sec-title{color:var(--denim-d);text-shadow:0 4px 0 #fff,0 8px 0 var(--sun-d)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:0;cursor:pointer;text-decoration:none;
+  font-family:var(--display);font-weight:400;font-size:1.08rem;letter-spacing:.04em;line-height:1;padding:14px 24px 11px;border-radius:999px;
+  background:var(--sun);color:var(--denim-d);box-shadow:0 5px 0 #c99400,0 10px 18px rgba(8,22,52,.25);transition:transform .15s,box-shadow .15s;
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 7px 0 #c99400,0 12px 20px rgba(8,22,52,.25)}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #c99400}
+.btn svg{width:18px;height:18px;flex:none;margin-top:-3px}
+.btn.dk{background:var(--denim-d);color:var(--sun);box-shadow:0 5px 0 var(--denim-dd),0 10px 18px rgba(8,22,52,.2)}
+.ic{width:20px;height:20px;flex:none}
+.denim{background:var(--denim-bg)}
+/* stitched seam: two rows of thread across the denim */
+.seam{position:relative;height:14px;border-top:2px dashed rgba(245,184,0,.75);border-bottom:2px dashed rgba(245,184,0,.75);margin:0 -16px;opacity:.9}
+/* metal rivet / overall button */
+.rivet{
+  display:inline-block;width:22px;height:22px;border-radius:50%;flex:none;
+  background:radial-gradient(circle at 36% 32%,#fff 0 12%,#e3e6ea 30%,#a9b0ba 70%,#7d8592 100%);
+  box-shadow:inset 0 0 0 2px rgba(80,88,100,.35),0 2px 3px rgba(0,0,0,.35);
+}
+.float-ban{position:absolute;width:56px;height:auto;pointer-events:none;opacity:.9;animation:drift 7s ease-in-out infinite}
+@keyframes drift{0%,100%{transform:translateY(0) rotate(var(--r,-12deg))}50%{transform:translateY(-14px) rotate(calc(var(--r,-12deg) + 16deg))}}
+
+/* reveal on scroll (the runtime adds .in) */
+.js .reveal{opacity:0;transform:translateY(28px) scale(.97)}
+.js .reveal.in{opacity:1;transform:none;transition:opacity .6s ease,transform .8s var(--bounce)}
+
+/* ---------- intro: peel the banana ---------- */
+#curtain-overlay{
+  position:fixed;inset:0;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;padding:24px 16px;text-align:center;overflow:hidden;
+  background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.55) 0,rgba(255,255,255,0) 46%),var(--rays),var(--sun);
+}
+.intro-open #curtain-overlay{display:flex}
+#curtain-overlay.open{transform:translateY(-104%);transition:transform .75s cubic-bezier(.6,-.2,.7,.4) 1.15s;pointer-events:none}
+#curtain-overlay.hidden{display:none}
+#curtain-overlay::after{ /* the strap peeking along the bottom */
+  content:"";position:absolute;left:0;right:0;bottom:0;height:34px;background:var(--strap);
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.08),inset 0 -3px 0 rgba(0,0,0,.4);
+  border-top:2px dashed rgba(255,255,255,.18);
+}
+.intro-eyebrow{font-weight:900;font-size:.82rem;letter-spacing:.2em;text-transform:uppercase;color:var(--denim)}
+.intro-title{
+  font-family:var(--display);font-size:clamp(2.6rem,12vw,4rem);line-height:1;color:var(--denim-d);letter-spacing:.01em;
+  text-shadow:0 4px 0 #fff,0 8px 0 var(--sun-d);
+}
+.peel-btn{
+  position:relative;background:none;border:0;padding:0;margin:6px 0 0;cursor:pointer;width:min(54vw,230px);
+  -webkit-tap-highlight-color:transparent;
+}
+.peel-btn svg{display:block;width:100%;height:auto;overflow:visible}
+.peel-btn .ring{
+  position:absolute;left:50%;top:44%;width:96%;aspect-ratio:1;border-radius:50%;border:4px solid #fff;
+  transform:translate(-50%,-50%);animation:ring 1.9s ease-out infinite;pointer-events:none;
+}
+@keyframes ring{0%{transform:translate(-50%,-50%) scale(.55);opacity:.9}100%{transform:translate(-50%,-50%) scale(1.25);opacity:0}}
+.intro-hint{
+  display:inline-flex;align-items:center;gap:8px;margin-top:4px;padding:10px 20px 8px;border-radius:999px;background:#fff;
+  font-family:var(--display);font-size:1.15rem;letter-spacing:.03em;color:var(--denim-d);box-shadow:0 4px 0 var(--sun-d);
+}
+.intro-hint span{display:inline-block;animation:poke 1.2s ease-in-out infinite}
+@keyframes poke{50%{transform:translateY(-4px)}}
+.big-ban{transform-box:view-box;transform-origin:100px 250px;animation:wiggle 2.6s ease-in-out infinite}
+@keyframes wiggle{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+.peel{transform-box:view-box;transition:transform .85s var(--bounce)}
+.peel.pl{transform-origin:70px 154px}
+.peel.pc{transform-origin:100px 156px}
+.peel.pr{transform-origin:130px 154px}
+.spark{opacity:0;transform-box:fill-box;transform-origin:center}
+.open .peel-btn .ring,.open .intro-hint{opacity:0;transition:opacity .2s;animation:none}
+.open .big-ban{animation:hooray .9s var(--bounce) .55s both}
+.open .peel.pl{transform:rotate(-128deg)}
+.open .peel.pc{transform:rotate(176deg) scale(.9);transition-delay:.12s}
+.open .peel.pr{transform:rotate(128deg);transition-delay:.06s}
+.open .spark{animation:spark .9s ease-out .6s both}
+.open .spark.k2{animation-delay:.72s}.open .spark.k3{animation-delay:.84s}
+@keyframes hooray{0%{transform:none}35%{transform:translateY(-22px) scale(1.06,.95)}60%{transform:translateY(0) scale(.96,1.05)}80%{transform:translateY(-6px)}100%{transform:none}}
+@keyframes spark{0%{opacity:0;transform:scale(.2) rotate(0)}50%{opacity:1;transform:scale(1.15) rotate(45deg)}100%{opacity:0;transform:scale(.6) rotate(90deg)}}
+.burst{position:fixed;inset:0;z-index:70;pointer-events:none;overflow:hidden}
+.burst i{position:absolute;display:block;font-style:normal;line-height:1}
+.burst .dot{width:12px;height:12px;border-radius:50%}
+/* ---------- hero: sunshine, strap and the giant goggle ---------- */
+#hero{
+  position:relative;overflow:hidden;text-align:center;padding:78px 0 0;
+  background:radial-gradient(circle at 50% 400px,rgba(255,255,255,.55) 0,rgba(255,255,255,0) 300px),
+             repeating-conic-gradient(from 4deg at 50% 400px,rgba(255,255,255,.15) 0 8deg,transparent 8deg 16deg),var(--sun);
+}
+.lang{position:absolute;top:14px;right:14px;z-index:3;display:flex;gap:2px;padding:3px;border-radius:999px;background:#fff;box-shadow:0 3px 0 var(--sun-d)}
+.lang-btn{border:0;background:none;cursor:pointer;font-weight:900;font-size:.82rem;min-height:36px;padding:6px 12px;border-radius:999px;color:var(--denim-d)}
+.lang-btn.active{background:var(--denim-d);color:var(--sun)}
+.hero-head{position:relative;z-index:2;padding:0 16px;max-width:720px;margin:0 auto}
+.chip{display:inline-block;font-weight:900;font-size:.9rem;padding:9px 18px;border-radius:999px;background:#fff;color:var(--denim-d);box-shadow:0 4px 0 var(--sun-d)}
+.title{
+  font-family:var(--display);font-weight:400;font-size:clamp(3.3rem,15.5vw,6.4rem);line-height:.95;margin-top:18px;color:var(--denim-d);letter-spacing:.01em;text-wrap:balance;
+  text-shadow:4px 0 0 #fff,-4px 0 0 #fff,0 4px 0 #fff,0 -4px 0 #fff,3px 3px 0 #fff,-3px 3px 0 #fff,3px -3px 0 #fff,-3px -3px 0 #fff,
+              5px 8px 0 #fff,8px 10px 0 var(--denim-dd);
+}
+.strap-row{position:relative;margin-top:30px;padding:6px 0}
+.strap{
+  position:absolute;left:0;right:0;top:50%;height:clamp(60px,17vw,92px);transform:translateY(-50%);
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.045) 0 2px,transparent 2px 7px),linear-gradient(#2e2e2e,#1b1b1b 55%,#262626);
+  box-shadow:0 7px 0 rgba(122,90,26,.25);
+}
+.strap::before,.strap::after{content:"";position:absolute;left:0;right:0;height:0;border-top:2px dashed rgba(255,255,255,.28)}
+.strap::before{top:8px}.strap::after{bottom:8px}
+.goggle{position:relative;z-index:1;width:min(80vw,340px);aspect-ratio:1;margin:0 auto;filter:drop-shadow(0 12px 14px rgba(35,35,35,.35))}
+.goggle .lens{position:absolute;inset:9.5%;border-radius:50%;overflow:hidden;background:#cfe6ff}
+.goggle .lens img,.goggle .lens svg{display:block;width:100%;height:100%;object-fit:cover}
+.goggle .lens::after{ /* a glint that sweeps across the glass */
+  content:"";position:absolute;top:-20%;bottom:-20%;left:0;width:34%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);transform:translateX(-160%) skewX(-18deg);
+  animation:glint 5.5s ease-in-out 2.2s infinite;
+}
+@keyframes glint{0%{transform:translateX(-160%) skewX(-18deg)}22%,100%{transform:translateX(420%) skewX(-18deg)}}
+.goggle .ring{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.helper-line{position:relative;z-index:2;margin-top:22px;padding:0 16px;font-weight:800;font-size:1.12rem;color:var(--denim-d)}
+.helper-line b{font-family:var(--display);font-weight:400;font-size:1.5rem;letter-spacing:.03em;color:var(--denim)}
+.bubble{
+  position:relative;z-index:2;max-width:400px;margin:22px auto 0;width:calc(100% - 32px);padding:16px 20px;border-radius:26px;
+  background:#fff;border:3px solid var(--denim-d);box-shadow:0 6px 0 var(--denim-d);
+}
+.bubble::before,.bubble::after{content:"";position:absolute;left:50%;transform:translateX(-50%);border-style:solid;border-color:transparent}
+.bubble::before{top:-22px;border-width:0 16px 22px;border-bottom-color:var(--denim-d)}
+.bubble::after{top:-16px;border-width:0 12px 17px;border-bottom-color:#fff}
+#heroTagline{font-size:1.06rem;font-weight:700;line-height:1.55}
+/* the overall bib */
+.bib{
+  position:relative;z-index:2;max-width:540px;width:calc(100% - 32px);margin:52px auto 0;padding:66px 18px 34px;
+  border-radius:36px 36px 0 0;background:var(--denim-bg);box-shadow:0 -6px 0 rgba(31,63,115,.25);
+}
+.bib::before{content:"";position:absolute;inset:10px 10px 0;border:2.5px dashed rgba(245,184,0,.85);border-bottom:0;border-radius:28px 28px 0 0;pointer-events:none}
+.bib .rivet{position:absolute;top:20px;width:28px;height:28px}
+.bib .rivet.l{left:22px}.bib .rivet.r{right:22px}
+.bib .strap-tab{position:absolute;top:-30px;width:46px;height:44px;border-radius:12px 12px 0 0;background:var(--denim-bg);box-shadow:inset 0 0 0 2px rgba(255,255,255,.06)}
+.bib .strap-tab::after{content:"";position:absolute;inset:6px 6px 0;border:2px dashed rgba(245,184,0,.8);border-bottom:0;border-radius:8px 8px 0 0}
+.bib .strap-tab.l{left:12px}.bib .strap-tab.r{right:12px}
+#heroDatePill{
+  display:inline-block;position:relative;padding:15px 22px 11px;border-radius:12px;transform:rotate(-2deg);
+  background:var(--twill),var(--denim-d);color:#fff;font-family:var(--display);font-size:clamp(1.12rem,5vw,1.4rem);letter-spacing:.04em;line-height:1.2;text-wrap:balance;max-width:100%;
+  outline:2.5px dashed var(--sun);outline-offset:-8px;box-shadow:0 5px 0 var(--denim-dd),0 10px 18px rgba(8,22,52,.3);
+}
+.pocket-wrap{position:relative;width:min(100%,250px);margin:26px auto 0;padding-top:74px}
+.pocket-wrap .peek{position:absolute;top:0;width:112px;height:auto;z-index:0;filter:drop-shadow(0 3px 2px rgba(8,22,52,.3))}
+.pocket-wrap .peek.a{left:12%;top:4px;transform:rotate(-58deg);animation:peek 3.4s ease-in-out infinite}
+.pocket-wrap .peek.b{left:40%;top:10px;transform:rotate(-118deg) scaleY(-1);animation:peek2 3.4s ease-in-out -.8s infinite}
+@keyframes peek{50%{transform:rotate(-52deg) translateY(-6px)}}
+@keyframes peek2{50%{transform:rotate(-124deg) scaleY(-1) translateY(5px)}}
+.pocket{
+  position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:26px 16px 20px;text-decoration:none;
+  border-radius:6px 6px 26px 26px;background:var(--twill),#3a6cb8;color:#fff;box-shadow:inset 0 12px 0 rgba(8,22,52,.18),0 4px 0 rgba(8,22,52,.25);
+}
+.pocket::before{content:"";position:absolute;inset:16px 8px 8px;border:2px dashed rgba(245,184,0,.85);border-radius:4px 4px 20px 20px;pointer-events:none}
+.pocket b{font-family:var(--display);font-weight:400;font-size:1.25rem;letter-spacing:.05em;color:var(--sun)}
+.pocket i{width:13px;height:13px;border-right:3.5px solid var(--sun);border-bottom:3.5px solid var(--sun);border-radius:2px;transform:rotate(45deg);animation:nudge 1.6s ease-in-out infinite}
+@keyframes nudge{50%{transform:translate(0,5px) rotate(45deg)}}
+#hero .float-ban{z-index:0}
+.rise{animation:rise .9s var(--bounce) both}
+.r1{animation-delay:.12s}.r2{animation-delay:.26s}.r3{animation-delay:.4s}.r4{animation-delay:.54s}
+html.intro-open .rise{animation-play-state:paused}
+@keyframes rise{from{opacity:0;transform:translateY(30px) scale(.9)}}
+.goggle.rise{animation-name:popIn}
+@keyframes popIn{from{opacity:0;transform:scale(.4) rotate(-25deg)}}
+/* ---------- events: overall pockets ---------- */
+#events{padding-top:clamp(56px,9vw,90px)}
+.events{position:relative;z-index:1;display:grid;gap:44px;max-width:900px;margin:0 auto;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr))}
+.event{
+  --pk:#3a6cb8;--flap:#24508f;--thread:rgba(245,184,0,.9);--badge:var(--sun);
+  position:relative;border-radius:16px 16px 44px 44px;background:var(--twill),var(--pk);color:#fff;transform:rotate(-.6deg);
+  box-shadow:0 8px 0 var(--denim-dd),0 20px 34px rgba(8,22,52,.35);
+}
+.event:nth-of-type(even){--pk:#2b5aa0;--flap:var(--sun);--thread:rgba(31,63,115,.75);--badge:#fff;transform:rotate(.6deg)}
+.event::before{content:"";position:absolute;inset:9px;border:2.5px dashed rgba(245,184,0,.85);border-radius:10px 10px 36px 36px;pointer-events:none}
+.ev-flap{
+  position:relative;height:82px;border-radius:16px 16px 50% 50%/16px 16px 52px 52px;background:var(--twill),var(--flap);
+  box-shadow:0 5px 0 rgba(8,22,52,.28);
+}
+.ev-flap::after{content:"";position:absolute;inset:8px 9px 9px;border:2.5px dashed var(--thread);border-top:0;border-radius:0 0 50% 50%/0 0 44px 44px;pointer-events:none}
+.ev-flap .rivet{position:absolute;top:26px}
+.ev-flap .rivet.l{left:24px}.ev-flap .rivet.r{right:24px}
+.ev-icon{
+  position:absolute;left:50%;bottom:-36px;z-index:1;transform:translateX(-50%) rotate(-6deg);width:74px;height:74px;border-radius:50%;
+  display:grid;place-items:center;font-size:2.1rem;background:var(--badge);box-shadow:0 0 0 5px var(--denim-d),0 7px 0 5px var(--denim-dd);
+}
+.ev-icon img{width:60%;height:60%;object-fit:contain}
+.ev-body{position:relative;padding:56px 24px 34px;text-align:center}
+.ev-num{font-weight:900;font-size:.76rem;letter-spacing:.2em;text-transform:uppercase;color:#cfe0f7}
+.event h3{font-family:var(--display);font-weight:400;font-size:clamp(1.8rem,7vw,2.2rem);line-height:1.08;letter-spacing:.02em;margin:6px 0 18px;color:var(--sun);text-shadow:0 3px 0 var(--denim-dd)}
+.ev-meta{list-style:none;margin:0 auto 16px;padding:0;display:grid;gap:12px;text-align:left;max-width:290px}
+.ev-meta li{display:flex;gap:12px;align-items:flex-start;line-height:1.45}
+.ev-meta .ic{margin-top:2px;color:var(--sun)}
+.ev-meta strong{font-weight:800}
+.ev-meta small{display:block;font-size:.95rem;color:#d7e4f7}
+.ev-desc{color:#e9f0fb;font-weight:600;margin:0 auto 22px;max-width:30ch;padding:10px 14px;border-radius:14px;background:rgba(8,22,52,.22)}
+.event .btn{margin-top:4px}
+#events .float-ban{z-index:0}
+/* ---------- countdown: four goggles on a strap ---------- */
+#countdown{
+  background:radial-gradient(circle at 50% 60%,rgba(255,255,255,.45) 0,rgba(255,255,255,0) 60%),var(--sun);
+  box-shadow:inset 0 10px 0 rgba(8,22,52,.12),inset 0 -10px 0 rgba(8,22,52,.12);
+}
+#countdown::before,#countdown::after{content:"";position:absolute;left:0;right:0;border-top:2.5px dashed rgba(31,63,115,.6)}
+#countdown::before{top:20px}#countdown::after{bottom:20px}
+.goggles{
+  --gs:clamp(76px,20.5vw,132px);position:relative;display:flex;justify-content:center;gap:clamp(8px,2.6vw,28px);max-width:680px;margin:0 auto;
+}
+.goggles::before{
+  content:"";position:absolute;left:-100vw;right:-100vw;top:calc(var(--gs) / 2);height:calc(var(--gs) * .44);transform:translateY(-50%);
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.045) 0 2px,transparent 2px 7px),linear-gradient(#2e2e2e,#1b1b1b 55%,#262626);
+  box-shadow:0 6px 0 rgba(122,90,26,.25);
+}
+.gg{position:relative;width:var(--gs);text-align:center}
+.g-ring{
+  position:relative;width:var(--gs);aspect-ratio:1;border-radius:50%;padding:13%;
+  background:linear-gradient(135deg,#fbfcfd 0,#c9ced6 30%,#8a929e 55%,#e2e5ea 78%,#9aa2ad 100%);
+  box-shadow:0 0 0 2px #6f7783,inset 0 0 0 2px rgba(255,255,255,.6),0 8px 12px rgba(35,35,35,.3);
+}
+.g-ring::before,.g-ring::after{
+  content:"";position:absolute;left:50%;width:9%;aspect-ratio:1;border-radius:50%;transform:translateX(-50%);
+  background:radial-gradient(circle at 35% 30%,#fff,#c9ced6 50%,#6f7783);box-shadow:0 0 0 1px #6f7783;
+}
+.g-ring::before{top:2.5%}.g-ring::after{bottom:2.5%}
+.g-lens{
+  position:relative;height:100%;border-radius:50%;display:grid;place-items:center;overflow:hidden;
+  background:radial-gradient(circle at 34% 28%,#fff 0,#eaf3ff 26%,#bcd4ee 70%,#93b3d8 100%);
+  box-shadow:inset 0 0 0 3px #6f7783,inset 0 7px 12px rgba(31,63,115,.35);
+  font-family:var(--display);font-size:calc(var(--gs) * .3);line-height:1;color:var(--denim-d);padding-top:.12em;
+}
+.g-lens::after{
+  content:"";position:absolute;inset:12%;border-radius:50%;border:calc(var(--gs) * .04) solid transparent;border-top-color:rgba(255,255,255,.9);
+  transform:rotate(-38deg);pointer-events:none;
+}
+.gg .lbl{margin-top:12px;font-weight:900;font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:var(--denim-d)}
+.gg:nth-child(odd) .g-ring{animation:look 6s ease-in-out infinite}
+.gg:nth-child(even) .g-ring{animation:look 6s ease-in-out -3s infinite}
+@keyframes look{0%,40%,100%{transform:none}46%{transform:rotate(-8deg)}54%{transform:rotate(6deg)}60%{transform:none}}
+.cd-when{
+  display:block;width:fit-content;max-width:100%;margin:30px auto 0;padding:12px 22px 9px;border-radius:999px;background:#fff;text-align:center;
+  font-family:var(--display);font-size:1.15rem;letter-spacing:.04em;color:var(--denim-d);box-shadow:0 5px 0 var(--sun-d);
+}
+.cd-when span:first-child{color:var(--denim)}
+/* ---------- wishes: banana notes ---------- */
+.wish-form{
+  position:relative;z-index:1;max-width:560px;margin:0 auto 50px;padding:32px 24px 30px;border-radius:26px;display:grid;gap:16px;
+  background:var(--twill),var(--denim-d);box-shadow:0 8px 0 var(--denim-dd),0 20px 34px rgba(8,22,52,.35);
+}
+.wish-form::before{content:"";position:absolute;inset:9px;border:2.5px dashed rgba(245,184,0,.85);border-radius:19px;pointer-events:none}
+.field{position:relative;display:grid;gap:6px;font-weight:800;font-size:.92rem;color:#fff}
+.field input,.field textarea{
+  width:100%;border:3px solid #c9d8ee;background:#fff;border-radius:16px;padding:12px 14px;font-weight:700;font-size:1rem;color:var(--denim-d);
+  resize:vertical;transition:border-color .2s,box-shadow .2s;
+}
+.field input::placeholder,.field textarea::placeholder{color:#7d93b5;font-weight:600}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--sun);box-shadow:0 0 0 4px rgba(255,213,46,.35)}
+.wish-form .btn{position:relative;justify-self:center;margin-top:4px}
+.wall{position:relative;z-index:1;display:grid;gap:30px;max-width:980px;margin:0 auto;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr))}
+.wish{
+  --t:var(--banana);position:relative;margin:0;padding:52px 22px 22px;border-radius:8px 8px 20px 20px;background:var(--t);color:var(--denim-d);
+  transform:rotate(-1.4deg);box-shadow:0 6px 0 rgba(8,22,52,.35),0 16px 26px rgba(8,22,52,.25);
+}
+.wish:nth-of-type(3n+2){--t:var(--sun-l);transform:rotate(1.2deg)}
+.wish:nth-of-type(3n){--t:var(--sun);transform:rotate(-.5deg)}
+.wish::before{ /* the strap across the top */
+  content:"";position:absolute;left:0;right:0;top:12px;height:22px;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 2px,transparent 2px 6px),var(--strap);
+  box-shadow:inset 0 3px 0 -1px rgba(255,255,255,.12);border-top:2px dashed rgba(255,255,255,.25);border-bottom:2px dashed rgba(255,255,255,.25);
+  background-clip:padding-box;
+}
+.wish::after{ /* a tiny goggle on the strap */
+  content:"";position:absolute;top:4px;left:50%;width:38px;height:38px;margin-left:-19px;border-radius:50%;
+  background:radial-gradient(circle at 38% 34%,#fff 0 10%,#dcebfb 22%,#a9c4e4 56%,#6f7783 57% 61%,#e6e9ed 62% 80%,#8a929e 81% 100%);
+  box-shadow:0 2px 3px rgba(0,0,0,.35);
+}
+.wish:nth-of-type(even)::after{
+  content:"🍌";display:grid;place-items:center;font-size:1.25rem;line-height:1;background:#fff;box-shadow:0 0 0 3px var(--denim-d),0 3px 4px rgba(0,0,0,.3);
+}
+.wish blockquote{margin:0 0 12px;font-size:1.04rem;font-weight:700;line-height:1.5}
+.wish figcaption{font-family:var(--display);font-size:1.12rem;letter-spacing:.04em;color:var(--denim)}
+.wish figcaption::before{content:"— "}
+.wishes-more{position:relative;z-index:1;display:flex;justify-content:center;margin-top:40px}
+/* ---------- help & contacts: a yellow patch ---------- */
+#stay{padding-top:clamp(70px,10vw,104px)}
+.help{
+  position:relative;z-index:1;max-width:620px;margin:0 auto;text-align:center;padding:62px 16px 26px;border-radius:30px;
+  background:var(--sun);box-shadow:0 8px 0 #c99400,0 20px 34px rgba(8,22,52,.35);transform:rotate(-.8deg);
+}
+.help::before{content:"";position:absolute;inset:9px;border:2.5px dashed rgba(31,63,115,.6);border-radius:23px;pointer-events:none}
+.help-art{
+  position:absolute;left:50%;top:-44px;width:88px;height:88px;margin-left:-44px;border-radius:50%;display:grid;place-items:center;
+  background:#fff;box-shadow:0 0 0 5px var(--denim-d),0 7px 0 5px var(--denim-dd);
+}
+.help-art svg{width:72%;height:auto;overflow:visible}
+.help .sec-title{font-size:clamp(2rem,7.5vw,2.6rem)}
+#stayText{position:relative;margin:12px auto 22px;max-width:34ch;font-weight:700;color:var(--denim-d)}
+#coordinators{position:relative;display:grid;gap:12px}
+.coord{display:flex;align-items:center;gap:10px;text-align:left;padding:12px 10px 12px 12px;border-radius:20px;background:#fff;box-shadow:0 4px 0 var(--sun-d)}
+.coord .av{width:48px;height:48px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--twill),var(--denim);font-size:1.4rem;box-shadow:inset 0 0 0 2px rgba(245,184,0,.8)}
+.coord .who{flex:1;min-width:0}
+.coord .c-name{font-family:var(--display);font-size:1.15rem;letter-spacing:.03em;line-height:1.2;color:var(--denim-d)}
+.coord .c-phone{font-size:.95rem;font-weight:700;color:var(--denim);white-space:nowrap}
+.coord .btn{padding:12px 16px 9px;font-size:1rem;flex:none}
+
+/* ---------- cuffed hem + footer ---------- */
+.cuff{
+  position:relative;height:54px;margin-top:20px;background:var(--twill),#5b86c9;
+  box-shadow:0 -7px 0 rgba(8,22,52,.35),inset 0 -6px 0 rgba(8,22,52,.18);
+}
+.cuff::before,.cuff::after{content:"";position:absolute;left:0;right:0;border-top:2.5px dashed rgba(245,184,0,.9)}
+.cuff::before{top:9px}.cuff::after{bottom:13px}
+footer{
+  position:relative;overflow:hidden;padding:44px 16px 96px;text-align:center;
+  background:radial-gradient(circle at 50% 30%,rgba(255,255,255,.5) 0,rgba(255,255,255,0) 240px),
+             repeating-conic-gradient(from 0deg at 50% 90px,rgba(255,255,255,.15) 0 8deg,transparent 8deg 16deg),var(--sun);
+}
+.bunch{display:block;width:min(62vw,250px);height:auto;margin:0 auto 8px;overflow:visible;animation:sway 4s ease-in-out infinite;transform-origin:50% 12%}
+@keyframes sway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+.hashtag{font-family:var(--display);font-size:clamp(2.3rem,10vw,3.6rem);line-height:1.05;letter-spacing:.02em;color:var(--denim-d);text-shadow:0 4px 0 #fff,0 8px 0 var(--sun-d);word-break:break-word}
+.thanks{margin:14px auto 0;max-width:30ch;font-weight:800;font-size:1.1rem;color:var(--denim-d)}
+footer .float-ban{z-index:0}
+
+/* ---------- music + toast ---------- */
+#musicToggle{
+  position:fixed;right:16px;bottom:16px;z-index:40;width:58px;height:58px;border:0;border-radius:50%;cursor:pointer;display:grid;place-items:center;
+  color:var(--sun);
+  background:radial-gradient(circle at 40% 36%,#4a7cc6 0,var(--denim) 40%,var(--denim-d) 58%,#6f7783 59% 62%,transparent 63%),
+             linear-gradient(135deg,#fbfcfd,#c9ced6 30%,#8a929e 55%,#e2e5ea 78%,#9aa2ad);
+  box-shadow:0 0 0 2px #6f7783,0 6px 0 rgba(35,35,35,.35),0 10px 18px rgba(8,22,52,.3);
+}
+#musicToggle svg{width:22px;height:22px}
+#musicToggle.spinning svg{animation:spin 2.6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#toast{
+  position:fixed;left:50%;bottom:90px;z-index:60;transform:translate(-50%,20px);opacity:0;pointer-events:none;width:max-content;max-width:calc(100% - 32px);
+  padding:12px 20px;border-radius:999px;background:var(--denim-d);color:#fff;font-weight:800;font-size:.95rem;text-align:center;transition:.3s;
+  box-shadow:0 0 0 3px var(--sun),0 10px 20px rgba(8,22,52,.35);
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  html{scroll-behavior:auto}
+}
+/* Tamil labels: no English-style letter-spacing or capitals. */
+html[lang="ta"] [data-ta]{letter-spacing:0;text-transform:none}
+/* The uploaded photo covers the stand-in illustration (it starts as a transparent pixel). */
+:where(.cover-slot){position:relative}
+.cover-img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;display:block}
+.wishes-empty{text-align:center;margin:10px auto 22px;max-width:40ch;font-weight:600;opacity:.85}
+</style>
+</head>
+<body>
+
+<!-- small icons used across the page -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-cal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="4"/><path d="M8 3v4M16 3v4M3.5 10.5h17"/></g></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></g></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></g></symbol>
+  <symbol id="i-go" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></g></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path fill="currentColor" d="M9 17.5V6.2l10-2.2v11.3a3 3 0 1 1-2-2.83V7.5l-6 1.3v8.7a3 3 0 1 1-2-2.83z"/></symbol>
+  <!-- one banana, stem at the right -->
+  <symbol id="ban" viewBox="0 0 64 40">
+    <path d="M6 9C4 30 34 42 56 24C47 29 20 31 6 9Z" fill="#ffe14d" stroke="#e0a800" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M12 19c8 10 24 14 38 8" fill="none" stroke="#fff6b8" stroke-width="2.2" stroke-linecap="round" opacity=".8"/>
+    <path d="M54 25l6-7 2.6 2-5.4 7.4z" fill="#7a5a1a"/><circle cx="6" cy="9" r="2.4" fill="#7a5a1a"/>
+  </symbol>
+</svg>
+
+<!-- ============ INTRO: peel the banana ============ -->
+<div id="curtain-overlay" data-hide-after="2000">
+  <p class="intro-eyebrow" data-ta="உங்களுக்கு ஒரு பார்ட்டி அழைப்பு!">Psst… a party invite for you!</p>
+  <p class="intro-title" data-bind="title">Diya turns 4!</p>
+  <button type="button" class="peel-btn" id="openCurtainBtn" data-open-invite aria-label="Peel the banana to open the invitation">
+    <span class="ring" aria-hidden="true"></span>
+    <svg viewBox="0 0 200 270" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="peelG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f5c400"/><stop offset=".45" stop-color="#ffe14d"/><stop offset="1" stop-color="#f2bd00"/></linearGradient>
+        <linearGradient id="fruitG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fbeaa6"/><stop offset=".5" stop-color="#fff8d8"/><stop offset="1" stop-color="#f6e199"/></linearGradient>
+      </defs>
+      <ellipse cx="100" cy="258" rx="58" ry="9" fill="#c99400" opacity=".35"/>
+      <g class="big-ban">
+        <!-- the fruit inside -->
+        <path d="M70 160C66 100 80 50 100 40C120 50 134 100 130 160Z" fill="url(#fruitG)" stroke="#ecd27a" stroke-width="2"/>
+        <path d="M100 58v86" stroke="#efd98f" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 9"/>
+        <!-- the bottom of the peel stays put -->
+        <path d="M57 150C55 198 74 234 100 246C126 234 145 198 143 150Z" fill="url(#peelG)" stroke="#d9a200" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M84 156C84 200 90 226 100 244M116 156C116 200 110 226 100 244" fill="none" stroke="#e3ad00" stroke-width="2" opacity=".7"/>
+        <ellipse cx="100" cy="248" rx="7" ry="4.5" fill="#7a5a1a"/>
+        <circle cx="70" cy="204" r="2.4" fill="#a87d24" opacity=".55"/><circle cx="128" cy="190" r="2" fill="#a87d24" opacity=".55"/><circle cx="122" cy="218" r="1.6" fill="#a87d24" opacity=".55"/>
+        <!-- three peel strips (fold down from the top) -->
+        <g class="peel pl"><path d="M57 152C53 104 70 58 96 30C86 70 82 112 84 157Z" fill="url(#peelG)" stroke="#d9a200" stroke-width="2.5" stroke-linejoin="round"/><path d="M64 140c-1-30 8-62 22-84" fill="none" stroke="#fff3a0" stroke-width="3" stroke-linecap="round" opacity=".7"/></g>
+        <g class="peel pr"><path d="M143 152C147 104 130 58 104 30C114 70 118 112 116 157Z" fill="url(#peelG)" stroke="#d9a200" stroke-width="2.5" stroke-linejoin="round"/><circle cx="128" cy="96" r="2.2" fill="#a87d24" opacity=".55"/><circle cx="133" cy="126" r="1.7" fill="#a87d24" opacity=".55"/></g>
+        <g class="peel pc">
+          <path d="M84 157C82 112 88 64 100 26C112 64 118 112 116 157Z" fill="url(#peelG)" stroke="#d9a200" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M100 40c-6 30-8 70-7 108" fill="none" stroke="#fff3a0" stroke-width="3" stroke-linecap="round" opacity=".75"/>
+          <path d="M94 31L95.5 9C96 3 104 3 104.5 9L106 31Z" fill="#9c7a26" stroke="#7a5a1a" stroke-width="2" stroke-linejoin="round"/>
+          <rect x="94" y="4" width="12" height="6" rx="3" fill="#5a4010"/>
+        </g>
+        <!-- sparkles once it's open -->
+        <path class="spark" d="M100 12l4 10 10 4-10 4-4 10-4-10-10-4 10-4z" fill="#fff"/>
+        <path class="spark k2" d="M40 84l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#fff"/>
+        <path class="spark k3" d="M162 70l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#fff"/>
+      </g>
+    </svg>
+  </button>
+  <p class="intro-hint"><span aria-hidden="true">👆</span><span data-ta="வாழைப்பழத்தை உரிக்கத் தொடுங்கள்!">Tap to peel the banana!</span></p>
+</div>
+
+<!-- ============ HERO ============ -->
+<header id="hero">
+  <nav class="lang" aria-label="Language">
+    <button type="button" class="lang-btn active" data-lang="en">EN</button>
+    <button type="button" class="lang-btn" data-lang="ta" lang="ta">தமிழ்</button>
+  </nav>
+  <svg class="float-ban" style="left:-10px;top:96px;--r:-28deg" viewBox="0 0 64 40" aria-hidden="true"><use href="#ban"/></svg>
+  <svg class="float-ban" style="right:-12px;top:300px;width:48px;--r:150deg;animation-delay:-3s" viewBox="0 0 64 40" aria-hidden="true"><use href="#ban"/></svg>
+
+  <div class="hero-head">
+    <p class="chip rise" data-ta="🍌 பிறந்தநாள் கொண்டாட்டத்துக்கு உங்களை அழைக்கிறோம்!">🍌 You're invited to a birthday bash!</p>
+    <h1 class="title rise r1" data-bind="title">Diya turns 4!</h1>
+  </div>
+
+  <div class="strap-row">
+    <div class="strap" aria-hidden="true"></div>
+    <div class="goggle rise r2">
+      <div class="cover-slot lens" role="img" aria-label="Birthday photo">
+        <!-- cover photo goes here (data-bind="cover"); a smiling kid stands in for the preview -->
+        <svg viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+          <defs><linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe0ff"/><stop offset="1" stop-color="#fff3b8"/></linearGradient></defs>
+          <rect width="200" height="200" fill="url(#skyG)"/>
+          <g fill="#fff" opacity=".85"><ellipse cx="34" cy="44" rx="20" ry="8"/><ellipse cx="46" cy="38" rx="12" ry="9"/><ellipse cx="170" cy="150" rx="18" ry="7"/></g>
+          <g fill="#ffd52e"><circle cx="28" cy="128" r="3.5"/><circle cx="176" cy="40" r="3"/><circle cx="160" cy="98" r="2.5"/></g>
+          <!-- hair puffs and back -->
+          <g fill="#2a1a12"><circle cx="46" cy="66" r="25"/><circle cx="154" cy="66" r="25"/><circle cx="100" cy="102" r="60"/></g>
+          <g fill="#ffd52e" stroke="#e0a800" stroke-width="2"><circle cx="64" cy="82" r="7"/><circle cx="136" cy="82" r="7"/></g>
+          <!-- tee and denim overalls -->
+          <path d="M28 200C32 164 64 152 100 152S168 164 172 200Z" fill="#fff"/>
+          <path d="M64 156L76 182M136 156L124 182" stroke="#2f5fa8" stroke-width="12" stroke-linecap="round"/>
+          <rect x="70" y="176" width="60" height="30" rx="8" fill="#2f5fa8"/>
+          <path d="M78 186h44" stroke="#f5b800" stroke-width="1.6" stroke-dasharray="3 3"/>
+          <circle cx="77" cy="181" r="4" fill="#c9ced6" stroke="#8a929e"/><circle cx="123" cy="181" r="4" fill="#c9ced6" stroke="#8a929e"/>
+          <rect x="88" y="136" width="24" height="22" rx="8" fill="#b4764a"/>
+          <!-- face -->
+          <circle cx="48" cy="112" r="10" fill="#c98b5b"/><circle cx="152" cy="112" r="10" fill="#c98b5b"/>
+          <circle cx="100" cy="108" r="52" fill="#c98b5b"/>
+          <path d="M48 104C45 64 75 45 100 45S156 64 152 104C143 86 128 76 112 74C116 82 112 88 106 90C99 80 86 74 72 78C62 82 54 92 48 104Z" fill="#2a1a12"/>
+          <use href="#ban" x="104" y="44" width="36" height="22" transform="rotate(-18 122 55)"/>
+          <path d="M72 98q8-5 16 0M112 98q8-5 16 0" fill="none" stroke="#2a1a12" stroke-width="3" stroke-linecap="round"/>
+          <ellipse cx="80" cy="113" rx="6.5" ry="8" fill="#2a1a12"/><ellipse cx="120" cy="113" rx="6.5" ry="8" fill="#2a1a12"/>
+          <circle cx="82.5" cy="110" r="2.6" fill="#fff"/><circle cx="122.5" cy="110" r="2.6" fill="#fff"/>
+          <circle cx="68" cy="130" r="9" fill="#ff7f6e" opacity=".42"/><circle cx="132" cy="130" r="9" fill="#ff7f6e" opacity=".42"/>
+          <path d="M96 121q4 3 8 0" fill="none" stroke="#8e5532" stroke-width="2.4" stroke-linecap="round"/>
+          <path d="M82 128C86 154 114 154 118 128Z" fill="#6d2420"/>
+          <path d="M85 129H115C114 133 112 135 109 135H91C88 135 86 133 85 129Z" fill="#fff"/>
+          <path d="M91 145C95 139 105 139 109 145C105 150 95 150 91 145Z" fill="#ff7f8a"/>
+        </svg>
+      
+<img class="cover-img" data-bind="cover" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+</div>
+      <svg class="ring" viewBox="0 0 340 340" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="ringG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbfcfd"/><stop offset=".3" stop-color="#c9ced6"/><stop offset=".55" stop-color="#8a929e"/><stop offset=".78" stop-color="#e2e5ea"/><stop offset="1" stop-color="#9aa2ad"/></linearGradient>
+          <radialGradient id="boltG" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#c9ced6"/><stop offset="1" stop-color="#6f7783"/></radialGradient>
+          <radialGradient id="glassG" cx=".5" cy=".5" r=".5"><stop offset=".74" stop-color="#9cc3ea" stop-opacity="0"/><stop offset="1" stop-color="#1f3f73" stop-opacity=".38"/></radialGradient>
+          <g id="bolt"><circle r="8.5" fill="url(#boltG)" stroke="#6f7783" stroke-width="1.5"/><path d="M-4.5 0h9" stroke="#6f7783" stroke-width="2" stroke-linecap="round"/></g>
+        </defs>
+        <rect x="-10" y="138" width="36" height="64" rx="11" fill="url(#ringG)" stroke="#6f7783" stroke-width="3"/>
+        <rect x="314" y="138" width="36" height="64" rx="11" fill="url(#ringG)" stroke="#6f7783" stroke-width="3"/>
+        <circle cx="170" cy="170" r="137" fill="url(#glassG)"/>
+        <path d="M70 160A102 102 0 0 1 152 70" fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round" opacity=".45"/>
+        <path d="M268 196A100 100 0 0 1 240 244" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".35"/>
+        <circle cx="170" cy="170" r="151" fill="none" stroke="url(#ringG)" stroke-width="32"/>
+        <circle cx="170" cy="170" r="167" fill="none" stroke="#6f7783" stroke-width="2.5"/>
+        <circle cx="170" cy="170" r="135" fill="none" stroke="#6f7783" stroke-width="4"/>
+        <circle cx="170" cy="170" r="139.5" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="2"/>
+        <path d="M28.1 118.4A151 151 0 0 1 118.4 28.1" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".85"/>
+        <use href="#bolt" x="276.8" y="276.8"/><use href="#bolt" x="170" y="321"/><use href="#bolt" x="63.2" y="276.8"/>
+        <use href="#bolt" x="63.2" y="63.2"/><use href="#bolt" x="170" y="19"/><use href="#bolt" x="276.8" y="63.2"/>
+      </svg>
+    </div>
+  </div>
+
+  <p class="helper-line rise r3"><span data-ta="🍌 இன்றைய நட்சத்திரம்:">🍌 Today's top helper:</span> <b data-bind="names">Diya</b></p>
+  <div class="bubble rise r3">
+    <p id="heroTagline" data-bind="tagline">Our little helper is turning four! Come for games, giggles and lots of bananas at Diya's birthday bash.</p>
+  </div>
+
+  <div class="bib rise r4">
+    <span class="strap-tab l" aria-hidden="true"></span><span class="strap-tab r" aria-hidden="true"></span>
+    <span class="rivet l" aria-hidden="true"></span><span class="rivet r" aria-hidden="true"></span>
+    <p id="heroDatePill" data-bind="dateLine">🍌 14th March 2027 • Chennai</p>
+    <div class="pocket-wrap">
+      <svg class="peek a" viewBox="0 0 64 40" aria-hidden="true"><use href="#ban"/></svg>
+      <svg class="peek b" viewBox="0 0 64 40" aria-hidden="true"><use href="#ban"/></svg>
+      <a class="pocket" href="#events"><b data-ta="நிகழ்ச்சிகளைப் பாருங்கள்">See the plan</b><i aria-hidden="true"></i></a>
+    </div>
+  </div>
+</header>
+
+<main class="denim">
+<!-- ============ EVENTS ============ -->
+<section id="events" class="section">
+  <svg class="float-ban" style="left:-14px;top:38%;width:50px;--r:20deg;animation-delay:-2s" viewBox="0 0 64 40" aria-hidden="true"><use href="#ban"/></svg>
+  <svg class="float-ban" style="right:-10px;top:56%;--r:-160deg;animation-delay:-5s" viewBox="0 0 64 40" aria-hidden="true"><use href="#ban"/></svg>
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="பாக்கெட்டில் என்ன இருக்கு?">What's in the pockets</p>
+    <h2 class="sec-title" data-ta="நிகழ்ச்சிகள்">The plan</h2>
+    <p class="sec-sub" data-ta="கொண்டாட்ட நிகழ்ச்சிகள் இதோ. உங்கள் சிரிப்பையும் கொண்டு வாருங்கள்!">Happy stops on the big day. Bring your best giggles!</p>
+  </div>
+
+  <div id="eventsGrid" class="events">
+    <template>
+    <article class="event reveal">
+      <div class="ev-flap">
+        <span class="rivet l" aria-hidden="true"></span><span class="rivet r" aria-hidden="true"></span>
+        <span class="ev-icon" data-field="icon">🎈</span>
+      </div>
+      <div class="ev-body">
+        <p class="ev-num"><span data-ta="நிகழ்ச்சி எண்">Stop no.</span> <span data-field="number">01</span></p>
+        <h3 data-field="name">Birthday Party</h3>
+        <ul class="ev-meta">
+          <li><svg class="ic"><use href="#i-cal"/></svg><span data-field="date">14th March 2027</span></li>
+          <li><svg class="ic"><use href="#i-clock"/></svg><span data-field="time">4:00 PM to 6:30 PM</span></li>
+          <li><svg class="ic"><use href="#i-pin"/></svg><span><strong data-field="place">Sunshine Banquets</strong><small data-field="venue">Adyar, Chennai - 600020</small></span></li>
+        </ul>
+        <p class="ev-desc" data-field="desc">Games, a bubble show and the big cake cutting.</p>
+        <a class="btn" data-href="map" href="https://www.google.com/maps/dir/?api=1&amp;destination=Sunshine+Banquets+Adyar+Chennai+600020" target="_blank" rel="noopener"><span data-ta="வழி காட்டு">Get directions</span> <svg><use href="#i-go"/></svg></a>
+      </div>
+    </article>
+    </template>
+  </div>
+</section>
+
+<!-- ============ COUNTDOWN ============ -->
+<section id="countdown" class="section on-sun">
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="எல்லோரும் தயாரா?">Goggles on, everyone</p>
+    <h2 class="sec-title" data-ta="கொண்டாட்டத்துக்கு கவுண்ட்டவுன்!">Countdown to banana time!</h2>
+  </div>
+  <div class="goggles reveal" role="timer" aria-label="Time left until the party">
+    <div class="gg"><div class="g-ring"><div class="g-lens" id="cdDays">000</div></div><p class="lbl" data-ta="நாட்கள்">Days</p></div>
+    <div class="gg"><div class="g-ring"><div class="g-lens" id="cdHours">00</div></div><p class="lbl" data-ta="மணி">Hours</p></div>
+    <div class="gg"><div class="g-ring"><div class="g-lens" id="cdMins">00</div></div><p class="lbl" data-ta="நிமிடம்">Mins</p></div>
+    <div class="gg"><div class="g-ring"><div class="g-lens" id="cdSecs">00</div></div><p class="lbl" data-ta="வினாடி">Secs</p></div>
+  </div>
+  <p class="cd-when reveal"><span data-bind="dateLong">Sunday, 14 March 2027</span> · <span data-bind="time">4:00 PM</span></p>
+</section>
+
+<!-- ============ WISHES ============ -->
+<section id="wishes" class="section">
+  <svg class="float-ban" style="right:-12px;top:30%;width:52px;--r:-150deg;animation-delay:-1s" viewBox="0 0 64 40" aria-hidden="true"><use href="#ban"/></svg>
+  <svg class="float-ban" style="left:-14px;bottom:14%;--r:24deg;animation-delay:-4s" viewBox="0 0 64 40" aria-hidden="true"><use href="#ban"/></svg>
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="வாழ்த்துப் புத்தகம்">Guest book</p>
+    <h2 class="sec-title" data-ta="வாழ்த்துக் குறிப்புகள்">Banana notes</h2>
+    <p class="sec-sub" data-ta="ஒரு சிறு பிறந்தநாள் வாழ்த்தை எழுதுங்கள். அந்த நாளில் ஒவ்வொன்றையும் படிப்போம்.">Leave a little birthday note. We'll read every one of them on the big day.</p>
+  </div>
+
+  <form id="wishForm" class="wish-form reveal">
+    <label class="field"><span data-ta="உங்கள் பெயர்">Your name</span><input id="wishName" maxlength="60" placeholder="e.g. Priya Chithi" data-ta-ph="எ.கா. பிரியா சித்தி" required></label>
+    <label class="field"><span data-ta="உங்கள் குறிப்பு">Your note</span><textarea id="wishMessage" maxlength="500" rows="3" placeholder="Write something sunny…" data-ta-ph="மகிழ்ச்சியாக ஏதாவது எழுதுங்கள்…" required></textarea></label>
+    <button class="btn" type="submit" data-ta="அனுப்பு 🍌">Send your note 🍌</button>
+  </form>
+
+  <div id="wishesWall" class="wall">
+    <template>
+    <figure class="wish reveal"><blockquote data-field="message">Happy 4th birthday, sunshine! Stay as cheerful as ever.</blockquote><figcaption data-field="name">Priya Chithi</figcaption></figure>
+    </template>
+  </div>
+  <p id="wishesEmpty" class="wishes-empty" hidden data-ta="இன்னும் குறிப்புகள் இல்லை — முதலில் நீங்களே எழுதுங்கள்!">No notes yet — be the first!</p>
+  <div class="wishes-more"><button id="wishesMore" class="btn" type="button" data-ta="மேலும் குறிப்புகள்">Show more notes</button></div>
+</section>
+
+<!-- ============ HELP & CONTACTS ============ -->
+<section id="stay" class="section on-sun">
+  <div class="help reveal">
+    <span class="help-art" aria-hidden="true">
+      <svg viewBox="0 0 64 64" focusable="false">
+        <g transform="rotate(-38 32 32)"><use href="#ban" x="0" y="12" width="64" height="40"/></g>
+        <path d="M44 14a10 10 0 0 1 8 8M46 6a18 18 0 0 1 14 14" fill="none" stroke="#2f5fa8" stroke-width="3.4" stroke-linecap="round"/>
+      </svg>
+    </span>
+    <h2 class="sec-title" data-ta="உதவி தேவையா?">Need a helper?</h2>
+    <p id="stayText" data-bind="help">Need help finding the venue? Call us any time.</p>
+    <div id="coordinators">
+    <template>
+    <div class="coord">
+        <span class="av" aria-hidden="true">👪</span>
+        <div class="who"><p class="c-name" data-field="name">Diya's parents</p><p class="c-phone" data-field="phone">+91 90000 00000</p></div>
+        <a class="btn dk" data-href="tel" href="tel:+919000000000"><svg><use href="#i-phone"/></svg><span data-ta="அழைக்க">Call</span></a>
+      </div>
+    </template>
+  </div>
+  </div>
+</section>
+<div class="cuff" aria-hidden="true"></div>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <svg class="float-ban" style="left:6%;top:30px;width:46px;--r:-20deg;animation-delay:-2.5s" viewBox="0 0 64 40" aria-hidden="true"><use href="#ban"/></svg>
+  <svg class="float-ban" style="right:5%;top:120px;width:42px;--r:160deg;animation-delay:-.5s" viewBox="0 0 64 40" aria-hidden="true"><use href="#ban"/></svg>
+  <svg class="bunch" viewBox="0 0 200 116" aria-hidden="true" focusable="false">
+    <defs>
+      <g id="hb"><!-- one hanging banana, stem at 0,0 -->
+        <path d="M6 0C9 44-16 78-60 74C-65 73.5-66 67-61.5 65C-30 57-13 35-9 0Z" fill="#ffe14d" stroke="#d9a200" stroke-width="2.4" stroke-linejoin="round"/>
+        <path d="M0 10C0 36-14 54-40 63" fill="none" stroke="#fff6b8" stroke-width="3.2" stroke-linecap="round" opacity=".85"/>
+        <path d="M4 6C5 40-12 62-34 70" fill="none" stroke="#f5b800" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+        <circle cx="-63" cy="69.5" r="3.6" fill="#7a5a1a"/>
+      </g>
+      <g id="halfBunch">
+        <use href="#hb" transform="translate(100 26) rotate(16)"/>
+        <use href="#hb" transform="translate(100 26) rotate(-20)"/>
+      </g>
+    </defs>
+    <use href="#halfBunch"/>
+    <use href="#halfBunch" transform="translate(200 0) scale(-1 1)"/>
+    <path d="M94 28L95 8C95 3 105 3 105 8L106 28Z" fill="#9c7a26" stroke="#7a5a1a" stroke-width="2.4" stroke-linejoin="round"/>
+    <rect x="93" y="2" width="14" height="8" rx="4" fill="#5a4010"/>
+    <ellipse cx="100" cy="28" rx="15" ry="8" fill="#c9a23a" stroke="#7a5a1a" stroke-width="2.2"/>
+    <g fill="#fff"><path d="M22 18l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/><path d="M178 30l2.4 5.6 5.6 2.4-5.6 2.4-2.4 5.6-2.4-5.6-5.6-2.4 5.6-2.4z"/></g>
+  </svg>
+  <p class="hashtag" data-bind="hashtag">#DiyaTurns4</p>
+  <p class="thanks" data-ta="இந்த நாளைக் கொண்டாட்டமாக்கியதற்கு நன்றி!">Thank you for making the big day bananas!</p>
+</footer>
+
+<button id="musicToggle" type="button" aria-label="Play or pause music"><svg><use href="#i-note"/></svg></button>
+<audio id="bgMusic" loop preload="auto"></audio>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* Intro and bilingual labels. js/invite.js opens the intro on tap (adds .open, then .hidden after data-hide-after);
+   this plays the theme's effect, then unlocks scrolling and starts the hero's entrance. */
+(function(){
+  var html=document.documentElement, overlay=document.getElementById("curtain-overlay");
+  var reduce=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
+  var DOTS=["#ffd52e","#ffe14d","#f5b800","#fff","#5b86c9"];
+  // Little bananas and yellow dots burst out of the peeled banana.
+  function bananaBurst(x,y){
+    if(reduce) return;
+    var box=document.createElement("div"); box.className="burst";
+    for(var i=0;i<46;i++){
+      var p=document.createElement("i"), a=Math.random()*Math.PI*2, d=110+Math.random()*300, isBan=i%3===0;
+      if(isBan){ p.textContent="🍌"; p.style.fontSize=(18+Math.random()*16)+"px"; }
+      else { p.className="dot"; p.style.background=DOTS[i%DOTS.length]; if(i%4===1){ p.style.width=p.style.height="8px"; } }
+      p.style.left=x+"px"; p.style.top=y+"px";
+      box.appendChild(p);
+      p.animate([
+        {transform:"translate(-50%,-50%) scale(.3) rotate(0deg)",opacity:1},
+        {transform:"translate("+Math.cos(a)*d+"px,"+(Math.sin(a)*d-90)+"px) scale(1) rotate("+(Math.random()*360)+"deg)",opacity:1,offset:.5},
+        {transform:"translate("+Math.cos(a)*d*1.1+"px,"+(Math.sin(a)*d+300)+"px) scale(.9) rotate("+(Math.random()*720)+"deg)",opacity:0}
+      ],{duration:1500+Math.random()*800,easing:"cubic-bezier(.15,.7,.3,1)",fill:"forwards"});
+    }
+    document.body.appendChild(box);
+    setTimeout(function(){ box.remove(); },2500);
+  }
+
+  if(overlay&&!html.classList.contains("intro-open")){
+    // Admin thumbnails and framed previews start on the page itself.
+    overlay.remove();
+  }else if(overlay){
+    var opened=false;
+    overlay.querySelectorAll("[data-open-invite]").forEach(function(b){
+      b.addEventListener("click",function(){
+        if(opened) return;
+        opened=true;
+        var r=overlay.querySelector(".peel-btn").getBoundingClientRect();
+        setTimeout(function(){ bananaBurst(r.left+r.width*.5,r.top+r.height*.35); },520);
+        overlay.classList.add("open");
+        setTimeout(function(){ html.classList.remove("intro-open"); },reduce?0:1150);
+      });
+    });
+  }
+
+  // Labels with data-ta (and placeholders with data-ta-ph) switch to that Tamil text when the guest picks தமிழ்.
+  var lang="en";
+  function labels(root){
+    root.querySelectorAll("[data-ta]").forEach(function(n){
+      if(n.dataset.en===undefined) n.dataset.en=n.textContent;
+      n.textContent=lang==="ta"?n.dataset.ta:n.dataset.en;
+    });
+    root.querySelectorAll("[data-ta-ph]").forEach(function(n){
+      if(n.dataset.enPh===undefined) n.dataset.enPh=n.placeholder;
+      n.placeholder=lang==="ta"?n.dataset.taPh:n.dataset.enPh;
+    });
+  }
+  document.addEventListener("invite:render",function(e){
+    lang=e.detail&&e.detail.lang==="ta"?"ta":"en";
+    labels(document);
+  });
+  // New wishes arrive without a full render, so label them as they are added.
+  var wall=document.getElementById("wishesWall");
+  if(wall&&window.MutationObserver) new MutationObserver(function(){ labels(wall); }).observe(wall,{childList:true});
+})();
+</script>
+</body>
+</html>

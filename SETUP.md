@@ -85,8 +85,8 @@ those are saved to Firestore and appear instantly).
 Open the admin page, log in, and click **Templates** at the top. The first visit creates three categories:
 Weddings, Housewarmings and Birthdays.
 
-- **Add 12 starter templates** (shown while some are missing) copies the designs in `public/templates/` into Firestore:
-  ten wedding designs, a housewarming and a birthday one. The built-in **Classic Maroon & Gold** design is always
+- **Add 22 starter templates** (shown while some are missing) copies the designs in `public/templates/` into Firestore:
+  ten wedding designs, a housewarming and eleven birthday ones. The built-in **Classic Maroon & Gold** design is always
   there for weddings.
 - Templates are listed by category. Each card has a live preview, the events using it, and **Edit**, **Preview ↗**,
   **Copy link** (`/?template=<id>`, the template with sample details), **Duplicate** and **Delete**.

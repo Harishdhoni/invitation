@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<!--
+  Monster Trainer — birthday template
+  A trading-card adventure for kids (about 5–12) who love monster-collecting games: a mystery egg wobbles on a
+  grassy hill under the night sky and hatches in a flash of stars, the hero is a holographic TRAINER CARD holding
+  the photo and a row of energy badges, the events are type-framed trading cards laid on a play mat, the countdown is
+  a case of metallic badges, wishes are RPG dialogue boxes, and the footer bookends the night sky.
+  Palette: electric yellow #ffd23c · red #ee3b2f · blue #2f6fdc / deep #1d3f8f · grass #5bc35b · fire #ff8a2a ·
+           water #3fa9f5 · psychic #f069a8 · card silver #e6e8ee · ink #1b1d2b
+  Fonts:   Lilita One (headings, numbers) · Nunito (body) · Noto Sans Tamil (Tamil)
+  A birthday template for the invitation site; it follows TEMPLATES.md, and js/invite.js fills in the names, title,
+  date, photo, events, countdown, wishes and contacts. Labels with data-ta switch to Tamil with the தமிழ் button.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1d3f8f">
+<title>Arjun turns 8! — Monster Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;600;700;800;900&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
+<script>
+  /* Runs before paint: mark JS, and decide whether the intro overlay is shown (not in admin previews or frames). */
+  (function(){
+    var d=document.documentElement, skip=/[?&]preview/.test(location.search);
+    try{ skip=skip||window.self!==window.top; }catch(e){ skip=true; }
+    d.className+=" js"+(skip?"":" intro-open");
+  })();
+</script>
+<style>
+:root{
+  --ink:#1b1d2b; --ink2:#454a63; --yellow:#ffd23c; --yellow-d:#e2a900; --red:#ee3b2f; --red-d:#b8241b;
+  --blue:#2f6fdc; --deep:#1d3f8f; --navy:#0f1a47; --grass:#5bc35b; --grass-d:#2f8f3a; --fire:#ff8a2a; --fire-d:#b24a05;
+  --water:#3fa9f5; --water-d:#16609f; --psychic:#f069a8; --silver:#e6e8ee; --paper:#f6f7fb; --sky-l:#eef7ff;
+  --display:'Lilita One','Noto Sans Tamil',system-ui,sans-serif;
+  --body:'Nunito','Noto Sans Tamil',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --bounce:cubic-bezier(.34,1.56,.64,1);
+  --starfield:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><g fill='%23fff'><circle cx='18' cy='26' r='1.3' opacity='.9'/><circle cx='74' cy='12' r='.9' opacity='.6'/><circle cx='132' cy='48' r='1.6' opacity='.85'/><circle cx='196' cy='20' r='1' opacity='.7'/><circle cx='238' cy='70' r='1.3' opacity='.8'/><circle cx='44' cy='96' r='1' opacity='.55'/><circle cx='104' cy='122' r='1.2' opacity='.75'/><circle cx='170' cy='104' r='.9' opacity='.6'/><circle cx='222' cy='150' r='1.5' opacity='.9'/><circle cx='22' cy='170' r='1.1' opacity='.7'/><circle cx='86' cy='196' r='1.4' opacity='.85'/><circle cx='150' cy='176' r='1' opacity='.6'/><circle cx='200' cy='226' r='1.1' opacity='.75'/><circle cx='54' cy='240' r='.9' opacity='.55'/><circle cx='120' cy='250' r='1.2' opacity='.7'/></g></svg>");
+  --tufts:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='64'><rect y='30' width='96' height='34' fill='%238fd982'/><path d='M0 64L7 20L13 64ZM11 64L22 6L26 64ZM24 64L37 24L35 64ZM47 64L55 12L61 64ZM59 64L70 26L70 64ZM70 64L82 8L85 64ZM84 64L92 28L96 64Z' fill='%233a9f40'/><path d='M-3 64L10 34L15 64ZM13 64L28 30L28 64ZM31 64L42 36L46 64ZM42 64L51 26L55 64ZM62 64L73 38L77 64ZM75 64L88 32L92 64Z' fill='%235bc35b'/><path d='M22 64L28 30L26 64ZM51 64L51 26L53 64ZM88 64L88 32L89 64Z' fill='%2397e08a' opacity='.8'/><rect y='56' width='96' height='8' fill='%235bc35b'/></svg>");
+  --bolts:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><g fill='%23f2bd00' opacity='.55'><path d='M30 10L16 32h9l-4 16 16-24h-9z'/><path d='M94 66L80 88h9l-4 16 16-24h-9z'/></g><g fill='%23fff' opacity='.35'><circle cx='86' cy='22' r='3'/><circle cx='26' cy='88' r='2.5'/></g></svg>");
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+html.intro-open,html.intro-open body{overflow:hidden}
+body{margin:0;min-height:100vh;overflow-x:hidden;font-family:var(--body);font-size:1.02rem;line-height:1.6;color:var(--ink);background:var(--sky-l)}
+h1,h2,h3,p{margin:0}
+a{color:inherit}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--red);outline-offset:3px;border-radius:10px}
+[lang="ta"]{font-family:'Noto Sans Tamil',var(--body)}
+.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- shared bits ---------- */
+.section{position:relative;padding:clamp(64px,10vw,100px) 16px}
+.sec-head{text-align:center;max-width:620px;margin:0 auto clamp(30px,5vw,44px)}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 14px 5px;border-radius:999px;border:2.5px solid var(--ink);
+  background:var(--yellow);color:var(--ink);font-weight:900;font-size:.76rem;letter-spacing:.16em;text-transform:uppercase;line-height:1.2;
+}
+/* sticker lettering: white fill, ink outline, coloured offset shadow */
+.sticker{color:#fff;-webkit-text-stroke:.15em var(--ink);paint-order:stroke fill;text-shadow:.07em .09em 0 var(--sh,var(--red))}
+.sec-title{font-family:var(--display);font-weight:400;font-size:clamp(2.1rem,8.4vw,3.1rem);line-height:1.08;margin-top:14px;letter-spacing:.01em}
+.sec-sub{margin:14px auto 0;max-width:36ch;color:var(--ink2);font-weight:600}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;cursor:pointer;text-decoration:none;
+  font-family:var(--display);font-weight:400;font-size:1.15rem;line-height:1;letter-spacing:.02em;padding:13px 22px 12px;border-radius:14px;
+  background:var(--red);color:#fff;border:3px solid var(--ink);box-shadow:0 5px 0 var(--ink);transition:transform .15s,box-shadow .15s;
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 7px 0 var(--ink)}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.btn svg{width:20px;height:20px;flex:none}
+.btn.blue{background:var(--blue)}
+.btn.ghost{background:#fff;color:var(--deep)}
+.nrg{display:block;width:34px;height:34px;flex:none}
+
+/* reveal on scroll (the runtime adds .in) */
+.js .reveal{opacity:0;transform:translateY(28px) scale(.97)}
+.js .reveal.in{opacity:1;transform:none;transition:opacity .6s ease,transform .8s var(--bounce)}
+
+/* zig-zag "lightning" edges */
+.zz::before,.zz::after{content:"";position:absolute;left:0;right:0;height:18px;pointer-events:none}
+.zz::before{top:-17px;background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='18'><path d='M0 18L18 2L36 18Z' fill='%23ffd23c'/><path d='M0 18L18 2L36 18' fill='none' stroke='%231b1d2b' stroke-width='3'/></svg>") repeat-x 0 0/36px 18px}
+.zz::after{bottom:-17px;background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='18'><path d='M0 0L18 16L36 0Z' fill='%23ffd23c'/><path d='M0 0L18 16L36 0' fill='none' stroke='%231b1d2b' stroke-width='3'/></svg>") repeat-x 0 0/36px 18px}
+
+/* ---------- intro: the mystery egg ---------- */
+#curtain-overlay{
+  position:fixed;inset:0;z-index:50;display:none;flex-direction:column;overflow:hidden;text-align:center;
+  background:var(--starfield) 0 0/260px 260px,radial-gradient(ellipse at 50% 100%,#3767c9 0,rgba(55,103,201,0) 62%),linear-gradient(#070d2c 0%,#13235e 48%,#22449a 100%);
+}
+.intro-open #curtain-overlay,#curtain-overlay.open{display:flex}
+#curtain-overlay.open{pointer-events:none;animation:introOut .55s ease 1.3s forwards}
+#curtain-overlay.hidden{display:none}
+@keyframes introOut{to{opacity:0}}
+.intro-top{position:relative;z-index:1;margin:auto 0;padding:28px 16px 8px}
+.intro-eyebrow{background:#fff}
+.intro-title{--sh:var(--red);font-family:var(--display);font-size:clamp(2.3rem,10.4vw,3.8rem);line-height:1.04;margin-top:16px;letter-spacing:.01em;text-wrap:balance}
+.twinkle{position:absolute;width:16px;height:16px;color:#fff6c2;animation:twinkle 2.4s ease-in-out infinite}
+.twinkle svg{width:100%;height:100%;display:block}
+.tw1{top:9%;left:12%}.tw2{top:16%;right:14%;width:12px;height:12px;animation-delay:-.8s}.tw3{top:38%;left:7%;width:10px;height:10px;animation-delay:-1.5s}
+.tw4{top:30%;right:8%;animation-delay:-.3s}.tw5{top:5%;left:58%;width:11px;height:11px;animation-delay:-1.1s}
+@keyframes twinkle{0%,100%{opacity:.25;transform:scale(.6) rotate(0)}50%{opacity:1;transform:scale(1) rotate(45deg)}}
+.scene{--egg-w:min(50vw,206px);--base:128px;position:relative;flex:none;height:calc(var(--base) + var(--egg-w)*1.2 + 26px)}
+.hill{position:absolute;left:0;bottom:0;width:100%;height:210px;display:block}
+.tuft{position:absolute;width:74px;height:auto;z-index:1}
+.tuft.l{left:6%;bottom:62px}.tuft.r{right:7%;bottom:78px;width:60px}
+.egg-btn{
+  position:absolute;left:50%;bottom:var(--base);z-index:2;width:var(--egg-w);margin-left:calc(var(--egg-w) / -2);
+  background:none;border:0;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:50% 50% 46% 46%;
+}
+.egg-btn svg{display:block;width:100%;height:auto;overflow:visible}
+.egg-btn:focus-visible{outline-offset:8px}
+.egg-wob{transform-box:view-box;transform-origin:100px 228px;animation:wobble 2.8s ease-in-out infinite}
+.egg-aura{transform-box:fill-box;transform-origin:center;animation:aura 2.8s ease-in-out infinite}
+@keyframes wobble{0%,52%,100%{transform:rotate(0)}58%{transform:rotate(-8deg)}64%{transform:rotate(7deg)}70%{transform:rotate(-5deg)}76%{transform:rotate(3deg)}82%{transform:rotate(0)}}
+@keyframes aura{0%,100%{opacity:.45;transform:scale(.94)}60%{opacity:.85;transform:scale(1.04)}}
+.wob-lines{opacity:0;animation:wobLines 2.8s ease-in-out infinite}
+@keyframes wobLines{0%,54%,86%,100%{opacity:0}60%,78%{opacity:1}}
+.front-grass{position:absolute;left:50%;bottom:calc(var(--base) - 16px);z-index:3;width:calc(var(--egg-w)*1.45);height:auto;transform:translateX(-50%);pointer-events:none}
+.firefly{position:absolute;z-index:1;width:6px;height:6px;border-radius:50%;background:#f3ff9a;box-shadow:0 0 10px 3px rgba(225,255,120,.7);animation:fly 6s ease-in-out infinite}
+.ff1{left:18%;bottom:200px}.ff2{left:78%;bottom:250px;animation-delay:-2s;animation-duration:7s}.ff3{left:30%;bottom:300px;animation-delay:-4s}.ff4{left:66%;bottom:150px;animation-delay:-3s;animation-duration:5s}
+@keyframes fly{0%,100%{transform:translate(0,0);opacity:.2}30%{opacity:1}50%{transform:translate(14px,-22px);opacity:.9}80%{transform:translate(-10px,-8px);opacity:.3}}
+.intro-hint{position:absolute;left:0;right:0;bottom:30px;z-index:4;display:flex;flex-direction:column;align-items:center;gap:2px;color:#fff;font-family:var(--display);font-size:1.35rem;letter-spacing:.03em}
+.intro-hint .hand{display:block;font-size:1.6rem;line-height:1;animation:poke 1.2s ease-in-out infinite}
+@keyframes poke{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.rays,.flash{position:absolute;left:50%;bottom:calc(var(--base) + var(--egg-w)*.62);pointer-events:none}
+.rays{z-index:1;width:calc(var(--egg-w)*2.7);aspect-ratio:1;margin:0 0 calc(var(--egg-w)*-1.35) calc(var(--egg-w)*-1.35);border-radius:50%;opacity:0;
+  background:repeating-conic-gradient(rgba(255,240,160,.9) 0 7deg,rgba(255,240,160,0) 7deg 22deg);
+  -webkit-mask:radial-gradient(circle,#000 0 20%,transparent 68%);mask:radial-gradient(circle,#000 0 20%,transparent 68%)}
+.flash{z-index:6;width:40px;height:40px;margin:0 0 -20px -20px;border-radius:50%;transform:scale(0);
+  background:radial-gradient(circle,#fff 0 38%,#fffbe2 52%,rgba(255,240,170,.9) 62%,rgba(255,214,70,0) 72%)}
+/* hatch: cracks, shake, split, rays, flash */
+.crack{fill:none;stroke:var(--ink);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
+.c-glow{fill:none;stroke:#fff3a6;stroke-width:9;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+.shell-top,.shell-bot{transform-box:view-box;transform-origin:100px 120px}
+.open .egg-wob{animation:shake .09s linear 9}
+.open .egg-aura{animation:none;opacity:1;transform:scale(1.15);transition:transform .6s,opacity .3s}
+.open .wob-lines,.open .intro-hint{animation:none;opacity:0;transition:opacity .2s}
+.open .crack{animation:draw .2s ease-out forwards}
+.open .c-a{animation-delay:.04s}.open .c-b{animation-delay:.18s}.open .c-main{animation-duration:.3s;animation-delay:.34s}
+.open .c-glow{animation:fadeIn .2s ease .6s forwards}
+.open .egg-whole{animation:hide 0s linear .84s forwards}
+@keyframes hide{to{opacity:0}}
+.open .shell-top{animation:popTop .8s cubic-bezier(.2,.7,.3,1) .84s forwards}
+.open .shell-bot{animation:dropBot .7s ease-in .84s forwards}
+.open .rays{animation:rays 1.3s ease-out .6s forwards}
+.open .flash{animation:flash 1.05s cubic-bezier(.3,.6,.4,1) .8s forwards}
+.open .intro-top{animation:fadeOut .4s ease .7s forwards}
+@keyframes shake{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-5px) rotate(-5deg)}75%{transform:translateX(5px) rotate(5deg)}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes fadeIn{to{opacity:1}}
+@keyframes fadeOut{to{opacity:0;transform:translateY(-14px)}}
+@keyframes popTop{to{transform:translate(-22px,-120px) rotate(-38deg);opacity:0}}
+@keyframes dropBot{to{transform:translate(8px,34px) rotate(9deg);opacity:0}}
+@keyframes rays{0%{opacity:0;transform:scale(.3) rotate(0)}35%{opacity:1}100%{opacity:1;transform:scale(1.7) rotate(50deg)}}
+@keyframes flash{0%{transform:scale(0)}55%{transform:scale(46)}100%{transform:scale(72)}}
+.burst{position:fixed;inset:0;z-index:70;pointer-events:none;overflow:hidden}
+.burst i{position:absolute;left:0;top:0;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+.burst i.sp{clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%)}
+
+/* ---------- hero: the route + trainer card ---------- */
+#hero{
+  position:relative;overflow:hidden;text-align:center;padding:74px 16px 150px;
+  background:linear-gradient(#5db6ff 0%,#93d1ff 38%,#cdeeff 72%,#e6f8ff 100%);
+}
+.sun{position:absolute;left:-70px;top:-70px;width:220px;height:220px;pointer-events:none}
+.sun .sun-rays{transform-box:fill-box;transform-origin:center;animation:spin 50s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cloud{position:absolute;height:auto;pointer-events:none;animation:drift 14s ease-in-out infinite alternate}
+.cl1{width:120px;top:150px;left:-28px}.cl2{width:150px;top:44%;right:-46px;animation-duration:18s;animation-delay:-6s}.cl3{width:96px;top:70%;left:-30px;animation-duration:16s}
+@keyframes drift{from{transform:translateX(-10px)}to{transform:translateX(22px)}}
+.ground{position:absolute;left:0;right:0;bottom:0;height:150px;pointer-events:none}
+.ground .hills{position:absolute;left:0;bottom:30px;width:100%;height:110px;display:block}
+.ground .grass{position:absolute;left:0;right:0;bottom:0;height:64px;background:var(--tufts) 0 100%/96px 64px repeat-x}
+.lang{position:absolute;top:12px;right:12px;z-index:3;display:flex;gap:2px;padding:3px;border-radius:999px;background:#fff;border:2.5px solid var(--ink);box-shadow:0 3px 0 var(--ink)}
+.lang-btn{min-height:34px;border:0;background:none;cursor:pointer;font-weight:900;font-size:.82rem;padding:5px 12px;border-radius:999px;color:var(--ink2)}
+.lang-btn.active{background:var(--blue);color:#fff}
+.hero-inner{position:relative;z-index:1;max-width:640px;margin:0 auto;display:flex;flex-direction:column;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:8px;font-weight:900;font-size:.88rem;padding:7px 16px;border-radius:999px;background:#fff;border:2.5px solid var(--ink);box-shadow:0 4px 0 var(--ink)}
+.title{--sh:var(--red);font-family:var(--display);font-weight:400;font-size:clamp(3rem,13.6vw,5.6rem);line-height:.98;margin-top:20px;letter-spacing:.01em;text-wrap:balance}
+#heroTagline{max-width:34ch;margin:22px auto 0;font-size:1.08rem;font-weight:700;color:var(--ink)}
+#heroDatePill{
+  display:inline-block;margin-top:20px;padding:12px 20px 11px;border-radius:999px;background:var(--yellow);border:3px solid var(--ink);
+  box-shadow:4px 5px 0 var(--red);font-family:var(--display);font-size:1.18rem;letter-spacing:.02em;
+}
+.scroll-cue{display:inline-flex;flex-direction:column;align-items:center;gap:4px;margin-top:28px;font-weight:900;font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--deep);text-decoration:none;min-height:44px}
+.scroll-cue i{width:13px;height:13px;border-right:3.5px solid currentColor;border-bottom:3.5px solid currentColor;border-radius:2px;transform:rotate(45deg);animation:nudge 1.6s ease-in-out infinite}
+@keyframes nudge{50%{transform:translate(0,6px) rotate(45deg)}}
+.rise{animation:rise .9s var(--bounce) both}
+.r1{animation-delay:.12s}.r2{animation-delay:.26s}.r3{animation-delay:.4s}.r4{animation-delay:.52s}
+html.intro-open .rise{animation-play-state:paused}
+@keyframes rise{from{opacity:0;transform:translateY(34px) scale(.9)}}
+
+/* the trainer card */
+.tc-wrap{position:relative;width:min(100%,340px);margin:26px auto 0;perspective:900px}
+.tc-float{animation:float 6s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-8px) rotate(1deg)}}
+.tc{
+  position:relative;border-radius:20px;padding:11px;text-align:left;
+  background:linear-gradient(150deg,#fff0a0 0%,#ffd23c 22%,#ffc61a 60%,#f2b400 100%);
+  box-shadow:0 0 0 3px var(--ink),0 22px 40px rgba(29,63,143,.35);
+  transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .25s ease-out;
+}
+.tc::after{ /* holo shine sweep */
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:3;
+  background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.7) 47%,rgba(255,248,200,.35) 51%,rgba(170,230,255,.3) 54%,transparent 62%) 0 0/300% 100% no-repeat;
+  animation:sweep 5s ease-in-out infinite;mix-blend-mode:screen;
+}
+@keyframes sweep{0%{background-position:110% 0}55%,100%{background-position:-10% 0}}
+.tc-in{position:relative;overflow:hidden;border-radius:12px;padding:10px 12px 10px;border:2px solid #c99a00;
+  background:linear-gradient(160deg,#ffffff 0%,#eef0f6 40%,#dfe3ee 100%)}
+.tc-in::before{ /* rainbow foil */
+  content:"";position:absolute;inset:-40%;pointer-events:none;opacity:.5;
+  background:repeating-linear-gradient(120deg,rgba(255,105,180,.16) 0 18px,rgba(255,214,60,.18) 18px 36px,rgba(90,220,140,.16) 36px 54px,rgba(63,169,245,.18) 54px 72px,rgba(170,120,255,.16) 72px 90px);
+  animation:foil 9s linear infinite;
+}
+@keyframes foil{to{transform:translateX(180px)}}
+.tc-in>*{position:relative}
+.tc-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tc-tag{font-family:var(--display);font-size:.86rem;letter-spacing:.1em;color:#fff;background:var(--red);border:2px solid var(--ink);border-radius:7px;padding:3px 9px 2px}
+.tc-id{font-weight:900;font-size:.76rem;letter-spacing:.12em;color:var(--ink2)}
+.tc-namebar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0 8px}
+.tc-name{font-family:var(--display);font-size:2.1rem;line-height:1.05;color:var(--ink);min-width:0;overflow-wrap:anywhere}
+.tc-photo{padding:4px;border-radius:8px;background:linear-gradient(135deg,#fff6c4,#d6a300 30%,#fff1a0 55%,#b68700 80%,#ffe680);box-shadow:0 0 0 2px var(--ink)}
+.tc-photo .ph{position:relative;aspect-ratio:10/8.6;overflow:hidden;border-radius:5px;background:#bfe6ff}
+.tc-photo img,.tc-photo .ph>svg{display:block;width:100%;height:100%;object-fit:cover}
+.tc-strip{margin:8px auto 0;width:92%;text-align:center;font-size:.78rem;font-weight:800;font-style:italic;color:#4b5068;padding:3px 8px;border-radius:4px;
+  background:linear-gradient(90deg,#c3c9d8,#f7f8fb 30%,#e2e6ef 70%,#c3c9d8)}
+.tc-move{display:flex;align-items:center;gap:10px;margin-top:10px;padding:8px 2px;border-top:2px solid rgba(27,29,43,.12);border-bottom:2px solid rgba(27,29,43,.12)}
+.tc-move .cost{display:flex;gap:2px}
+.tc-move .cost .nrg{width:24px;height:24px}
+.tc-move b{flex:1;font-family:var(--display);font-weight:400;font-size:1.25rem;line-height:1.1}
+.tc-move .dmg{font-family:var(--display);font-size:1.5rem;line-height:1}
+.tc-energy{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}
+.tc-energy small{font-weight:900;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
+.tc-energy .row{display:flex;gap:5px}
+.tc-energy .nrg{width:32px;height:32px;animation:hop 3s ease-in-out infinite}
+.tc-energy .nrg:nth-child(2){animation-delay:.15s}.tc-energy .nrg:nth-child(3){animation-delay:.3s}.tc-energy .nrg:nth-child(4){animation-delay:.45s}.tc-energy .nrg:nth-child(5){animation-delay:.6s}
+@keyframes hop{0%,30%,100%{transform:translateY(0)}15%{transform:translateY(-6px)}}
+.tc-foot{display:flex;justify-content:space-between;margin-top:8px;font-size:.72rem;font-weight:800;color:#5b6077}
+.spark{position:absolute;width:22px;height:22px;color:#fff;pointer-events:none;animation:twinkle 2.6s ease-in-out infinite;z-index:4}
+.spark svg{display:block;width:100%;height:100%;filter:drop-shadow(0 0 3px rgba(255,210,60,.9))}
+.sp1{top:-12px;left:-8px}.sp2{top:34%;right:-14px;width:16px;height:16px;animation-delay:-1s}.sp3{bottom:12%;left:-14px;width:14px;height:14px;animation-delay:-1.8s}
+
+/* ---------- events: trading cards on a play mat ---------- */
+#events{padding:24px 16px 70px;background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='70' height='70'><g fill='none' stroke='%2346a948' stroke-width='2.4' stroke-linecap='round'><path d='M12 22l3-8 3 8M15 22v-8'/><path d='M48 56l3-8 3 8M51 56v-8'/></g></svg>") 0 0/70px 70px,var(--grass)}
+.mat{
+  position:relative;max-width:900px;margin:0 auto;padding:44px 12px 40px;border-radius:30px;border:4px solid var(--ink);
+  background:radial-gradient(ellipse at 50% 30%,#3d7fe8 0%,#2f6fdc 30%,#1d3f8f 85%);
+  box-shadow:inset 0 0 0 7px rgba(255,255,255,.1),0 12px 0 rgba(27,29,43,.22);overflow:hidden;
+}
+.mat::before{ /* play-mat markings */
+  content:"";position:absolute;inset:14px;border-radius:20px;border:2px dashed rgba(255,255,255,.22);pointer-events:none;
+  background:radial-gradient(circle at 50% 50%,transparent 0 118px,rgba(255,255,255,.12) 119px 121px,transparent 122px),linear-gradient(transparent calc(50% - 1px),rgba(255,255,255,.1) 0 calc(50% + 1px),transparent 0);
+}
+.mat .sec-head{position:relative}
+.mat .sec-title{--sh:var(--yellow)}
+.mat .sec-sub{color:#dfe9ff}
+.events{position:relative;display:grid;gap:34px;max-width:800px;margin:0 auto;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.event{
+  --t:var(--fire);--t-d:var(--fire-d);--t-l:#fff0e2;--a1:#ffe08a;--a2:#ff7d1f;
+  position:relative;width:100%;max-width:370px;justify-self:center;border-radius:22px;padding:10px;rotate:-1.4deg;
+  background:linear-gradient(150deg,color-mix(in srgb,var(--t) 70%,#fff) 0%,var(--t) 30%,var(--t-d) 100%);
+  box-shadow:0 0 0 3px var(--ink),0 16px 30px rgba(8,16,48,.45);
+}
+.event:nth-of-type(even){--t:var(--water);--t-d:var(--water-d);--t-l:#e3f4ff;--a1:#c9efff;--a2:#2c8fe0;rotate:1.4deg}
+.js .event.reveal{transform:perspective(1000px) rotateY(-75deg) translateY(16px)}
+.js .event.reveal.in{transform:none;transition:opacity .45s ease,transform .9s var(--bounce)}
+.js .event.reveal.in:nth-of-type(even){transition-delay:.15s}
+.ev-in{border-radius:14px;padding:12px 14px 14px;background:linear-gradient(170deg,#fbfcff,var(--silver));border:2px solid rgba(27,29,43,.35)}
+.ev-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.event h3{font-family:var(--display);font-weight:400;font-size:1.62rem;line-height:1.08;min-width:0}
+.ev-no{display:flex;align-items:center;gap:6px;flex:none;font-family:var(--display);font-size:1rem;color:var(--ink2)}
+.ev-no .nrg{width:30px;height:30px}
+.t-water{display:none!important}
+.event:nth-of-type(even) .t-fire{display:none!important}
+.event:nth-of-type(even) .t-water{display:block!important}
+.ev-art{
+  position:relative;margin-top:10px;aspect-ratio:16/9.4;border-radius:8px;overflow:hidden;
+  background:radial-gradient(circle at 50% 56%,rgba(255,255,255,.85) 0,rgba(255,255,255,0) 40%),linear-gradient(165deg,var(--a1),var(--a2));
+  box-shadow:0 0 0 3px #fff,0 0 0 5px var(--ink),inset 0 -14px 24px rgba(0,0,0,.12);
+}
+.ev-art::before{content:"";position:absolute;left:50%;top:56%;width:160%;aspect-ratio:1;translate:-50% -50%;opacity:.35;
+  background:repeating-conic-gradient(#fff 0 8deg,transparent 8deg 24deg);animation:spin 40s linear infinite}
+.ev-art::after{content:"";position:absolute;left:50%;bottom:12%;width:42%;height:12%;translate:-50% 0;border-radius:50%;background:rgba(27,29,43,.22)}
+.ev-icon{position:absolute;left:50%;top:48%;z-index:1;translate:-50% -50%;font-size:4.4rem;line-height:1;filter:drop-shadow(0 5px 0 rgba(27,29,43,.25));animation:bob 3.4s ease-in-out infinite}
+.ev-icon img{width:5rem;height:5rem;object-fit:contain}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.ev-strip{margin:10px auto 0;width:90%;text-align:center;font-size:.78rem;font-weight:800;font-style:italic;color:#4b5068;padding:3px 8px;border-radius:4px;
+  background:linear-gradient(90deg,#c3c9d8,#f7f8fb 30%,#e2e6ef 70%,#c3c9d8)}
+.ev-moves{list-style:none;margin:8px 0 0;padding:0}
+.ev-moves li{display:grid;grid-template-columns:38px 1fr;gap:12px;align-items:center;padding:9px 2px;border-top:2px solid rgba(27,29,43,.11)}
+.ev-moves li:first-child{border-top:0}
+.mv-ic{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--t) 55%,#fff),var(--t) 60%);border:2.5px solid var(--ink)}
+.mv-ic svg{width:19px;height:19px}
+.mv-lbl{display:block;font-size:.72rem;font-weight:900;letter-spacing:.15em;text-transform:uppercase;color:var(--t-d);line-height:1.3}
+.mv-val{display:block;font-family:var(--display);font-size:1.22rem;line-height:1.18;color:var(--ink);letter-spacing:.01em}
+.mv-sub{display:block;font-size:.95rem;font-weight:600;color:var(--ink2);margin-top:2px;line-height:1.4}
+.ev-desc{margin-top:8px;padding:10px 12px;border-radius:10px;font-style:italic;font-weight:600;font-size:1rem;line-height:1.5;color:#2c2f40;background:var(--t-l);border:2px solid var(--t)}
+.ev-go{display:flex;width:100%;margin-top:14px;font-size:1.35rem}
+.ev-foot{display:flex;justify-content:space-between;margin-top:10px;font-size:.72rem;font-weight:800;color:#5b6077}
+
+/* ---------- countdown: badge case ---------- */
+#countdown{padding:76px 16px 84px;background:var(--bolts) 0 0/120px 120px,var(--yellow);z-index:1}
+#countdown .sec-title{--sh:var(--red)}
+#countdown .eyebrow{background:#fff}
+.case{
+  position:relative;max-width:640px;margin:0 auto;padding:22px 12px 20px;border-radius:26px;border:4px solid var(--ink);
+  background:radial-gradient(ellipse at 50% 0,#2f63c9 0,#1d3f8f 55%,#142c6a 100%);box-shadow:0 10px 0 rgba(27,29,43,.85);
+}
+.case::before{content:"";position:absolute;inset:8px;border-radius:19px;border:2px dashed rgba(255,210,60,.55);pointer-events:none}
+.case-plate{
+  position:relative;display:table;margin:-40px auto 18px;padding:7px 18px 6px;border-radius:10px;border:3px solid var(--ink);
+  background:linear-gradient(180deg,#fff6c0,#ffd23c 45%,#e8ac00);font-family:var(--display);font-size:1.05rem;letter-spacing:.06em;color:var(--ink);
+}
+.badges{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(6px,2.4vw,22px);max-width:520px;margin:0 auto}
+.bdg{text-align:center}
+.slot{position:relative;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#0b1c4a 0 58%,rgba(11,28,74,0) 70%)}
+.slot svg{position:absolute;inset:4%;width:92%;height:92%;overflow:visible;filter:drop-shadow(0 4px 0 rgba(0,0,0,.35))}
+.b-num{position:absolute;left:0;right:0;top:var(--ny,50%);translate:0 -50%;z-index:1;font-family:var(--display);font-size:clamp(1.45rem,6.6vw,2.5rem);line-height:1;
+  color:#fff;-webkit-text-stroke:.16em var(--ink);paint-order:stroke fill;letter-spacing:.01em}
+.b-lbl{margin-top:8px;font-family:var(--display);font-size:1rem;letter-spacing:.06em;color:#fff}
+.b-shield{--ny:47%}.b-star{--ny:56%}.b-drop{--ny:63%}
+.js .case.reveal.in .slot svg{animation:pin .7s var(--bounce) both}
+.js .case.reveal.in .bdg:nth-child(2) svg{animation-delay:.12s}.js .case.reveal.in .bdg:nth-child(3) svg{animation-delay:.24s}.js .case.reveal.in .bdg:nth-child(4) svg{animation-delay:.36s}
+@keyframes pin{from{transform:scale(.3) rotate(-30deg);opacity:0}}
+.shine{animation:gleam 4s ease-in-out infinite}
+@keyframes gleam{0%,70%,100%{opacity:.35}80%{opacity:.9}}
+.cd-when{text-align:center;margin-top:26px;font-family:var(--display);font-size:1.22rem;letter-spacing:.02em}
+.cd-when span{white-space:nowrap}
+
+/* ---------- wishes: RPG dialogue boxes ---------- */
+#wishes{padding-top:clamp(84px,12vw,112px);background:linear-gradient(#dff1ff,var(--sky-l) 40%)}
+#wishes .sec-title,#stay .sec-title{--sh:var(--blue)}
+.dlg{
+  --tab:var(--deep);position:relative;margin:0;padding:28px 20px 26px;border-radius:16px;background:#fff;border:4px solid var(--deep);
+  box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 5.5px var(--blue),0 7px 0 rgba(29,63,143,.2);
+}
+.dlg-tab{
+  position:absolute;top:-17px;left:14px;max-width:calc(100% - 28px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  padding:5px 12px 4px;border-radius:8px;background:var(--tab);color:#fff;border:2.5px solid #fff;box-shadow:0 0 0 2.5px var(--tab);
+  font-weight:900;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;line-height:1.3;
+}
+.wall{display:grid;gap:40px 22px;max-width:960px;margin:0 auto;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));padding-top:14px}
+.wish::after{content:"\25BC";position:absolute;right:16px;bottom:8px;font-size:.8rem;color:var(--red);animation:blink 1s steps(2,jump-none) infinite}
+@keyframes blink{50%{opacity:0}}
+.wish:nth-of-type(3n+2){--tab:var(--red-d)}
+.wish:nth-of-type(3n+3){--tab:#23803a}
+.wish blockquote{margin:0;font-weight:700;font-size:1.06rem;line-height:1.6}
+.wish-form{max-width:560px;margin:0 auto 52px;display:grid;gap:14px}
+.wish-form .prompt{font-weight:800;font-size:1.06rem}
+.field{display:grid;gap:6px;font-weight:900;font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;color:var(--deep)}
+.field input,.field textarea{
+  width:100%;border:2.5px solid #a9bfe8;background:#f4f8ff;border-radius:12px;padding:12px 14px;font-weight:700;font-size:1rem;letter-spacing:0;text-transform:none;
+  color:var(--ink);resize:vertical;transition:border-color .2s,box-shadow .2s;
+}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px rgba(47,111,220,.2)}
+.wish-form .btn{justify-self:start;margin-top:2px}
+.wish-form .btn .cur{display:inline-block;animation:nudgeR 1s ease-in-out infinite}
+@keyframes nudgeR{50%{transform:translateX(3px)}}
+.wishes-more{display:flex;justify-content:center;margin-top:40px}
+
+/* ---------- help & contacts ---------- */
+#stay{padding-top:24px;background:var(--sky-l)}
+.guide{position:relative;max-width:620px;margin:56px auto 0;text-align:center;padding:30px 12px 14px;border-radius:24px;background:#fff;border:4px solid var(--ink);box-shadow:0 10px 0 var(--grass)}
+.signpost{display:block;width:118px;height:auto;margin:-96px auto 10px}
+.guide .sec-title{--sh:var(--grass);font-size:clamp(1.9rem,7vw,2.5rem);margin-top:0}
+#stayText{margin:12px auto 22px;max-width:34ch;color:var(--ink2);font-weight:600}
+#coordinators{display:grid;gap:12px}
+.coord{--c:var(--yellow);display:flex;align-items:center;gap:10px;text-align:left;padding:10px;border-radius:16px;background:var(--paper);border:2.5px solid rgba(27,29,43,.14)}
+.coord:nth-of-type(2n){--c:var(--psychic)}
+.coord:nth-of-type(3n){--c:var(--water)}
+.coord .av{width:44px;height:44px;flex:none;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--c) 50%,#fff),var(--c) 65%);border:2.5px solid var(--ink)}
+.coord .av svg{width:26px;height:26px}
+.coord .who{flex:1;min-width:0}
+.coord .c-name{font-family:var(--display);font-size:1.18rem;line-height:1.2}
+.coord .c-phone{font-size:.95rem;font-weight:700;color:var(--ink2);white-space:nowrap}
+.coord .btn{flex:none;gap:6px;padding:11px 13px 10px;font-size:1.05rem}
+.coord .btn svg{width:17px;height:17px}
+
+/* ---------- footer: back to the night sky ---------- */
+footer{
+  position:relative;overflow:hidden;text-align:center;color:#fff;padding:120px 16px 150px;
+  background:var(--starfield) 0 0/260px 260px,linear-gradient(#1d3f8f 0%,#13235e 55%,#0a1236 100%);
+}
+footer::before{content:"";position:absolute;left:0;right:0;top:-1px;height:56px;pointer-events:none;
+  background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='56' preserveAspectRatio='none' viewBox='0 0 400 56'><path d='M0 0H400V22C340 54 262 30 200 40S70 58 0 26Z' fill='%23eef7ff'/></svg>") 0 0/100% 100% no-repeat}
+.foot-badges{display:flex;justify-content:center;gap:10px}
+.foot-badges .nrg{width:42px;height:42px;animation:hop 2.6s ease-in-out infinite}
+.foot-badges .nrg:nth-child(2){animation-delay:.12s}.foot-badges .nrg:nth-child(3){animation-delay:.24s}.foot-badges .nrg:nth-child(4){animation-delay:.36s}.foot-badges .nrg:nth-child(5){animation-delay:.48s}
+.thanks{font-family:var(--display);font-size:clamp(1.45rem,6vw,2rem);line-height:1.15;margin-top:22px;letter-spacing:.01em}
+.hashtag{--sh:var(--red);font-family:var(--display);font-size:clamp(1.9rem,8.6vw,3.3rem);line-height:1.1;margin-top:14px;color:var(--yellow);overflow-wrap:anywhere}
+.foot-note{margin-top:14px;color:#c9d6ff;font-weight:700}
+.foot-hill{position:absolute;left:0;bottom:0;width:100%;height:96px;display:block}
+.foot-shells{position:absolute;left:50%;bottom:58px;width:96px;height:auto;margin-left:-48px}
+
+/* ---------- music + toast ---------- */
+#musicToggle{
+  position:fixed;right:16px;bottom:16px;z-index:40;width:56px;height:56px;border-radius:50%;cursor:pointer;display:grid;place-items:center;
+  background:radial-gradient(circle at 35% 30%,#fff3a8,#ffd23c 55%,#e8ac00);border:3px solid var(--ink);box-shadow:0 4px 0 var(--ink);color:var(--ink);padding:0;
+}
+#musicToggle svg{width:24px;height:24px}
+#musicToggle.spinning{box-shadow:0 4px 0 var(--ink),0 0 0 6px rgba(255,210,60,.45)}
+#musicToggle.spinning svg{animation:spin 2.4s linear infinite}
+#toast{
+  position:fixed;left:50%;bottom:88px;z-index:60;transform:translate(-50%,20px);opacity:0;pointer-events:none;width:max-content;max-width:calc(100% - 32px);
+  padding:12px 18px;border-radius:12px;background:#fff;color:var(--ink);border:3px solid var(--deep);box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 4px var(--blue),0 8px 20px rgba(15,26,71,.3);
+  font-weight:800;font-size:.95rem;text-align:center;transition:.3s;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- desktop ---------- */
+@media (min-width:900px){
+  #hero{padding:90px 32px 170px}
+  .hero-inner{max-width:1040px;display:grid;grid-template-columns:360px 1fr;grid-template-areas:"card chip" "card title" "card tag" "card pill" "card cue";
+    column-gap:64px;align-items:start;justify-items:start;text-align:left;align-content:center}
+  .tc-wrap{grid-area:card;align-self:center;margin:0;width:360px}
+  .chip{grid-area:chip;align-self:end}
+  .title{grid-area:title}
+  #heroTagline{grid-area:tag;margin-left:0}
+  #heroDatePill{grid-area:pill}
+  .scroll-cue{grid-area:cue}
+  .mat{padding:56px 40px 52px}
+  .cl1{left:6%;top:110px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  html{scroll-behavior:auto}
+}
+/* Tamil labels: no English-style letter-spacing or capitals. */
+html[lang="ta"] [data-ta]{letter-spacing:0;text-transform:none}
+/* The uploaded photo covers the stand-in illustration (it starts as a transparent pixel). */
+:where(.cover-slot){position:relative}
+.cover-img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;display:block}
+.wishes-empty{text-align:center;margin:10px auto 22px;max-width:40ch;font-weight:600;opacity:.85}
+</style>
+</head>
+<body>
+
+<!-- shared symbols: energy badges, countdown badges, line icons -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="gBronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe0b0"/><stop offset=".35" stop-color="#ff9a3c"/><stop offset=".6" stop-color="#ffc98a"/><stop offset="1" stop-color="#b2500c"/></linearGradient>
+    <linearGradient id="gBronze2" x1="1" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ffd0a0"/><stop offset=".5" stop-color="#f07a1c"/><stop offset="1" stop-color="#c25e12"/></linearGradient>
+    <linearGradient id="gSilver" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#a9bbe3"/><stop offset=".62" stop-color="#eef2fb"/><stop offset="1" stop-color="#5d74ad"/></linearGradient>
+    <linearGradient id="gSilver2" x1="1" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e5ecfb"/><stop offset=".5" stop-color="#7f98d4"/><stop offset="1" stop-color="#4b62a0"/></linearGradient>
+    <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff7c0"/><stop offset=".35" stop-color="#ffd23c"/><stop offset=".6" stop-color="#fff0a0"/><stop offset="1" stop-color="#c08e00"/></linearGradient>
+    <linearGradient id="gGold2" x1="1" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ffe98a"/><stop offset=".5" stop-color="#f0b800"/><stop offset="1" stop-color="#b98600"/></linearGradient>
+    <linearGradient id="gAqua" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e6f7ff"/><stop offset=".35" stop-color="#3fa9f5"/><stop offset=".6" stop-color="#b9e6ff"/><stop offset="1" stop-color="#14609f"/></linearGradient>
+    <linearGradient id="gAqua2" x1="1" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#bfe7ff"/><stop offset=".5" stop-color="#2b8fdc"/><stop offset="1" stop-color="#16609f"/></linearGradient>
+  </defs>
+  <!-- energy types -->
+  <symbol id="nrg-bolt" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17.5" fill="#ffd23c" stroke="#1b1d2b" stroke-width="2.5"/><path d="M9.5 15.5a12 12 0 0 1 8-7.6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".7"/><path d="M22.5 7.5L11.5 22h7l-2.5 10.5L28.5 17h-7.2z" fill="#fff" stroke="#1b1d2b" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="nrg-flame" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17.5" fill="#ff8a2a" stroke="#1b1d2b" stroke-width="2.5"/><path d="M9.5 15.5a12 12 0 0 1 8-7.6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".55"/><path d="M20 7.5c4 6 9 9.5 9 16a9 9 0 0 1-18 0c0-4 2-6.5 4-8.5.4 3 1.8 4.6 3.4 5-.9-4.3-.4-8.6 1.6-12.5z" fill="#fff" stroke="#1b1d2b" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="nrg-drop" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17.5" fill="#3fa9f5" stroke="#1b1d2b" stroke-width="2.5"/><path d="M9.5 15.5a12 12 0 0 1 8-7.6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".55"/><path d="M20 7.5c5 7 9 11.5 9 16.5a9 9 0 0 1-18 0C11 19 15 14.5 20 7.5z" fill="#fff" stroke="#1b1d2b" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="nrg-leaf" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17.5" fill="#5bc35b" stroke="#1b1d2b" stroke-width="2.5"/><path d="M9.5 15.5a12 12 0 0 1 8-7.6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".55"/><path d="M10.5 29.5C10 18 17 10.5 30 10c.5 12.5-7 19.5-19.5 19.5z" fill="#fff" stroke="#1b1d2b" stroke-width="1.8" stroke-linejoin="round"/><path d="M11.5 28.5L23 17" fill="none" stroke="#1b1d2b" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="nrg-star" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17.5" fill="#f069a8" stroke="#1b1d2b" stroke-width="2.5"/><path d="M9.5 15.5a12 12 0 0 1 8-7.6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".55"/><path d="M20 8.5l3.4 7.6 8.1.8-6.1 5.5 1.8 8-7.2-4.2-7.2 4.2 1.8-8-6.1-5.5 8.1-.8z" fill="#fff" stroke="#1b1d2b" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="sparkle" viewBox="0 0 20 20"><path d="M10 0C11 7 13 9 20 10C13 11 11 13 10 20C9 13 7 11 0 10C7 9 9 7 10 0Z" fill="currentColor"/></symbol>
+  <!-- countdown badges -->
+  <symbol id="bdg-oct" viewBox="0 0 100 100"><polygon points="32,6.6 68,6.6 93.4,32 93.4,68 68,93.4 32,93.4 6.6,68 6.6,32" fill="url(#gBronze)" stroke="#1b1d2b" stroke-width="3.5" stroke-linejoin="round"/><polygon points="35.5,14.9 64.5,14.9 85.1,35.5 85.1,64.5 64.5,85.1 35.5,85.1 14.9,64.5 14.9,35.5" fill="url(#gBronze2)" stroke="#8a3d08" stroke-width="1.5"/><path class="shine" d="M22 30L34 18H52L24 46Z" fill="#fff" opacity=".4"/></symbol>
+  <symbol id="bdg-shield" viewBox="0 0 100 100"><path d="M50 4L90 16V46C90 72 72 88 50 97C28 88 10 72 10 46V16Z" fill="url(#gSilver)" stroke="#1b1d2b" stroke-width="3.5" stroke-linejoin="round"/><path d="M50 13L81 23V47C81 67 67 80 50 88C33 80 19 67 19 47V23Z" fill="url(#gSilver2)" stroke="#3b4f86" stroke-width="1.5"/><path class="shine" d="M24 26L48 18V30L24 50Z" fill="#fff" opacity=".4"/></symbol>
+  <symbol id="bdg-star" viewBox="0 0 100 100"><polygon points="50,6 67.6,29.7 95.7,39.2 78.5,63.3 78.2,92.8 50,84 21.8,92.8 21.5,63.3 4.3,39.2 32.4,29.7" fill="url(#gGold)" stroke="#1b1d2b" stroke-width="3.5" stroke-linejoin="round"/><polygon points="50,6 67.6,29.7 95.7,39.2 78.5,63.3 78.2,92.8 50,84 21.8,92.8 21.5,63.3 4.3,39.2 32.4,29.7" transform="translate(50 56) scale(.7) translate(-50 -54)" fill="url(#gGold2)" stroke="#946a00" stroke-width="2" stroke-linejoin="round"/><path class="shine" d="M30 36L44 32L50 16Z" fill="#fff" opacity=".4"/></symbol>
+  <symbol id="bdg-drop" viewBox="0 0 100 100"><path d="M50 3C62 23 87 43 87 63A37 37 0 0 1 13 63C13 43 38 23 50 3Z" fill="url(#gAqua)" stroke="#1b1d2b" stroke-width="3.5" stroke-linejoin="round"/><path d="M50 16C60 32 79 48 79 64A29 29 0 0 1 21 64C21 48 40 32 50 16Z" fill="url(#gAqua2)" stroke="#10528a" stroke-width="1.5"/><path class="shine" d="M27 56C28 46 36 37 43 30L40 46Z" fill="#fff" opacity=".45"/></symbol>
+  <!-- line icons -->
+  <symbol id="i-cal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10.5h17"/></g></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></g></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></g></symbol>
+  <symbol id="i-go" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h14M12.5 5.5L19 12l-6.5 6.5"/></g></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path fill="currentColor" d="M9 17.5V6.2l10-2.2v11.3a3 3 0 1 1-2-2.83V7.5l-6 1.3v8.7a3 3 0 1 1-2-2.83z"/></symbol>
+  <symbol id="i-guide" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4.2" fill="#fff" stroke="#1b1d2b" stroke-width="1.8"/><path d="M4 21c.6-4.6 3.8-7.2 8-7.2s7.4 2.6 8 7.2z" fill="#fff" stroke="#1b1d2b" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+</svg>
+
+<!-- ============ INTRO: the mystery egg ============ -->
+<div id="curtain-overlay" data-hide-after="1900">
+  <span class="twinkle tw1" aria-hidden="true"><svg><use href="#sparkle"/></svg></span>
+  <span class="twinkle tw2" aria-hidden="true"><svg><use href="#sparkle"/></svg></span>
+  <span class="twinkle tw3" aria-hidden="true"><svg><use href="#sparkle"/></svg></span>
+  <span class="twinkle tw4" aria-hidden="true"><svg><use href="#sparkle"/></svg></span>
+  <span class="twinkle tw5" aria-hidden="true"><svg><use href="#sparkle"/></svg></span>
+
+  <div class="intro-top">
+    <p class="eyebrow intro-eyebrow" data-ta="🎉 உங்களுக்கு ஒரு பிறந்தநாள் அழைப்பு">🎉 A birthday invite for you</p>
+    <p class="intro-title sticker" data-ta="ஏதோ பொரிக்கப் போகிறது!">Something is about to hatch!</p>
+  </div>
+
+  <div class="scene">
+    <svg class="hill" viewBox="0 0 400 210" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <defs><linearGradient id="hillG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a7a52"/><stop offset="1" stop-color="#12382c"/></linearGradient></defs>
+      <path d="M0 70C60 40 120 52 170 68C230 42 330 30 400 62V210H0Z" fill="#1a3f66"/>
+      <path d="M0 132C80 96 140 74 200 72C260 74 330 98 400 128V210H0Z" fill="url(#hillG)"/>
+      <path d="M0 132C80 96 140 74 200 72C260 74 330 98 400 128" fill="none" stroke="#4fb877" stroke-width="3" vector-effect="non-scaling-stroke" opacity=".7"/>
+    </svg>
+    <svg class="tuft l" viewBox="0 0 80 40" aria-hidden="true" focusable="false"><path d="M4 40L14 8L20 40ZM16 40L30 0L34 40ZM30 40L46 12L44 40ZM44 40L58 4L60 40ZM58 40L72 16L76 40Z" fill="#256b45"/><path d="M10 40L22 18L26 40ZM36 40L50 20L52 40ZM56 40L66 24L70 40Z" fill="#3f9a62"/></svg>
+    <svg class="tuft r" viewBox="0 0 80 40" aria-hidden="true" focusable="false"><path d="M4 40L14 8L20 40ZM16 40L30 0L34 40ZM30 40L46 12L44 40ZM44 40L58 4L60 40ZM58 40L72 16L76 40Z" fill="#256b45"/><path d="M10 40L22 18L26 40ZM36 40L50 20L52 40ZM56 40L66 24L70 40Z" fill="#3f9a62"/></svg>
+    <span class="firefly ff1" aria-hidden="true"></span><span class="firefly ff2" aria-hidden="true"></span><span class="firefly ff3" aria-hidden="true"></span><span class="firefly ff4" aria-hidden="true"></span>
+    <div class="rays" aria-hidden="true"></div>
+
+    <button type="button" class="egg-btn" id="openCurtainBtn" data-open-invite aria-label="Tap the egg to open the invitation">
+      <svg viewBox="0 0 200 240" aria-hidden="true" focusable="false">
+        <defs>
+          <radialGradient id="eggShade" cx=".36" cy=".28" r=".8"><stop offset="0" stop-color="#fffef8"/><stop offset=".5" stop-color="#fdf0d2"/><stop offset="1" stop-color="#e6c992"/></radialGradient>
+          <radialGradient id="eggShadow" cx=".3" cy=".25" r=".95"><stop offset=".55" stop-color="#5a3a10" stop-opacity="0"/><stop offset="1" stop-color="#5a3a10" stop-opacity=".35"/></radialGradient>
+          <radialGradient id="auraG"><stop offset="0" stop-color="#fff4b0" stop-opacity=".85"/><stop offset=".55" stop-color="#ffd23c" stop-opacity=".3"/><stop offset="1" stop-color="#ffd23c" stop-opacity="0"/></radialGradient>
+          <path id="eggPath" d="M100 14C144 14 174 92 174 146C174 194 142 226 100 226C58 226 26 194 26 146C26 92 56 14 100 14Z"/>
+          <clipPath id="eggClip"><use href="#eggPath"/></clipPath>
+          <clipPath id="clipTop"><path d="M-20 -40H220V114L180 114L168 128L152 106L136 128L118 104L100 130L82 106L66 128L48 108L34 124L20 112L-20 112Z"/></clipPath>
+          <clipPath id="clipBot"><path d="M-20 280H220V114L180 114L168 128L152 106L136 128L118 104L100 130L82 106L66 128L48 108L34 124L20 112L-20 112Z"/></clipPath>
+          <g id="eggArt">
+            <use href="#eggPath" fill="url(#eggShade)"/>
+            <g clip-path="url(#eggClip)">
+              <ellipse cx="66" cy="74" rx="15" ry="20" fill="#5bc35b" transform="rotate(-22 66 74)"/>
+              <ellipse cx="124" cy="46" rx="10" ry="12" fill="#f069a8"/>
+              <ellipse cx="146" cy="112" rx="17" ry="22" fill="#3fa9f5" transform="rotate(14 146 112)"/>
+              <circle cx="98" cy="92" r="9" fill="#ffd23c"/>
+              <ellipse cx="58" cy="164" rx="20" ry="16" fill="#ff8a2a" transform="rotate(-10 58 164)"/>
+              <ellipse cx="118" cy="190" rx="16" ry="12" fill="#5bc35b"/>
+              <circle cx="164" cy="176" r="14" fill="#f069a8"/>
+              <circle cx="92" cy="150" r="7" fill="#3fa9f5"/>
+              <circle cx="36" cy="118" r="8" fill="#ffd23c"/>
+              <use href="#eggPath" fill="url(#eggShadow)"/>
+              <ellipse cx="72" cy="56" rx="10" ry="22" fill="#fff" opacity=".75" transform="rotate(28 72 56)"/>
+              <ellipse cx="58" cy="92" rx="4" ry="7" fill="#fff" opacity=".6" transform="rotate(20 58 92)"/>
+            </g>
+            <use href="#eggPath" fill="none" stroke="#1b1d2b" stroke-width="5"/>
+          </g>
+        </defs>
+        <ellipse class="egg-aura" cx="100" cy="128" rx="104" ry="118" fill="url(#auraG)"/>
+        <ellipse cx="100" cy="228" rx="58" ry="9" fill="#08140f" opacity=".45"/>
+        <g class="egg-wob">
+          <use class="egg-whole" href="#eggArt"/>
+          <g class="shell-bot" clip-path="url(#clipBot)">
+            <use href="#eggArt"/>
+            <g clip-path="url(#eggClip)">
+              <path class="crack c-main" pathLength="1" d="M20 112L34 124L48 108L66 128L82 106L100 130L118 104L136 128L152 106L168 128L180 114"/>
+              <path class="crack c-b" pathLength="1" d="M150 168L140 178L150 186L142 198"/>
+            </g>
+          </g>
+          <g class="shell-top" clip-path="url(#clipTop)">
+            <use href="#eggArt"/>
+            <g clip-path="url(#eggClip)">
+              <path class="crack c-main" pathLength="1" d="M20 112L34 124L48 108L66 128L82 106L100 130L118 104L136 128L152 106L168 128L180 114"/>
+              <path class="crack c-a" pathLength="1" d="M104 30L96 44L106 54L98 70"/>
+            </g>
+          </g>
+          <g clip-path="url(#eggClip)"><path class="c-glow" d="M20 112L34 124L48 108L66 128L82 106L100 130L118 104L136 128L152 106L168 128L180 114"/></g>
+        </g>
+        <g class="wob-lines" fill="none" stroke="#fff6c2" stroke-width="4" stroke-linecap="round">
+          <path d="M8 96q-8 14 0 28M-6 88q-10 22 0 44"/><path d="M192 96q8 14 0 28M206 88q10 22 0 44"/>
+        </g>
+      </svg>
+    </button>
+
+    <svg class="front-grass" viewBox="0 0 300 60" aria-hidden="true" focusable="false">
+      <path d="M20 60L34 22L40 60ZM36 60L52 8L58 60ZM56 60L70 26L72 60ZM80 60L90 14L98 60ZM200 60L210 16L218 60ZM222 60L236 6L240 60ZM238 60L254 24L256 60ZM256 60L270 12L276 60Z" fill="#1f5a3c"/>
+      <path d="M8 60L26 30L30 60ZM46 60L62 30L66 60ZM66 60L84 34L88 60ZM100 60L112 38L118 60ZM180 60L192 38L196 60ZM210 60L228 30L232 60ZM246 60L262 32L266 60ZM268 60L284 36L292 60Z" fill="#2f7d50"/>
+      <path d="M0 52Q150 40 300 52V60H0Z" fill="#245f40"/>
+    </svg>
+    <p class="intro-hint" aria-hidden="true"><span class="hand">👆</span><span data-ta="முட்டையைத் தொடுங்கள்">Tap the egg</span></p>
+    <div class="flash" aria-hidden="true"></div>
+  </div>
+</div>
+
+<!-- ============ HERO ============ -->
+<header id="hero">
+  <svg class="sun" viewBox="0 0 220 220" aria-hidden="true" focusable="false">
+    <g class="sun-rays" fill="#fff3a6" opacity=".7"><path d="M110 0l9 40h-18zM110 220l9-40h-18zM0 110l40-9v18zM220 110l-40-9v18zM32 32l34 22-12 12zM188 188l-34-22 12-12zM188 32l-22 34-12-12zM32 188l22-34 12 12z"/></g>
+    <circle cx="110" cy="110" r="56" fill="#ffd23c" stroke="#ffe680" stroke-width="10"/>
+  </svg>
+  <svg class="cloud cl1" viewBox="0 0 120 56" aria-hidden="true" focusable="false"><path d="M18 52a16 16 0 0 1 2-31 22 22 0 0 1 40-10 18 18 0 0 1 32 8 16 16 0 0 1 10 33z" fill="#fff"/><path d="M14 46h88a16 16 0 0 1-4 6H18a16 16 0 0 1-4-6z" fill="#dbeeff"/></svg>
+  <svg class="cloud cl2" viewBox="0 0 120 56" aria-hidden="true" focusable="false"><path d="M18 52a16 16 0 0 1 2-31 22 22 0 0 1 40-10 18 18 0 0 1 32 8 16 16 0 0 1 10 33z" fill="#fff"/><path d="M14 46h88a16 16 0 0 1-4 6H18a16 16 0 0 1-4-6z" fill="#dbeeff"/></svg>
+  <svg class="cloud cl3" viewBox="0 0 120 56" aria-hidden="true" focusable="false"><path d="M18 52a16 16 0 0 1 2-31 22 22 0 0 1 40-10 18 18 0 0 1 32 8 16 16 0 0 1 10 33z" fill="#fff"/><path d="M14 46h88a16 16 0 0 1-4 6H18a16 16 0 0 1-4-6z" fill="#dbeeff"/></svg>
+
+  <nav class="lang" aria-label="Language">
+    <button type="button" class="lang-btn active" data-lang="en">EN</button>
+    <button type="button" class="lang-btn" data-lang="ta" lang="ta">தமிழ்</button>
+  </nav>
+
+  <div class="hero-inner">
+    <p class="chip rise" data-ta="🎒 டிரெய்னரே, உங்களுக்கு அழைப்பு!">🎒 Trainer, you're invited!</p>
+    <h1 class="title sticker rise r1" data-bind="title">Arjun turns 8!</h1>
+
+    <div class="tc-wrap rise r2">
+      <span class="spark sp1" aria-hidden="true"><svg><use href="#sparkle"/></svg></span>
+      <span class="spark sp2" aria-hidden="true"><svg><use href="#sparkle"/></svg></span>
+      <span class="spark sp3" aria-hidden="true"><svg><use href="#sparkle"/></svg></span>
+      <div class="tc-float">
+        <div class="tc">
+          <div class="tc-in">
+            <div class="tc-top"><span class="tc-tag">TRAINER CARD</span><span class="tc-id">ID No. 001</span></div>
+            <div class="tc-namebar">
+              <p class="tc-name" data-bind="names">Arjun</p>
+              <svg class="nrg" aria-hidden="true"><use href="#nrg-bolt"/></svg>
+            </div>
+            <div class="tc-photo">
+              <div class="cover-slot ph">
+                <!-- cover photo goes here (data-bind="cover"); a young trainer stands in for the preview -->
+                <svg viewBox="0 0 200 172" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Birthday photo">
+                  <defs>
+                    <linearGradient id="phSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6cc0ff"/><stop offset="1" stop-color="#d6f0ff"/></linearGradient>
+                  </defs>
+                  <rect width="200" height="172" fill="url(#phSky)"/>
+                  <g fill="#fff" opacity=".45"><path d="M100 86L60 0h24zM100 86L140 0h-24zM100 86L0 30v20zM100 86L200 30v20z"/></g>
+                  <path d="M14 40a9 9 0 0 1 14-9 11 11 0 0 1 20 3 8 8 0 0 1 2 15H16a7 7 0 0 1-2-9z" fill="#fff"/>
+                  <path d="M150 28a8 8 0 0 1 12-7 10 10 0 0 1 18 3 7 7 0 0 1 2 13h-30a6 6 0 0 1-2-9z" fill="#fff"/>
+                  <path d="M0 126Q50 104 100 118T200 110V172H0Z" fill="#8fdc84"/>
+                  <path d="M0 146Q60 128 120 140T200 136V172H0Z" fill="#5bc35b"/>
+                  <path d="M6 150L12 130L16 150ZM14 150L22 124L24 150ZM176 146L182 126L186 146ZM184 146L192 120L194 146Z" fill="#3a9f40"/>
+                  <!-- body -->
+                  <path d="M50 172C52 146 70 132 100 132C130 132 148 146 150 172Z" fill="#ff8a2a" stroke="#1b1d2b" stroke-width="3"/>
+                  <path d="M100 150l-8 12h6l-3 10 11-14h-6l3-8z" fill="#ffd23c" stroke="#1b1d2b" stroke-width="1.6" stroke-linejoin="round"/>
+                  <path d="M70 140L76 172M130 140L124 172" stroke="#2f8f3a" stroke-width="9" stroke-linecap="round"/>
+                  <path d="M70 140L76 172M130 140L124 172" stroke="#1b1d2b" stroke-width="1.5" stroke-linecap="round" opacity=".35"/>
+                  <!-- waving arm -->
+                  <path d="M136 146Q152 136 158 112" fill="none" stroke="#1b1d2b" stroke-width="15" stroke-linecap="round"/>
+                  <path d="M136 146Q152 136 158 112" fill="none" stroke="#b97a4f" stroke-width="10" stroke-linecap="round"/>
+                  <path d="M131 140Q142 134 146 142L142 152Q134 150 131 140Z" fill="#ff8a2a" stroke="#1b1d2b" stroke-width="2.5" stroke-linejoin="round"/>
+                  <path d="M150 112C147 100 150 90 160 89C170 90 172 100 169 112C166 118 153 118 150 112Z" fill="#b97a4f" stroke="#1b1d2b" stroke-width="2.5" stroke-linejoin="round"/>
+                  <path d="M151 106C145 103 142 98 145 95C148 93 151 97 153 101" fill="#b97a4f" stroke="#1b1d2b" stroke-width="2.5" stroke-linejoin="round"/>
+                  <path d="M157 92V100M162 91V100" stroke="#1b1d2b" stroke-width="1.6" stroke-linecap="round" opacity=".5"/>
+                  <!-- neck + head -->
+                  <rect x="91" y="112" width="18" height="22" rx="6" fill="#a36a43" stroke="#1b1d2b" stroke-width="2.5"/>
+                  <circle cx="67" cy="90" r="8" fill="#b97a4f" stroke="#1b1d2b" stroke-width="2.5"/>
+                  <circle cx="133" cy="90" r="8" fill="#b97a4f" stroke="#1b1d2b" stroke-width="2.5"/>
+                  <ellipse cx="100" cy="86" rx="33" ry="35" fill="#b97a4f" stroke="#1b1d2b" stroke-width="3"/>
+                  <path d="M66 84C60 62 70 48 84 46L80 40L92 44L94 36L104 43L110 36L114 46L124 42L121 51C134 58 140 70 134 84L128 72L120 78L112 68L102 76L92 68L84 77L76 70L71 80Z" fill="#1b1d2b" stroke="#1b1d2b" stroke-width="2" stroke-linejoin="round"/>
+                  <path d="M67 72Q100 58 133 72L132 82Q100 68 68 82Z" fill="#2f6fdc" stroke="#1b1d2b" stroke-width="2.5" stroke-linejoin="round"/>
+                  <path d="M100 63l-2.2 4.6-5 .6 3.7 3.4-1 5 4.5-2.5 4.5 2.5-1-5 3.7-3.4-5-.6z" fill="#ffd23c" stroke="#1b1d2b" stroke-width="1.2" stroke-linejoin="round"/>
+                  <path d="M80 88q6-4 12 0M108 88q6-4 12 0" fill="none" stroke="#1b1d2b" stroke-width="2.6" stroke-linecap="round"/>
+                  <ellipse cx="86" cy="96" rx="4.4" ry="5.4" fill="#1b1d2b"/><ellipse cx="114" cy="96" rx="4.4" ry="5.4" fill="#1b1d2b"/>
+                  <circle cx="87.6" cy="94" r="1.6" fill="#fff"/><circle cx="115.6" cy="94" r="1.6" fill="#fff"/>
+                  <circle cx="76" cy="106" r="6" fill="#f069a8" opacity=".35"/><circle cx="124" cy="106" r="6" fill="#f069a8" opacity=".35"/>
+                  <path d="M86 106Q100 124 114 106Z" fill="#fff" stroke="#1b1d2b" stroke-width="2.6" stroke-linejoin="round"/>
+                  <path d="M93 114q7 5 14 0" fill="#ee6a5f"/>
+                </svg>
+              
+<img class="cover-img" data-bind="cover" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+</div>
+            </div>
+            <p class="tc-strip">Star Trainer · Birthday Edition</p>
+            <div class="tc-move">
+              <span class="cost" aria-hidden="true"><svg class="nrg"><use href="#nrg-bolt"/></svg><svg class="nrg"><use href="#nrg-star"/></svg></span>
+              <b>Birthday Blast</b><span class="dmg">100</span>
+            </div>
+            <div class="tc-energy">
+              <small>Energy</small>
+              <span class="row" aria-hidden="true">
+                <svg class="nrg"><use href="#nrg-bolt"/></svg><svg class="nrg"><use href="#nrg-flame"/></svg><svg class="nrg"><use href="#nrg-drop"/></svg><svg class="nrg"><use href="#nrg-leaf"/></svg><svg class="nrg"><use href="#nrg-star"/></svg>
+              </span>
+            </div>
+            <p class="tc-foot"><span>001/001 ★</span><span>One of a kind</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p id="heroTagline" class="rise r3" data-bind="tagline">Calling all trainers! Join Arjun's 8th birthday adventure for games, card battles, cake and lots of fun.</p>
+    <p id="heroDatePill" class="rise r4" data-bind="dateLine">⚡ 17th July 2027 • Chennai</p>
+    <a class="scroll-cue rise r4" href="#events"><span data-ta="நிகழ்ச்சிகளைப் பாருங்கள்">See the plan</span><i aria-hidden="true"></i></a>
+  </div>
+
+  <div class="ground" aria-hidden="true">
+    <svg class="hills" viewBox="0 0 400 110" preserveAspectRatio="none" focusable="false">
+      <path d="M0 50C70 18 130 30 190 46C260 16 340 10 400 40V110H0Z" fill="#b7e8a8"/>
+      <path d="M0 76C80 48 150 58 220 70C290 52 350 54 400 66V110H0Z" fill="#8fd982"/>
+    </svg>
+    <div class="grass"></div>
+  </div>
+</header>
+
+<main>
+<!-- ============ EVENTS ============ -->
+<section id="events">
+  <div class="mat">
+    <div class="sec-head reveal">
+      <p class="eyebrow" data-ta="⚡ சாகசத் திட்டம்">⚡ The adventure plan</p>
+      <h2 class="sec-title sticker" data-ta="உங்கள் பார்ட்டி கார்டுகள்">Your party cards</h2>
+      <p class="sec-sub"><span data-ta="வழி அறிய கார்டில் உள்ள">Tap</span> <b>Go!</b> <span data-ta="பொத்தானைத் தொடுங்கள்.">on a card for directions to that stop.</span></p>
+    </div>
+
+    <div id="eventsGrid" class="events">
+    <template>
+    <article class="event reveal">
+        <div class="ev-in">
+          <div class="ev-head">
+            <h3 data-field="name">Birthday Party</h3>
+            <p class="ev-no"><span data-ta="எண்&nbsp;">No.&nbsp;</span><span data-field="number">01</span><span aria-hidden="true"><svg class="nrg t-fire"><use href="#nrg-flame"/></svg><svg class="nrg t-water"><use href="#nrg-drop"/></svg></span></p>
+          </div>
+          <div class="ev-art"><span class="ev-icon" data-field="icon">⚡</span></div>
+          <p class="ev-strip" data-ta="பார்ட்டி கார்டு · தவறவிடாதீர்கள்!">Party card · Don't miss it!</p>
+          <ul class="ev-moves">
+            <li><span class="mv-ic"><svg><use href="#i-cal"/></svg></span><span><small class="mv-lbl" data-ta="தேதி">Date</small><span class="mv-val" data-field="date">17th July 2027</span></span></li>
+            <li><span class="mv-ic"><svg><use href="#i-clock"/></svg></span><span><small class="mv-lbl" data-ta="நேரம்">Time</small><span class="mv-val" data-field="time">4:00 PM to 7:00 PM</span></span></li>
+            <li><span class="mv-ic"><svg><use href="#i-pin"/></svg></span><span><small class="mv-lbl" data-ta="இடம்">Place</small><span class="mv-val" data-field="place">PlayZone Arena</span><span class="mv-sub" data-field="venue">OMR, Thoraipakkam, Chennai - 600097</span></span></li>
+          </ul>
+          <p class="ev-desc" data-field="desc">Card battles, a treasure hunt and the cake cutting.</p>
+          <a class="btn ev-go" data-href="map" href="https://www.google.com/maps/dir/?api=1&destination=PlayZone+Arena+OMR+Thoraipakkam+Chennai+600097" target="_blank" rel="noopener">Go!<span class="sr-only" data-ta="வழி காட்டு"> Get directions</span> <svg aria-hidden="true"><use href="#i-go"/></svg></a>
+          <p class="ev-foot"><span>Party Pack</span><span>★ Rare</span></p>
+        </div>
+      </article>
+    </template>
+  </div>
+  </div>
+</section>
+
+<!-- ============ COUNTDOWN ============ -->
+<section id="countdown" class="section zz">
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="விழாவுக்கு கவுண்ட்டவுன்">Countdown to the party</p>
+    <h2 class="sec-title sticker" data-ta="தயாராகுங்கள், டிரெய்னர்!">Get ready, trainer!</h2>
+  </div>
+  <div class="case reveal" role="timer" aria-label="Time left until the party">
+    <p class="case-plate" data-ta="விழா தொடங்க இன்னும்">Party starts in</p>
+    <div class="badges">
+      <div class="bdg b-oct"><div class="slot"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#bdg-oct"/></svg><span class="b-num" id="cdDays">000</span></div><p class="b-lbl" data-ta="நாட்கள்">Days</p></div>
+      <div class="bdg b-shield"><div class="slot"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#bdg-shield"/></svg><span class="b-num" id="cdHours">00</span></div><p class="b-lbl" data-ta="மணி">Hours</p></div>
+      <div class="bdg b-star"><div class="slot"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#bdg-star"/></svg><span class="b-num" id="cdMins">00</span></div><p class="b-lbl" data-ta="நிமிடம்">Mins</p></div>
+      <div class="bdg b-drop"><div class="slot"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#bdg-drop"/></svg><span class="b-num" id="cdSecs">00</span></div><p class="b-lbl" data-ta="வினாடி">Secs</p></div>
+    </div>
+  </div>
+  <p class="cd-when reveal"><span data-bind="dateLong">Saturday, 17 July 2027</span> · <span data-bind="time">4:00 PM</span></p>
+</section>
+
+<!-- ============ WISHES ============ -->
+<section id="wishes" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="💬 வாழ்த்துப் புத்தகம்">💬 Guest book</p>
+    <h2 class="sec-title sticker" data-ta="டிரெய்னர் வாழ்த்துகள்">Trainer messages</h2>
+    <p class="sec-sub" data-ta="பிறந்தநாள் டிரெய்னருக்கு ஒரு வாழ்த்து அனுப்புங்கள்!">Send the birthday trainer a message for the big day!</p>
+  </div>
+
+  <form id="wishForm" class="dlg wish-form reveal">
+    <p class="dlg-tab" data-ta="புதிய செய்தி">New message</p>
+    <p class="prompt" data-ta="பிறந்தநாள் டிரெய்னருக்கு என்ன சொல்லப் போகிறீர்கள்?">What will you say to the birthday trainer?</p>
+    <label class="field"><span data-ta="உங்கள் பெயர்">Your name</span><input id="wishName" maxlength="60" placeholder="e.g. Divya Aunty" data-ta-ph="எ.கா. திவ்யா அத்தை" required></label>
+    <label class="field"><span data-ta="உங்கள் செய்தி">Your message</span><textarea id="wishMessage" maxlength="500" rows="3" placeholder="Type your birthday message…" data-ta-ph="உங்கள் பிறந்தநாள் வாழ்த்தை எழுதுங்கள்…" required></textarea></label>
+    <button class="btn blue" type="submit"><span class="cur" aria-hidden="true">▶</span> <span data-ta="அனுப்பு">Send message</span></button>
+  </form>
+
+  <div id="wishesWall" class="wall">
+    <template>
+    <figure class="dlg wish reveal"><figcaption class="dlg-tab" data-field="name">Rahul</figcaption><blockquote data-field="message">Happy birthday, champion trainer! Have an epic day.</blockquote></figure>
+    </template>
+  </div>
+  <p id="wishesEmpty" class="wishes-empty" hidden data-ta="இன்னும் செய்திகள் இல்லை — முதல் வாழ்த்தை நீங்களே அனுப்புங்கள்!">No messages yet — be the first trainer to say hi!</p>
+  <div class="wishes-more"><button id="wishesMore" class="btn ghost" type="button" data-ta="மேலும் செய்திகள்">Show more messages</button></div>
+</section>
+
+<!-- ============ HELP & CONTACTS ============ -->
+<section id="stay" class="section">
+  <div class="guide reveal">
+    <svg class="signpost" viewBox="0 0 120 110" aria-hidden="true" focusable="false">
+      <rect x="54" y="20" width="12" height="84" rx="3" fill="#b07a45" stroke="#1b1d2b" stroke-width="3"/>
+      <path d="M22 22H94L108 34L94 46H22Z" fill="#ffd23c" stroke="#1b1d2b" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M98 54H26L12 66L26 78H98Z" fill="#fff" stroke="#1b1d2b" stroke-width="3" stroke-linejoin="round"/>
+      <text x="60" y="40.5" text-anchor="middle" font-family="Lilita One,sans-serif" font-size="15" fill="#1b1d2b" letter-spacing="1">PARTY</text>
+      <text x="58" y="72.5" text-anchor="middle" font-family="Lilita One,sans-serif" font-size="15" fill="#ee3b2f" letter-spacing="1">CAKE</text>
+      <circle cx="60" cy="16" r="5" fill="#ee3b2f" stroke="#1b1d2b" stroke-width="2.5"/>
+      <path d="M30 108L38 88L42 108ZM40 108L50 82L52 108ZM68 108L72 86L80 108ZM78 108L88 92L90 108Z" fill="#3a9f40"/>
+      <path d="M24 108H96" stroke="#2f8f3a" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+    <h2 class="sec-title sticker" data-ta="வழிகாட்டி வேண்டுமா? எங்களை அழையுங்கள்!">Need a guide? Call us!</h2>
+    <p id="stayText" data-bind="help">Need help finding the venue? Call us any time.</p>
+    <div id="coordinators">
+    <template>
+    <div class="coord">
+        <span class="av" aria-hidden="true"><svg><use href="#i-guide"/></svg></span>
+        <div class="who"><p class="c-name" data-field="name">Arjun's parents</p><p class="c-phone" data-field="phone">+91 90000 00000</p></div>
+        <a class="btn" data-href="tel" href="tel:+919000000000"><svg aria-hidden="true"><use href="#i-phone"/></svg><span data-ta="அழைக்க">Call</span></a>
+      </div>
+    </template>
+  </div>
+  </div>
+</section>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="foot-badges reveal" aria-hidden="true">
+    <svg class="nrg"><use href="#nrg-bolt"/></svg><svg class="nrg"><use href="#nrg-flame"/></svg><svg class="nrg"><use href="#nrg-drop"/></svg><svg class="nrg"><use href="#nrg-leaf"/></svg><svg class="nrg"><use href="#nrg-star"/></svg>
+  </div>
+  <p class="thanks reveal" data-ta="சாகசத்தில் இணைந்ததற்கு நன்றி!">Thanks for joining the adventure!</p>
+  <p class="hashtag sticker reveal" data-bind="hashtag">#TrainerArjunTurns8</p>
+  <p class="foot-note reveal" data-ta="பார்ட்டியில் சந்திப்போம், டிரெய்னர்! ⚡">See you at the party, trainer! ⚡</p>
+  <svg class="foot-shells" viewBox="0 0 120 60" aria-hidden="true" focusable="false">
+    <path d="M8 56C6 40 14 30 22 28L28 36L34 26L40 34L46 28C54 34 56 46 52 56Z" fill="#fdf0d2" stroke="#1b1d2b" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="22" cy="46" r="5" fill="#5bc35b"/><circle cx="40" cy="44" r="3.5" fill="#f069a8"/>
+    <path d="M70 56C68 44 72 36 80 32L86 40L92 30L98 38L104 32C112 38 114 48 110 56Z" fill="#fdf0d2" stroke="#1b1d2b" stroke-width="3" stroke-linejoin="round" transform="rotate(12 90 44)"/>
+    <circle cx="92" cy="48" r="5" fill="#3fa9f5"/>
+  </svg>
+  <svg class="foot-hill" viewBox="0 0 400 96" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <path d="M0 50C80 22 150 30 200 38C260 26 330 24 400 46V96H0Z" fill="#1d5a40"/>
+    <path d="M0 70C90 50 170 56 240 62C310 52 360 56 400 64V96H0Z" fill="#143f2e"/>
+  </svg>
+</footer>
+
+<button id="musicToggle" type="button" aria-label="Play or pause music"><svg aria-hidden="true"><use href="#i-note"/></svg></button>
+<audio id="bgMusic" loop preload="auto"></audio>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* Template decoration (stays in the real template): the hatch's star burst and the trainer card's tilt. */
+(function(){
+  var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var COLORS=["#ffd23c","#ffffff","#f069a8","#3fa9f5","#5bc35b","#ff8a2a"];
+  var egg=document.querySelector(".egg-btn");
+  function starBurst(){
+    if(reduce||!egg) return;
+    var r=egg.getBoundingClientRect(), x=r.left+r.width/2, y=r.top+r.height*.5;
+    var box=document.createElement("div"); box.className="burst";
+    for(var i=0;i<34;i++){
+      var s=document.createElement("i"), a=Math.random()*Math.PI*2, d=110+Math.random()*380, size=10+Math.random()*18;
+      if(i%3===0) s.className="sp";
+      s.style.width=s.style.height=size+"px"; s.style.background=COLORS[i%COLORS.length];
+      box.appendChild(s);
+      s.animate([
+        {transform:"translate("+x+"px,"+y+"px) translate(-50%,-50%) scale(.2) rotate(0deg)",opacity:1},
+        {transform:"translate("+(x+Math.cos(a)*d)+"px,"+(y+Math.sin(a)*d)+"px) translate(-50%,-50%) scale(1) rotate("+(180+Math.random()*360)+"deg)",opacity:1,offset:.7},
+        {transform:"translate("+(x+Math.cos(a)*d*1.2)+"px,"+(y+Math.sin(a)*d*1.2+60)+"px) translate(-50%,-50%) scale(.5) rotate(540deg)",opacity:0}
+      ],{duration:1200+Math.random()*700,delay:Math.random()*120,easing:"cubic-bezier(.15,.75,.3,1)",fill:"forwards"});
+    }
+    document.body.appendChild(box);
+    setTimeout(function(){ box.remove(); },2400);
+  }
+  if(egg) egg.addEventListener("click",function(){ setTimeout(starBurst,820); },{once:true});
+
+  // Trainer card tilts toward the pointer (mouse only).
+  var card=document.querySelector(".tc");
+  if(card&&!reduce&&matchMedia("(hover:hover) and (pointer:fine)").matches){
+    card.addEventListener("pointermove",function(e){
+      var b=card.getBoundingClientRect(), px=(e.clientX-b.left)/b.width-.5, py=(e.clientY-b.top)/b.height-.5;
+      card.style.setProperty("--rx",(-py*12).toFixed(2)+"deg"); card.style.setProperty("--ry",(px*14).toFixed(2)+"deg");
+    });
+    card.addEventListener("pointerleave",function(){ card.style.setProperty("--rx","0deg"); card.style.setProperty("--ry","0deg"); });
+  }
+})();
+</script>
+
+<script>
+/* Intro and bilingual labels. js/invite.js opens the intro on tap (adds .open, then .hidden after data-hide-after);
+   this plays the theme's effect, then unlocks scrolling and starts the hero's entrance. */
+(function(){
+  var html=document.documentElement, overlay=document.getElementById("curtain-overlay");
+  var reduce=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
+  
+
+  if(overlay&&!html.classList.contains("intro-open")){
+    // Admin thumbnails and framed previews start on the page itself.
+    overlay.remove();
+  }else if(overlay){
+    var opened=false;
+    overlay.querySelectorAll("[data-open-invite]").forEach(function(b){
+      b.addEventListener("click",function(){
+        if(opened) return;
+        opened=true;
+        overlay.classList.add("open");
+        setTimeout(function(){ html.classList.remove("intro-open"); },reduce?0:1150);
+      });
+    });
+  }
+
+  // Labels with data-ta (and placeholders with data-ta-ph) switch to that Tamil text when the guest picks தமிழ்.
+  var lang="en";
+  function labels(root){
+    root.querySelectorAll("[data-ta]").forEach(function(n){
+      if(n.dataset.en===undefined) n.dataset.en=n.textContent;
+      n.textContent=lang==="ta"?n.dataset.ta:n.dataset.en;
+    });
+    root.querySelectorAll("[data-ta-ph]").forEach(function(n){
+      if(n.dataset.enPh===undefined) n.dataset.enPh=n.placeholder;
+      n.placeholder=lang==="ta"?n.dataset.taPh:n.dataset.enPh;
+    });
+  }
+  document.addEventListener("invite:render",function(e){
+    lang=e.detail&&e.detail.lang==="ta"?"ta":"en";
+    labels(document);
+  });
+  // New wishes arrive without a full render, so label them as they are added.
+  var wall=document.getElementById("wishesWall");
+  if(wall&&window.MutationObserver) new MutationObserver(function(){ labels(wall); }).observe(wall,{childList:true});
+})();
+</script>
+</body>
+</html>

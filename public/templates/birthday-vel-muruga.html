@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<!--
+  Vel Muruga — birthday template
+  A devotional, joyful invitation for Tamil families celebrating a child's birthday (often the first) with Lord
+  Murugan's blessings: a temple pooja followed by a celebration. The deity appears only through sacred symbols —
+  the golden Vel, the peacock (his vahana) and its feathers, the rooster flag (seval kodi), "ஓம்" and the six hill
+  abodes. Intro: a single glowing peacock feather on deep peacock blue; one tap fans it out into a full peacock
+  tail that blooms into the page. Hero: a Vel emblem inside a halo of feather eyes above a range of hills where the
+  rooster flag flutters; feather-eye photo frame, Vel-crested event cards, feather-eye countdown medallions and
+  sandal-cream blessing cards with a saffron edge.
+  Palette: peacock blue #0b3d63 / #0e5a85 · teal #0f8b8d · emerald #127a52 · saffron #ff8a1d / kavi #e8631c ·
+           kumkum #b3121f · gold #d9a520 / #f3d27a · sandal cream #fff3dd
+  Fonts:   Tiro Tamil (headings; Latin + Tamil) · Mukta Malar (body; Latin + Tamil) · Arima (Tamil display accents)
+  A birthday template for the invitation site; it follows TEMPLATES.md, and js/invite.js fills in the names, title,
+  date, photo, events, countdown, wishes and contacts. Labels with data-ta switch to Tamil with the தமிழ் button.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b3d63">
+<title>Kumaran turns 1! — Vel Muruga</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Tamil:ital@0;1&family=Mukta+Malar:wght@400;500;600;700;800&family=Arima:wght@500;600;700&display=swap" rel="stylesheet">
+<script>
+  /* Runs before paint: mark JS, and decide whether the intro overlay is shown (not in admin previews or frames). */
+  (function(){
+    var d=document.documentElement, skip=/[?&]preview/.test(location.search);
+    try{ skip=skip||window.self!==window.top; }catch(e){ skip=true; }
+    d.className+=" js"+(skip?"":" intro-open");
+  })();
+</script>
+<style>
+:root{
+  --blue:#0b3d63; --blue2:#0e5a85; --blue-d:#072a45; --blue-dd:#041c30;
+  --teal:#0f8b8d; --emerald:#127a52; --turq:#19c2bf;
+  --saffron:#ff8a1d; --kavi:#e8631c; --kumkum:#b3121f;
+  --gold:#d9a520; --gold-l:#f3d27a; --gold-d:#a87412;
+  --sandal:#fff3dd; --sandal2:#fbe6c2; --paper:#fffaf0; --ink:#1f2a33; --ink2:#4e5b66; --line:#ecd3a4;
+  --display:'Tiro Tamil','Mukta Malar','Noto Sans Tamil',Georgia,serif;
+  --body:'Mukta Malar','Tiro Tamil','Noto Sans Tamil',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --accent:'Arima','Tiro Tamil','Mukta Malar','Noto Sans Tamil',serif;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --gold-text:linear-gradient(180deg,#fff1c1 0%,#f3d27a 38%,#d9a520 70%,#b8861a 100%);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+html.intro-open,html.intro-open body{overflow:hidden}
+body{margin:0;min-height:100vh;overflow-x:hidden;font-variant-numeric:lining-nums;font-family:var(--body);font-size:1.06rem;line-height:1.65;color:var(--ink);background:var(--sandal)}
+h1,h2,h3,p{margin:0}
+a{color:inherit}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--saffron);outline-offset:3px;border-radius:10px}
+.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- shared bits ---------- */
+.section{position:relative;padding:clamp(56px,9vw,96px) 16px}
+.sec-head{text-align:center;max-width:620px;margin:0 auto clamp(28px,5vw,44px)}
+.eyebrow{font-weight:700;font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;color:var(--kavi)}
+.sec-title{font-family:var(--display);font-weight:400;font-size:clamp(1.9rem,7.4vw,2.8rem);line-height:1.18;margin-top:6px;color:var(--blue)}
+.sec-title small{display:block;font-family:var(--display);font-style:italic;font-size:.5em;line-height:1.3;color:var(--teal);margin-top:4px}
+.sec-sub{margin-top:12px;color:var(--ink2)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:0;cursor:pointer;text-decoration:none;
+  font-family:var(--body);font-weight:700;font-size:1.02rem;line-height:1;padding:13px 24px 12px;border-radius:999px;
+  background:linear-gradient(180deg,#ff9d3c,var(--kavi));color:#fff;box-shadow:0 4px 0 #b9480f,0 10px 22px rgba(232,99,28,.28);
+  transition:transform .15s,box-shadow .15s;
+}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #b9480f}
+.btn svg{width:18px;height:18px}
+.btn.ghost{background:var(--paper);color:var(--blue);box-shadow:inset 0 0 0 2px var(--gold),0 4px 0 var(--line)}
+.ic{width:20px;height:20px;flex:none}
+
+/* small horizontal Vel divider */
+.vel-div{display:flex;align-items:center;justify-content:center;gap:10px;max-width:340px;margin:0 auto;padding:0 16px}
+.vel-div::before,.vel-div::after{content:"";flex:1;height:1.5px;background:linear-gradient(90deg,transparent,var(--gold))}
+.vel-div::after{transform:scaleX(-1)}
+.vel-div svg{width:168px;height:26px;flex:none}
+
+/* reveal on scroll (the runtime adds .in) */
+.js .reveal{opacity:0;transform:translateY(26px)}
+.js .reveal.in{opacity:1;transform:none;transition:opacity .7s ease,transform .9s var(--ease)}
+
+/* ---------- intro: one peacock feather fans out into a tail ---------- */
+#curtain-overlay{
+  position:fixed;inset:0;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;padding:28px 16px 24px;text-align:center;overflow:hidden;color:var(--sandal);
+  background:
+    radial-gradient(ellipse 60% 42% at 50% 56%,rgba(31,198,194,.26),transparent 70%),
+    radial-gradient(ellipse 90% 50% at 50% 110%,rgba(14,90,133,.95),transparent 70%),
+    linear-gradient(180deg,var(--blue-dd) 0%,var(--blue) 46%,var(--blue-d) 100%);
+}
+.intro-open #curtain-overlay{display:flex}
+#curtain-overlay.hidden{display:none}
+.intro-dust{position:absolute;inset:0;pointer-events:none;opacity:.8;
+  background:
+    radial-gradient(1.6px 1.6px at 12% 18%,#f3d27a 50%,transparent 51%),radial-gradient(1.2px 1.2px at 84% 12%,#fff1c1 50%,transparent 51%),
+    radial-gradient(1.4px 1.4px at 72% 34%,#f3d27a 50%,transparent 51%),radial-gradient(1.2px 1.2px at 22% 62%,#8ef0b8 50%,transparent 51%),
+    radial-gradient(1.6px 1.6px at 90% 70%,#f3d27a 50%,transparent 51%),radial-gradient(1.2px 1.2px at 8% 86%,#fff1c1 50%,transparent 51%),
+    radial-gradient(1.4px 1.4px at 60% 90%,#f3d27a 50%,transparent 51%),radial-gradient(1.2px 1.2px at 38% 8%,#8ef0b8 50%,transparent 51%);
+  animation:twinkle 3.6s ease-in-out infinite alternate}
+@keyframes twinkle{from{opacity:.35}to{opacity:.9}}
+.intro-om{font-family:var(--display);font-size:1.5rem;line-height:1;color:var(--gold-l);text-shadow:0 0 18px rgba(243,210,122,.6)}
+.intro-verse{
+  font-family:var(--accent);font-weight:700;font-size:clamp(1.45rem,6.5vw,2.5rem);line-height:1.3;margin-top:6px;
+  background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 2px 10px rgba(243,210,122,.28));
+}
+.intro-sub{font-size:.95rem;color:#cfe6f2;letter-spacing:.02em}
+.feather-btn{
+  position:relative;flex:none;height:min(52vh,430px);aspect-ratio:120/320;margin:10px 0 4px;padding:0;border:0;background:none;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;transform-origin:50% 98%;
+}
+.feather-btn:focus-visible{outline-offset:8px}
+.f-main,.ff{position:absolute;inset:0;width:100%;height:100%;overflow:visible;transform-origin:50% 98.4%}
+.f-main{filter:drop-shadow(0 0 10px rgba(31,198,194,.55)) drop-shadow(0 0 26px rgba(243,210,122,.3))}
+.feather-btn{animation:sway 3.4s ease-in-out infinite alternate}
+@keyframes sway{from{transform:rotate(-3deg)}to{transform:rotate(3deg)}}
+.tap-ring{position:absolute;left:50%;top:29.7%;width:62%;aspect-ratio:1;border-radius:50%;border:2px solid var(--gold-l);
+  transform:translate(-50%,-50%);opacity:0;animation:ring 2.2s ease-out infinite;pointer-events:none}
+@keyframes ring{0%{transform:translate(-50%,-50%) scale(.55);opacity:.85}100%{transform:translate(-50%,-50%) scale(1.5);opacity:0}}
+.fan{position:absolute;inset:0;pointer-events:none}
+.ff{opacity:0;transform:rotate(0) scale(.9);filter:drop-shadow(0 0 8px rgba(31,198,194,.45))}
+.fan-glow{position:absolute;left:50%;top:98.4%;width:230%;aspect-ratio:1;border-radius:50%;pointer-events:none;opacity:0;
+  transform:translate(-50%,-50%) scale(.2);
+  background:radial-gradient(circle,rgba(255,241,193,.75) 0,rgba(243,210,122,.38) 18%,rgba(31,198,194,.22) 42%,transparent 66%)}
+.intro-hint{font-weight:600;font-size:1rem;color:#e8f3f8}
+.intro-hint span{color:var(--gold-l)}
+/* opening */
+.open .tap-ring{animation:none;opacity:0}
+.open .intro-verse,.open .intro-om,.open .intro-sub,.open .intro-hint{opacity:0;transform:translateY(-10px);transition:opacity .45s ease,transform .45s ease}
+.open .intro-hint{transform:translateY(10px)}
+.open .ff{opacity:1;transform:rotate(var(--a)) scale(1);transition:transform 1s var(--ease) var(--d),opacity .25s ease var(--d)}
+.open .fan-glow{opacity:1;transform:translate(-50%,-50%) scale(1);transition:transform 1.2s var(--ease) .15s,opacity .5s ease .15s}
+.open .feather-btn{animation:fanout 2.3s var(--ease) forwards;cursor:default}
+@keyframes fanout{
+  0%{transform:none}
+  38%{transform:translateY(-12%) scale(.5)}
+  60%{transform:translateY(-12%) scale(.53);opacity:1}
+  100%{transform:translateY(-4%) scale(2.6);opacity:0}
+}
+#curtain-overlay.open{pointer-events:none;animation:overlayOut .8s ease 1.5s forwards}
+@keyframes overlayOut{to{opacity:0;visibility:hidden}}
+
+/* ---------- hero ---------- */
+#hero{
+  position:relative;overflow:hidden;text-align:center;color:var(--sandal);padding:58px 16px 168px;
+  background:
+    radial-gradient(ellipse 70% 40% at 50% 30%,rgba(31,198,194,.18),transparent 70%),
+    linear-gradient(180deg,var(--blue-dd) 0%,var(--blue) 38%,var(--blue2) 78%,#127082 100%);
+}
+.corner-f{position:absolute;width:110px;height:auto;opacity:.2;pointer-events:none}
+.corner-f.l{left:-34px;top:40px;transform:rotate(-28deg)}
+.corner-f.r{right:-34px;top:40px;transform:rotate(28deg)}
+.lang{position:absolute;top:12px;right:12px;z-index:3;display:flex;gap:2px;padding:3px;border-radius:999px;background:rgba(4,28,48,.55);border:1px solid rgba(243,210,122,.55)}
+.lang-btn{border:0;background:none;cursor:pointer;font-weight:700;font-size:.85rem;min-width:44px;min-height:36px;padding:4px 12px;border-radius:999px;color:var(--gold-l)}
+.lang-btn.active{background:linear-gradient(180deg,#f3d27a,#d9a520);color:var(--blue-d)}
+.hero-inner{position:relative;z-index:2;max-width:640px;margin:0 auto}
+.om-line{font-family:var(--accent);font-weight:700;font-size:1.15rem;letter-spacing:.02em;color:var(--gold-l);text-shadow:0 0 14px rgba(243,210,122,.45)}
+.om-line::before,.om-line::after{content:"";display:inline-block;width:26px;height:1px;margin:0 10px;vertical-align:middle;background:var(--gold)}
+.hero-eyebrow{margin-top:10px;font-weight:600;font-size:.9rem;letter-spacing:.06em;color:#bfe3ef}
+.nw{white-space:nowrap}
+.halo{position:relative;width:min(76vw,320px);aspect-ratio:1;margin:22px auto 14px}
+.halo::before{
+  content:"";position:absolute;inset:-34%;border-radius:50%;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg,rgba(243,210,122,.16) 0 4deg,transparent 4deg 12deg);
+  -webkit-mask:radial-gradient(circle,#000 28%,transparent 68%);mask:radial-gradient(circle,#000 28%,transparent 68%);
+  animation:spin 140s linear infinite;
+}
+.halo .ring{position:absolute;inset:0;width:100%;height:100%;overflow:visible;animation:spin 90s linear infinite;filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}
+.halo .disc{
+  position:absolute;inset:13.5%;border-radius:50%;
+  background:radial-gradient(circle at 50% 38%,rgba(255,177,82,.6) 0,rgba(232,99,28,.25) 30%,transparent 58%),radial-gradient(circle,#0f6e8a 0,#0b3d63 70%,#072a45 100%);
+  box-shadow:0 0 0 3px var(--gold),0 0 0 7px rgba(4,28,48,.6),0 0 0 8.5px var(--gold-l),0 0 40px 6px rgba(243,210,122,.35);
+}
+.emblem{position:absolute;inset:13.5%;border-radius:50%;overflow:hidden;display:grid;place-items:center}
+.emblem img{width:100%;height:100%;object-fit:cover}
+.emblem svg{height:90%;width:auto;margin-top:4%;filter:drop-shadow(0 0 12px rgba(255,214,120,.55))}
+.title{
+  font-family:var(--display);font-weight:400;font-size:clamp(2.5rem,11vw,4.6rem);line-height:1.08;margin-top:8px;text-wrap:balance;
+  background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 3px 0 rgba(4,28,48,.55)) drop-shadow(0 0 18px rgba(243,210,122,.25));
+}
+.hero-names{margin-top:6px;font-size:1.02rem;color:#d6edf5}
+.hero-names b{font-family:var(--display);font-weight:400;font-size:1.25rem;color:var(--gold-l)}
+#heroTagline{max-width:34ch;margin:12px auto 0;font-size:1.08rem;color:#f4ecdc}
+#heroDatePill{
+  display:inline-block;margin-top:22px;padding:11px 22px 9px;border-radius:999px;background:rgba(4,28,48,.45);
+  border:1.5px solid var(--gold);box-shadow:inset 0 0 0 4px rgba(4,28,48,.4),inset 0 0 0 5px rgba(243,210,122,.35);
+  font-family:var(--display);font-size:1.1rem;color:var(--gold-l);
+}
+.hills{position:absolute;left:0;right:0;bottom:-1px;height:120px;pointer-events:none}
+.hills svg.range{display:block;width:100%;height:120px}
+.kodi{position:absolute;left:62%;bottom:101px;width:54px;height:66px;margin-left:-4px;overflow:visible}
+.kodi .flag{transform-box:fill-box;transform-origin:0 50%;animation:flutter 1.6s ease-in-out infinite alternate}
+@keyframes flutter{0%{transform:skewY(-5deg) scaleX(.9)}50%{transform:skewY(2deg) scaleX(1)}100%{transform:skewY(5deg) scaleX(.94)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.rise{animation:rise 1s var(--ease) both}
+.r1{animation-delay:.12s}.r2{animation-delay:.26s}.r3{animation-delay:.4s}.r4{animation-delay:.54s}
+html.intro-open .rise{animation-play-state:paused}
+@keyframes rise{from{opacity:0;transform:translateY(26px) scale(.96)}}
+
+/* ---------- cover photo ---------- */
+#little-one{padding-top:34px}
+.frame{position:relative;width:min(80vw,340px);aspect-ratio:1;margin:0 auto}
+.frame .ring{position:absolute;inset:0;width:100%;height:100%;overflow:visible;animation:spin 120s linear infinite reverse}
+.frame .photo{
+  position:absolute;inset:13%;border-radius:50%;overflow:hidden;background:var(--paper);
+  box-shadow:0 0 0 4px var(--gold),0 0 0 8px var(--sandal),0 0 0 10px var(--teal),0 16px 34px rgba(11,61,99,.28);
+}
+.frame .photo img,.frame .photo svg{display:block;width:100%;height:100%;object-fit:cover}
+.photo-cap{text-align:center;margin-top:22px;font-family:var(--display);font-style:italic;font-size:1.12rem;color:var(--ink2)}
+.photo-cap b{font-style:normal;color:var(--kavi);font-weight:400}
+
+/* ---------- events ---------- */
+.events{display:grid;gap:30px;max-width:900px;margin:0 auto;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
+.event{
+  --b1:var(--blue-d);--b2:var(--blue2);position:relative;display:flex;flex-direction:column;margin:6px;background:var(--paper);border:2px solid var(--gold);border-radius:22px;overflow:hidden;
+  box-shadow:0 0 0 5px var(--sandal),0 0 0 6.5px rgba(217,165,32,.55),0 20px 40px rgba(11,61,99,.14);
+}
+.event:nth-of-type(even){--b1:#0a4a39;--b2:var(--teal)}
+.ev-band{position:relative;min-height:132px;padding:20px 84px 26px 70px;text-align:left;color:var(--sandal);background:linear-gradient(135deg,var(--b1),var(--b2))}
+.ev-band::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:12px;border-top:1.5px solid var(--gold);
+  background:radial-gradient(circle at 8px 6px,#0d3a8c 1.6px,var(--turq) 2.2px,var(--gold) 3.4px,transparent 3.8px) 0 0/16px 12px repeat-x,rgba(4,28,48,.35);
+}
+.ev-feather{position:absolute;right:-18px;top:-30px;width:70px;height:auto;opacity:.18;transform:rotate(32deg);pointer-events:none}
+.ev-vel{position:absolute;left:20px;top:12px;height:94px;width:auto;filter:drop-shadow(0 0 6px rgba(243,210,122,.45))}
+.ev-num{font-weight:700;font-size:.8rem;letter-spacing:.08em;color:var(--gold-l)}
+.event h3{font-family:var(--display);font-weight:400;font-size:1.5rem;line-height:1.2;margin-top:4px;color:#fff}
+.ev-icon{
+  position:absolute;right:16px;top:50%;z-index:1;transform:translateY(-58%);width:58px;height:58px;border-radius:50%;
+  display:grid;place-items:center;font-size:1.75rem;background:var(--paper);box-shadow:0 0 0 2px var(--gold),0 0 0 6px rgba(255,250,240,.18),0 6px 14px rgba(0,0,0,.25);
+}
+.ev-icon img{width:62%;height:62%;object-fit:contain}
+.ev-body{flex:1;padding:22px 22px 26px;text-align:center}
+.ev-meta{list-style:none;margin:0 auto 14px;padding:0;display:grid;gap:12px;text-align:left;max-width:320px}
+.ev-meta li{display:flex;gap:12px;align-items:flex-start}
+.ev-meta .ic{margin-top:3px;color:var(--teal)}
+.ev-meta strong{font-weight:700;color:var(--blue)}
+.ev-meta small{display:block;font-size:.95rem;color:var(--ink2)}
+.ev-desc{font-family:var(--display);font-style:italic;color:var(--ink2);margin:4px auto 20px;max-width:32ch;padding-top:14px;border-top:1px dashed var(--line)}
+
+/* ---------- countdown: feather-eye medallions ---------- */
+#countdown{
+  overflow:hidden;color:var(--sandal);text-align:center;
+  background:radial-gradient(ellipse 80% 60% at 50% 100%,rgba(31,198,194,.25),transparent 70%),linear-gradient(180deg,var(--blue-d),var(--blue) 60%,var(--blue2));
+}
+#countdown::before{
+  content:"";position:absolute;left:50%;top:58%;width:max(150%,900px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+  background:repeating-conic-gradient(from -90deg,rgba(243,210,122,.09) 0 3deg,transparent 3deg 10deg);
+  -webkit-mask:radial-gradient(circle,transparent 6%,#000 16%,transparent 52%);mask:radial-gradient(circle,transparent 6%,#000 16%,transparent 52%);
+}
+#countdown .eyebrow{color:var(--saffron)}
+#countdown .sec-title{color:var(--gold-l)}
+#countdown .sec-title small{color:#9fdcd6}
+.eyes{position:relative;display:flex;justify-content:center;gap:clamp(8px,3.4vw,28px)}
+.cd-eye{width:clamp(74px,20.5vw,124px)}
+.cd-eye .med{position:relative;aspect-ratio:60/80;filter:drop-shadow(0 6px 10px rgba(0,0,0,.3));animation:bob 4s ease-in-out infinite}
+.cd-eye:nth-child(2) .med{animation-delay:-1s}.cd-eye:nth-child(3) .med{animation-delay:-2s}.cd-eye:nth-child(4) .med{animation-delay:-3s}
+@keyframes bob{50%{transform:translateY(-6px)}}
+.cd-eye svg{position:absolute;inset:0;width:100%;height:100%}
+.cd-eye .num{position:absolute;left:0;right:0;top:65%;transform:translateY(-50%);font-family:var(--display);font-size:clamp(1.3rem,5.8vw,2.3rem);line-height:1;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.45)}
+.cd-eye .lbl{margin-top:10px;font-weight:700;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-l)}
+.cd-eye .lbl span{display:block;font-weight:500;font-size:.85rem;letter-spacing:0;text-transform:none;color:#bfe3ef}
+.cd-when{position:relative;margin-top:30px;font-family:var(--display);font-size:1.18rem;color:var(--sandal)}
+.cd-when span{color:var(--gold-l)}
+
+/* ---------- wishes ---------- */
+#wishes{--mini:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 60'><path d='M15 58V8' stroke='%23d9a520' stroke-width='1.6'/><path d='M15 2C25 10 28 22 24 32 21 38 18 41 15 44 12 41 9 38 6 32 2 22 5 10 15 2Z' fill='%232aa760' opacity='.85'/><ellipse cx='15' cy='20' rx='7.5' ry='9.5' fill='%23c9952e'/><ellipse cx='15' cy='21.5' rx='5.2' ry='6.8' fill='%231fc6c2'/><ellipse cx='15' cy='23' rx='3.2' ry='4.2' fill='%230d3a8c'/></svg>")}
+.wish-form{
+  position:relative;max-width:560px;margin:0 auto 44px;padding:28px 22px 26px;border-radius:22px;background:var(--paper);
+  border:1.5px solid var(--gold);box-shadow:0 0 0 5px var(--paper),0 0 0 6px rgba(217,165,32,.4),0 18px 40px rgba(11,61,99,.1);display:grid;gap:14px;
+}
+.wish-form::before{content:"";position:absolute;top:-20px;left:50%;width:22px;height:44px;transform:translateX(-50%) rotate(14deg);background:var(--mini) center/contain no-repeat}
+.field{display:grid;gap:6px;font-weight:700;font-size:.9rem;color:var(--blue)}
+.field input,.field textarea{
+  width:100%;border:1.5px solid var(--line);background:#fffdf8;border-radius:14px;padding:12px 14px;font-weight:500;font-size:1rem;color:var(--ink);
+  resize:vertical;transition:border-color .2s,box-shadow .2s;
+}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 4px rgba(15,139,141,.15)}
+.wish-form .btn{justify-self:center;margin-top:4px}
+.wall{display:grid;gap:20px;max-width:960px;margin:0 auto;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr))}
+.wish{
+  position:relative;margin:0;padding:20px 48px 18px 20px;border-radius:6px 18px 18px 6px;background:#fff6e4;
+  border-left:5px solid var(--saffron);box-shadow:0 1px 0 var(--line),0 10px 24px rgba(11,61,99,.08);
+}
+.wish:nth-of-type(even){border-left-color:var(--kavi);background:#fff1da}
+.wish::after{content:"";position:absolute;top:12px;right:14px;width:18px;height:36px;background:var(--mini) center/contain no-repeat;transform:rotate(18deg);opacity:.9}
+.wish:nth-of-type(even)::after{transform:rotate(-14deg)}
+.wish blockquote{margin:0 0 10px;font-size:1.04rem;line-height:1.6}
+.wish figcaption{font-family:var(--display);font-size:1.05rem;color:var(--blue)}
+.wish figcaption::before{content:"— ";color:var(--kavi)}
+.wishes-more{display:flex;justify-content:center;margin-top:34px}
+
+/* ---------- help & contacts ---------- */
+.help{
+  position:relative;max-width:620px;margin:20px auto 0;text-align:center;padding:52px 20px 24px;border-radius:24px;background:var(--paper);
+  border:1.5px solid var(--gold);box-shadow:0 0 0 5px var(--paper),0 0 0 6px rgba(217,165,32,.4),0 18px 40px rgba(11,61,99,.1);
+}
+.help-badge{
+  position:absolute;top:-34px;left:50%;transform:translateX(-50%);width:68px;height:68px;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 40% 35%,#d42a35,var(--kumkum) 60%,#7d0b14);box-shadow:0 0 0 3px var(--gold),0 0 0 7px var(--sandal),0 8px 18px rgba(179,18,31,.3);
+}
+.help-badge svg{width:42px;height:42px;color:var(--gold-l);fill:var(--gold-l)}
+.help .sec-title{font-size:clamp(1.7rem,6.4vw,2.3rem)}
+#stayText{margin:10px auto 22px;max-width:36ch;color:var(--ink2)}
+#coordinators{display:grid;gap:12px}
+.coord{display:flex;align-items:center;gap:12px;text-align:left;padding:12px;border-radius:16px;background:var(--sandal);border:1px solid var(--line)}
+.coord .av{width:46px;height:46px;flex:none;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--blue),var(--teal));box-shadow:0 0 0 2px var(--gold)}
+.coord .av svg{width:28px;height:28px;color:var(--gold-l);fill:var(--gold-l)}
+.coord .who{flex:1;min-width:0}
+.coord .c-name{font-family:var(--display);font-size:1.08rem;line-height:1.25;color:var(--blue)}
+.coord .c-phone{font-size:.95rem;color:var(--ink2)}
+.coord .btn{padding:11px 16px 10px;font-size:.95rem}
+
+/* ---------- footer ---------- */
+footer{position:relative;margin-top:110px;padding:30px 16px 100px;text-align:center;color:var(--sandal);background:linear-gradient(180deg,var(--blue-d),var(--blue-dd))}
+.foot-hills{position:absolute;left:0;right:0;top:-79px;width:100%;height:80px;display:block}
+.foot-vel{display:block;height:96px;width:auto;margin:-40px auto 12px;filter:drop-shadow(0 0 12px rgba(243,210,122,.45))}
+.arogara{
+  font-family:var(--accent);font-weight:700;font-size:clamp(1.55rem,6.8vw,2.6rem);line-height:1.35;text-wrap:balance;
+  background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hashtag{margin-top:14px;font-family:var(--display);font-size:clamp(1.5rem,6.4vw,2.4rem);line-height:1.2;color:#fff;word-break:break-word}
+.thanks{margin-top:8px;color:#cfe6f2}
+.abodes{max-width:560px;margin:28px auto 0;padding-top:18px;border-top:1px solid rgba(243,210,122,.3)}
+.abodes h3{font-family:var(--accent);font-weight:600;font-size:1rem;color:var(--gold-l)}
+.abodes ul{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:6px 8px}
+.abodes li{font-size:.86rem;padding:3px 10px;border-radius:999px;border:1px solid rgba(243,210,122,.4);color:#e3eef3}
+
+/* ---------- music + toast ---------- */
+#musicToggle{
+  position:fixed;right:16px;bottom:16px;z-index:40;width:56px;height:56px;border:0;border-radius:50%;cursor:pointer;display:grid;place-items:center;
+  background:radial-gradient(circle at 40% 35%,var(--blue2),var(--blue-d));color:var(--gold-l);
+  box-shadow:0 0 0 2px var(--gold),0 0 0 5px rgba(255,243,221,.85),0 10px 22px rgba(4,28,48,.35);
+}
+#musicToggle svg{width:24px;height:24px}
+#musicToggle.spinning svg{animation:spin 3s linear infinite}
+#musicToggle.spinning{box-shadow:0 0 0 2px var(--gold),0 0 0 5px rgba(255,243,221,.85),0 0 22px 6px rgba(31,198,194,.45)}
+#toast{
+  position:fixed;left:50%;bottom:88px;z-index:60;transform:translate(-50%,20px);opacity:0;pointer-events:none;max-width:calc(100% - 32px);
+  padding:12px 20px;border-radius:999px;background:var(--blue-d);border:1px solid var(--gold);color:var(--sandal);font-weight:600;font-size:.95rem;text-align:center;transition:.3s;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.sparks{position:fixed;inset:0;z-index:70;pointer-events:none;overflow:hidden}
+.sparks i{position:absolute;width:6px;height:6px;border-radius:50%}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  html{scroll-behavior:auto}
+}
+/* The feather-eye rings spin; keep their corners from widening the page on phones. */
+#hero,#little-one{overflow-x:clip}
+/* Tamil labels: no English-style letter-spacing or capitals. */
+html[lang="ta"] [data-ta]{letter-spacing:0;text-transform:none}
+/* The uploaded photo covers the stand-in illustration (it starts as a transparent pixel). */
+:where(.cover-slot){position:relative}
+.cover-img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;display:block}
+.wishes-empty{text-align:center;margin:10px auto 22px;max-width:40ch;font-weight:600;opacity:.85}
+</style>
+</head>
+<body>
+
+<!-- sacred symbols and small line icons used across the page -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1c1"/><stop offset=".35" stop-color="#f3d27a"/><stop offset=".7" stop-color="#d9a520"/><stop offset="1" stop-color="#a87412"/></linearGradient>
+    <linearGradient id="gGoldV" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#a87412"/><stop offset=".45" stop-color="#fff1c1"/><stop offset=".6" stop-color="#f3d27a"/><stop offset="1" stop-color="#b8861a"/></linearGradient>
+    <radialGradient id="gHeart" cx=".42" cy=".38" r=".7"><stop offset="0" stop-color="#3b7cf0"/><stop offset=".55" stop-color="#0d3a8c"/><stop offset="1" stop-color="#061a4a"/></radialGradient>
+    <linearGradient id="gVane" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2fbf7a"/><stop offset=".55" stop-color="#0f8b8d"/><stop offset="1" stop-color="#0e5a85" stop-opacity="0"/></linearGradient>
+    <linearGradient id="gBarb" gradientUnits="userSpaceOnUse" x1="0" y1="10" x2="0" y2="190"><stop offset="0" stop-color="#8ef0b8"/><stop offset=".5" stop-color="#2bb673"/><stop offset="1" stop-color="#16a3a0"/></linearGradient>
+    <path id="tear" d="M30 2C47 17 57 35 56 52 55 68 44 78 30 78 16 78 5 68 4 52 3 35 13 17 30 2Z"/>
+  </defs>
+  <!-- a peacock-feather eye: bronze, green, bronze, turquoise rings around a navy heart -->
+  <symbol id="eye" viewBox="0 0 60 80">
+    <use href="#tear" fill="#c9952e"/>
+    <use href="#tear" fill="#2aa760" transform="matrix(.84 0 0 .84 4.8 8.96)"/>
+    <use href="#tear" fill="#8a6a22" transform="matrix(.68 0 0 .68 9.6 17.92)"/>
+    <use href="#tear" fill="#1fc6c2" transform="matrix(.6 0 0 .6 12 22.4)"/>
+    <ellipse cx="30" cy="55" rx="10.5" ry="13" fill="url(#gHeart)"/>
+    <ellipse cx="27" cy="50" rx="3" ry="4.5" fill="#fff" opacity=".3"/>
+  </symbol>
+  <!-- a whole peacock feather: vane, barbs, wispy lower strands, golden shaft and the eye -->
+  <symbol id="feather" viewBox="0 0 120 320">
+    <path d="M60 8C94 28 117 64 113 100c-3 34-27 66-53 88C34 166 10 134 7 100 3 64 26 28 60 8Z" fill="url(#gVane)" opacity=".55"/>
+    <path d="M60 29Q52.1 22 45.7 12M60 29Q67.9 22 74.3 12M60 34Q49.3 27 40.5 17M60 34Q70.7 27 79.5 17M60 39Q46.8 32 36 22M60 39Q73.2 32 84 22M60 44Q44.6 37 32.1 27M60 44Q75.4 37 87.9 27M60 49Q42.7 42 28.6 32M60 49Q77.3 42 91.4 32M60 54Q41 47 25.4 37M60 54Q79 47 94.6 37M60 59Q39.4 52 22.6 42M60 59Q80.6 52 97.4 42M60 64Q38 57 20.1 47M60 64Q82 57 99.9 47M60 69Q36.8 62 17.9 52M60 69Q83.2 62 102.1 52M60 74Q35.8 67 15.9 57M60 74Q84.2 67 104.1 57M60 79Q34.8 72 14.3 62M60 79Q85.2 72 105.7 62M60 84Q34.1 77 12.9 67M60 84Q85.9 77 107.1 67M60 89Q33.5 82 11.8 72M60 89Q86.5 82 108.2 72M60 94Q33 87 10.9 77M60 94Q87 87 109.1 77M60 99Q32.7 92 10.3 82M60 99Q87.3 92 109.7 82M60 104Q32.5 97 10 87M60 104Q87.5 97 110 87M60 109Q32.5 102 10 92M60 109Q87.5 102 110 92M60 114Q32.6 107 10.3 97M60 114Q87.4 107 109.7 97M60 119Q32.9 112 10.8 102M60 119Q87.1 112 109.2 102M60 124Q33.4 117 11.6 107M60 124Q86.6 117 108.4 107M60 129Q33.9 122 12.6 112M60 129Q86.1 122 107.4 112M60 134Q34.7 127 14 117M60 134Q85.3 127 106 117M60 139Q35.6 132 15.6 122M60 139Q84.4 132 104.4 122M60 144Q36.6 137 17.4 127M60 144Q83.4 137 102.6 127M60 149Q37.8 142 19.6 132M60 149Q82.2 142 100.4 132M60 154Q39.1 147 22.1 137M60 154Q80.9 147 97.9 137M60 159Q40.7 152 24.8 142M60 159Q79.3 152 95.2 142M60 164Q42.4 157 27.9 147M60 164Q77.6 157 92.1 147M60 169Q44.2 162 31.4 152M60 169Q75.8 162 88.6 152M60 174Q46.4 167 35.2 157M60 174Q73.6 167 84.8 157M60 179Q48.7 172 39.5 162M60 179Q71.3 172 80.5 162M60 184Q51.5 177 44.6 167M60 184Q68.5 177 75.4 167" fill="none" stroke="url(#gBarb)" stroke-width="1.1" stroke-linecap="round" opacity=".9"/>
+    <path d="M60 184Q35.4 181 19 164M60 184Q84.6 181 101 164M60 191Q36.5 188 20.9 171M60 191Q83.5 188 99.1 171M60 198Q37.7 195 22.8 178M60 198Q82.3 195 97.2 178M60 205Q38.8 202 24.7 185M60 205Q81.2 202 95.3 185M60 212Q40 209 26.6 192M60 212Q80 209 93.4 192M60 219Q41.1 216 28.5 199M60 219Q78.9 216 91.5 199M60 226Q42.3 223 30.5 206M60 226Q77.7 223 89.5 206M60 233Q43.4 230 32.4 213M60 233Q76.6 230 87.6 213M60 240Q44.6 237 34.3 220M60 240Q75.4 237 85.7 220M60 247Q45.7 244 36.2 227M60 247Q74.3 244 83.8 227M60 254Q46.9 251 38.1 234M60 254Q73.1 251 81.9 234M60 261Q48 258 40 241M60 261Q72 258 80 241M60 268Q49.1 265 41.9 248M60 268Q70.9 265 78.1 248M60 275Q50.3 272 43.8 255M60 275Q69.7 272 76.2 255M60 282Q51.4 279 45.7 262M60 282Q68.6 279 74.3 262M60 289Q52.6 286 47.6 269M60 289Q67.4 286 72.4 269M60 296Q53.7 293 49.5 276M60 296Q66.3 293 70.5 276" fill="none" stroke="#cfc56c" stroke-width=".9" stroke-linecap="round" opacity=".6"/>
+    <path d="M58.6 318C59.3 230 59.5 120 59.6 22h.8c.1 98 .3 208 1 296Z" fill="#f3d27a"/>
+    <use href="#eye" x="30" y="40" width="60" height="80"/>
+  </symbol>
+  <!-- the Vel: leaf-shaped blade with vibhuti and kumkum, gem collar, tassels and a long shaft -->
+  <symbol id="vel" viewBox="0 0 80 300">
+    <path d="M34 128c-6 6-10 14-12 24M46 128c6 6 10 14 12 24" fill="none" stroke="#ff8a1d" stroke-width="1.6"/>
+    <path d="M22 150c-3 0-5 4-5 9s3 10 5 12c2-2 5-7 5-12s-2-9-5-9ZM58 150c-3 0-5 4-5 9s3 10 5 12c2-2 5-7 5-12s-2-9-5-9Z" fill="#b3121f"/>
+    <circle cx="22" cy="150" r="2.6" fill="#f3d27a"/><circle cx="58" cy="150" r="2.6" fill="#f3d27a"/>
+    <rect x="36.6" y="140" width="6.8" height="156" rx="3.4" fill="url(#gGoldV)"/>
+    <g fill="url(#gGold)"><rect x="34.5" y="186" width="11" height="5" rx="2"/><rect x="34.5" y="238" width="11" height="5" rx="2"/><circle cx="40" cy="294" r="5"/></g>
+    <path d="M40 4C58 34 67 66 61 92c-4 16-12 24-21 28-9-4-17-12-21-28C13 66 22 34 40 4Z" fill="url(#gGold)" stroke="#a87412" stroke-width="1.2"/>
+    <path d="M40 12C53 38 59 66 55 89c-3 13-9 21-15 25Z" fill="#fff6d6" opacity=".35"/>
+    <path d="M40 14V114" stroke="#a87412" stroke-width="1.1" opacity=".55"/>
+    <path d="M30.5 66h19M29.5 73h21M30.5 80h19" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="40" cy="73" r="3.6" fill="#b3121f"/>
+    <rect x="32" y="118" width="16" height="6" rx="3" fill="url(#gGold)" stroke="#a87412" stroke-width=".8"/>
+    <circle cx="40" cy="132" r="8" fill="url(#gGold)" stroke="#a87412" stroke-width=".8"/><circle cx="40" cy="132" r="3.4" fill="#b3121f"/>
+    <rect x="34" y="139" width="12" height="5" rx="2.5" fill="url(#gGold)" stroke="#a87412" stroke-width=".8"/>
+  </symbol>
+  <!-- the Vel lying flat, for section dividers -->
+  <symbol id="vel-h" viewBox="0 0 160 24">
+    <rect x="6" y="10.8" width="112" height="2.4" rx="1.2" fill="#d9a520"/>
+    <circle cx="5" cy="12" r="3.2" fill="#d9a520"/>
+    <rect x="44" y="9.4" width="3" height="5.2" rx="1" fill="#d9a520"/><rect x="82" y="9.4" width="3" height="5.2" rx="1" fill="#d9a520"/>
+    <path d="M118 15c-2 3-3 5-2 7M118 15c2 3 3 5 2 7" stroke="#e8631c" stroke-width="1.2" fill="none"/>
+    <rect x="113" y="8.6" width="4" height="6.8" rx="1.4" fill="#d9a520"/>
+    <circle cx="121.5" cy="12" r="4" fill="url(#gGold)"/><circle cx="121.5" cy="12" r="1.7" fill="#b3121f"/>
+    <path d="M126 12C134 3 148 4 158 12 148 20 134 21 126 12Z" fill="url(#gGold)" stroke="#a87412" stroke-width=".8"/>
+    <circle cx="141" cy="12" r="1.5" fill="#b3121f"/>
+  </symbol>
+  <!-- rooster for the seval kodi (flag) -->
+  <symbol id="rooster" viewBox="0 0 40 40">
+    <path d="M15 23C7 22 3 15 6 7c2 7 6 10 11 12zM15 25C8 28 2 24 2 17c3 5 8 6 13 5zM16 21C11 16 11 9 15 4c0 6 2 10 4 13z"/>
+    <path d="M15 21c2-4 7-4 10-6l1-6c0-3 4-4 6-1l3 1-2 2c1 5-1 12-6 15-5 3-11 2-12-5z"/>
+    <path d="M27 6.5l.6-3 1.4 2 .8-3 1.2 3 1.4-1.6-.4 3.2zM35 9l3 1.2-3 1zM32 11c0 2 1.6 3 2.4 1.6z"/>
+    <path d="M21 28l-1 7h-3M24 28l1 7h3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10.5h17"/></g></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></g></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></g></symbol>
+  <symbol id="i-go" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></g></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path fill="currentColor" d="M9 17.5V6.2l10-2.2v11.3a3 3 0 1 1-2-2.83V7.5l-6 1.3v8.7a3 3 0 1 1-2-2.83z"/></symbol>
+</svg>
+
+<!-- ============ INTRO: the peacock feather ============ -->
+<div id="curtain-overlay" data-hide-after="2400">
+  <span class="intro-dust" aria-hidden="true"></span>
+  <p class="intro-om" lang="ta" aria-hidden="true">ஓம்</p>
+  <p class="intro-verse" lang="ta">வேலும் மயிலும் துணை</p>
+  <p class="intro-sub"><span data-bind="name1">Kumaran</span>'s birthday · <span lang="ta">பிறந்தநாள் விழா</span></p>
+  <button type="button" class="feather-btn" id="openCurtainBtn" data-open-invite aria-label="Tap the peacock feather to open the invitation">
+    <span class="fan-glow" aria-hidden="true"></span>
+    <span class="fan" aria-hidden="true">
+      <svg class="ff" style="--a:-84deg;--d:330ms" viewBox="0 0 120 320"><use href="#feather"/></svg>
+      <svg class="ff" style="--a:-70deg;--d:275ms" viewBox="0 0 120 320"><use href="#feather"/></svg>
+      <svg class="ff" style="--a:-56deg;--d:220ms" viewBox="0 0 120 320"><use href="#feather"/></svg>
+      <svg class="ff" style="--a:-42deg;--d:165ms" viewBox="0 0 120 320"><use href="#feather"/></svg>
+      <svg class="ff" style="--a:-28deg;--d:110ms" viewBox="0 0 120 320"><use href="#feather"/></svg>
+      <svg class="ff" style="--a:-14deg;--d:55ms" viewBox="0 0 120 320"><use href="#feather"/></svg>
+      <svg class="ff" style="--a:14deg;--d:55ms" viewBox="0 0 120 320"><use href="#feather"/></svg>
+      <svg class="ff" style="--a:28deg;--d:110ms" viewBox="0 0 120 320"><use href="#feather"/></svg>
+      <svg class="ff" style="--a:42deg;--d:165ms" viewBox="0 0 120 320"><use href="#feather"/></svg>
+      <svg class="ff" style="--a:56deg;--d:220ms" viewBox="0 0 120 320"><use href="#feather"/></svg>
+      <svg class="ff" style="--a:70deg;--d:275ms" viewBox="0 0 120 320"><use href="#feather"/></svg>
+      <svg class="ff" style="--a:84deg;--d:330ms" viewBox="0 0 120 320"><use href="#feather"/></svg>
+    </span>
+    <svg class="f-main" viewBox="0 0 120 320" aria-hidden="true" focusable="false"><use href="#feather"/></svg>
+    <span class="tap-ring" aria-hidden="true"></span>
+  </button>
+  <p class="intro-hint">Tap the feather · <span lang="ta">மயிலிறகைத் தொடவும்</span></p>
+</div>
+
+<!-- ============ HERO ============ -->
+<header id="hero">
+  <svg class="corner-f l" viewBox="0 0 120 320" aria-hidden="true" focusable="false"><use href="#feather"/></svg>
+  <svg class="corner-f r" viewBox="0 0 120 320" aria-hidden="true" focusable="false"><use href="#feather"/></svg>
+  <nav class="lang" aria-label="Language">
+    <button type="button" class="lang-btn active" data-lang="en">EN</button>
+    <button type="button" class="lang-btn" data-lang="ta" lang="ta">தமிழ்</button>
+  </nav>
+
+  <div class="hero-inner">
+    <p class="om-line rise" lang="ta">ஓம் சரவணபவ</p>
+    <p class="hero-eyebrow rise">With Lord Murugan's blessings · <span lang="ta" class="nw">முருகன் அருளுடன்</span></p>
+
+    <div class="halo rise r1">
+      <svg class="ring" viewBox="0 0 320 320" aria-hidden="true" focusable="false">
+        <circle cx="160" cy="160" r="150" fill="none" stroke="#f3d27a" stroke-width="1.2" stroke-dasharray="1.5 7" stroke-linecap="round" opacity=".6"/>
+        <g id="eye4">
+          <use href="#eye" x="-14" y="-160" width="28" height="38" transform="translate(160 160)"/>
+          <use href="#eye" x="-14" y="-160" width="28" height="38" transform="translate(160 160) rotate(22.5)"/>
+          <use href="#eye" x="-14" y="-160" width="28" height="38" transform="translate(160 160) rotate(45)"/>
+          <use href="#eye" x="-14" y="-160" width="28" height="38" transform="translate(160 160) rotate(67.5)"/>
+        </g>
+        <use href="#eye4" transform="rotate(90 160 160)"/><use href="#eye4" transform="rotate(180 160 160)"/><use href="#eye4" transform="rotate(270 160 160)"/>
+      </svg>
+      <div class="disc" aria-hidden="true"></div>
+      <!-- deity image goes here (data-bind="emblem"); a golden Vel stands in for the preview -->
+      <div class="cover-slot emblem" role="img" aria-label="The golden Vel">
+        <svg viewBox="0 0 80 300" aria-hidden="true" focusable="false"><use href="#vel"/></svg>
+      
+<img class="cover-img" data-bind="emblem" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+</div>
+    </div>
+
+    <h1 class="title rise r2" data-bind="title">Kumaran turns 1!</h1>
+    <p class="hero-names rise r2"><span lang="ta">செல்லக் குழந்தை</span> · <b data-bind="names">Kumaran</b></p>
+    <p id="heroTagline" class="rise r3" data-bind="tagline">With Lord Murugan's blessings, our Kumaran turns one! Join us for a special pooja and a festive lunch with family and friends.</p>
+    <p id="heroDatePill" class="rise r4" data-bind="dateLine">🦚 24th January 2027 • Palani</p>
+  </div>
+
+  <!-- the hills, with the rooster flag (seval kodi) on the tallest -->
+  <div class="hills" aria-hidden="true">
+    <svg class="range" viewBox="0 0 400 120" preserveAspectRatio="none" focusable="false">
+      <path d="M0 120V74C12 66 20 60 30 60c14 0 30 12 40 10 10-4 16-18 25-18 11 0 21 18 33 18 12-2 22-12 32-12 12 0 24 12 36 8 18-8 34-48 52-48s32 42 48 44c10 0 16-12 24-12 10 0 20 16 32 16 10-2 20-10 28-10 10 0 16 6 20 8V120Z" fill="#16a3a0" opacity=".42"/>
+      <path d="M0 120V90C26 80 52 70 80 74c26 4 40 16 66 14 28-2 44-16 74-14 30 2 42 16 70 16 26 0 44-18 72-20 18-1 30 6 38 10V120Z" fill="#0a3354" opacity=".85"/>
+      <path d="M0 120V104C44 92 86 98 130 102c50 4 92-8 140-6 48 2 90 12 130 4V120Z" fill="#fff3dd"/>
+    </svg>
+    <svg class="kodi" viewBox="0 0 54 66" focusable="false">
+      <rect x="3" y="8" width="2.4" height="58" rx="1" fill="#f3d27a"/>
+      <path d="M4.2 0C7 3 7.6 6 6.6 8.4L4.2 9.6 1.8 8.4C.8 6 1.4 3 4.2 0Z" fill="#f3d27a"/>
+      <g class="flag">
+        <path d="M5.4 10H50l-9 13 9 13H5.4Z" fill="#b3121f" stroke="#ff8a1d" stroke-width="1.4" stroke-linejoin="round"/>
+        <use href="#rooster" x="11" y="11" width="24" height="24" fill="#f3d27a" style="color:#f3d27a"/>
+      </g>
+    </svg>
+  </div>
+</header>
+
+<main>
+<!-- ============ COVER PHOTO ============ -->
+<section id="little-one" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="எங்கள் குழந்தை">Our little one</p>
+    <h2 class="sec-title"><span lang="ta">எங்கள் செல்லக் குழந்தை</span><small>Our darling <span data-bind="name1">Kumaran</span></small></h2>
+  </div>
+  <div class="frame reveal">
+    <svg class="ring" viewBox="0 0 320 320" aria-hidden="true" focusable="false">
+      <g id="eye5">
+        <use href="#eye" x="-13" y="-160" width="26" height="36" transform="translate(160 160)"/>
+        <use href="#eye" x="-13" y="-160" width="26" height="36" transform="translate(160 160) rotate(18)"/>
+        <use href="#eye" x="-13" y="-160" width="26" height="36" transform="translate(160 160) rotate(36)"/>
+        <use href="#eye" x="-13" y="-160" width="26" height="36" transform="translate(160 160) rotate(54)"/>
+        <use href="#eye" x="-13" y="-160" width="26" height="36" transform="translate(160 160) rotate(72)"/>
+      </g>
+      <use href="#eye5" transform="rotate(90 160 160)"/><use href="#eye5" transform="rotate(180 160 160)"/><use href="#eye5" transform="rotate(270 160 160)"/>
+    </svg>
+    <!-- cover photo goes here (data-bind="cover"); a little peacock chick stands in for the preview -->
+    <div class="cover-slot photo" role="img" aria-label="Birthday photo">
+      <svg viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+        <defs>
+          <radialGradient id="pBg" cx=".5" cy=".42" r=".7"><stop offset="0" stop-color="#fff8e6"/><stop offset=".6" stop-color="#fde7bf"/><stop offset="1" stop-color="#bfe6df"/></radialGradient>
+          <radialGradient id="pBody" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#3f9ad8"/><stop offset="1" stop-color="#145a94"/></radialGradient>
+        </defs>
+        <rect width="200" height="200" fill="url(#pBg)"/>
+        <g opacity=".22" stroke="#e8631c" stroke-width="3" stroke-linecap="round"><path d="M100 120L100 18M100 120L40 34M100 120L160 34M100 120L14 80M100 120L186 80"/></g>
+        <g transform="translate(100 168)">
+          <use href="#feather" x="-14" y="-104" width="28" height="74" transform="rotate(-48)"/>
+          <use href="#feather" x="-14" y="-108" width="28" height="74" transform="rotate(-24)"/>
+          <use href="#feather" x="-14" y="-112" width="28" height="74"/>
+          <use href="#feather" x="-14" y="-108" width="28" height="74" transform="rotate(24)"/>
+          <use href="#feather" x="-14" y="-104" width="28" height="74" transform="rotate(48)"/>
+        </g>
+        <ellipse cx="100" cy="196" rx="70" ry="14" fill="#127a52" opacity=".25"/>
+        <ellipse cx="100" cy="148" rx="44" ry="40" fill="url(#pBody)"/>
+        <ellipse cx="100" cy="158" rx="26" ry="26" fill="#6cc0ea" opacity=".55"/>
+        <path d="M136 132c10 6 12 26 2 38-6-4-12-16-10-30z" fill="#127a52"/>
+        <path d="M64 132c-10 6-12 26-2 38 6-4 12-16 10-30z" fill="#127a52"/>
+        <path d="M88 186l-4 8m4-8l2 8m18-8l-2 8m2-8l4 8" stroke="#e8631c" stroke-width="3" stroke-linecap="round"/>
+        <path d="M100 60l-12-20M100 58V34M100 60l12-20" stroke="#145a94" stroke-width="2.4" stroke-linecap="round"/>
+        <circle cx="88" cy="39" r="5" fill="#1fc6c2"/><circle cx="100" cy="32" r="5.5" fill="#1fc6c2"/><circle cx="112" cy="39" r="5" fill="#1fc6c2"/>
+        <circle cx="88" cy="39" r="2.4" fill="#0d3a8c"/><circle cx="100" cy="32" r="2.6" fill="#0d3a8c"/><circle cx="112" cy="39" r="2.4" fill="#0d3a8c"/>
+        <circle cx="100" cy="90" r="32" fill="url(#pBody)"/>
+        <path d="M76 82c4-6 12-6 16-1M108 81c4-5 12-5 16 1" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <circle cx="88" cy="90" r="6.5" fill="#1b2430"/><circle cx="112" cy="90" r="6.5" fill="#1b2430"/>
+        <circle cx="90.2" cy="87.6" r="2.2" fill="#fff"/><circle cx="114.2" cy="87.6" r="2.2" fill="#fff"/>
+        <path d="M95 99l5 9 5-9z" fill="#f3b24a"/>
+        <circle cx="78" cy="102" r="6" fill="#ff8a8a" opacity=".45"/><circle cx="122" cy="102" r="6" fill="#ff8a8a" opacity=".45"/>
+        <g transform="translate(158 54)"><circle r="17" fill="url(#gGold)" stroke="#a87412" stroke-width="1.5"/><text y="7.5" text-anchor="middle" font-family="Tiro Tamil, Georgia, serif" font-size="22" fill="#7a3d06">1</text></g>
+      </svg>
+    
+<img class="cover-img" data-bind="cover" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+</div>
+  </div>
+  <p class="photo-cap reveal"><span lang="ta">இனிய பிறந்தநாள்</span> · <b>happy birthday</b></p>
+</section>
+
+<div class="vel-div" aria-hidden="true"><svg viewBox="0 0 160 24"><use href="#vel-h"/></svg></div>
+
+<!-- ============ EVENTS ============ -->
+<section id="events" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="பூஜை &amp; விருந்து">Pooja &amp; feast</p>
+    <h2 class="sec-title"><span lang="ta">விழா நிகழ்ச்சிகள்</span><small>The celebrations</small></h2>
+  </div>
+
+  <div id="eventsGrid" class="events">
+    <template>
+    <article class="event reveal">
+      <div class="ev-band">
+        <svg class="ev-feather" viewBox="0 0 120 320" aria-hidden="true" focusable="false"><use href="#feather"/></svg>
+        <svg class="ev-vel" viewBox="0 0 80 300" aria-hidden="true" focusable="false"><use href="#vel"/></svg>
+        <p class="ev-num"><span lang="ta">நிகழ்ச்சி</span> · <span data-field="number">01</span></p>
+        <h3 data-field="name">Special Pooja &amp; Abishekam</h3>
+        <span class="ev-icon" data-field="icon">🪔</span>
+      </div>
+      <div class="ev-body">
+        <ul class="ev-meta">
+          <li><svg class="ic"><use href="#i-cal"/></svg><span data-field="date">24th January 2027</span></li>
+          <li><svg class="ic"><use href="#i-clock"/></svg><span data-field="time">9:00 AM to 10:30 AM</span></li>
+          <li><svg class="ic"><use href="#i-pin"/></svg><span><strong data-field="place">Arulmigu Thiru Avinankudi Temple</strong><small data-field="venue">Palani, Dindigul - 624601</small></span></li>
+        </ul>
+        <p class="ev-desc" data-field="desc">Abishekam and archanai for Kumaran's first birthday.</p>
+        <a class="btn" data-href="map" href="https://www.google.com/maps/dir/?api=1&destination=Arulmigu+Thiru+Avinankudi+Temple+Palani+624601" target="_blank" rel="noopener"><span data-ta="வழி காட்டு">Get directions</span> <svg><use href="#i-go"/></svg></a>
+      </div>
+    </article>
+    </template>
+  </div>
+</section>
+
+<!-- ============ COUNTDOWN ============ -->
+<section id="countdown" class="section">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="cd-eye" viewBox="0 0 60 80">
+      <use href="#tear" fill="url(#gGold)"/>
+      <use href="#tear" fill="#2aa760" transform="matrix(.9 0 0 .9 3 5.4)"/>
+      <use href="#tear" fill="#8a6a22" transform="matrix(.8 0 0 .8 6 10.8)"/>
+      <use href="#tear" fill="#1fc6c2" transform="matrix(.75 0 0 .75 7.5 13.5)"/>
+      <ellipse cx="30" cy="52" rx="17" ry="19.5" fill="url(#gHeart)"/>
+      <ellipse cx="25" cy="44" rx="4" ry="6" fill="#fff" opacity=".18"/>
+    </symbol>
+  </svg>
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="நன்னாள் நெருங்குகிறது">The auspicious day draws near</p>
+    <h2 class="sec-title"><span lang="ta">நன்னாள் நெருங்குகிறது</span><small>Counting down to the celebration</small></h2>
+  </div>
+  <div class="eyes reveal" role="timer" aria-label="Time left until the pooja">
+    <div class="cd-eye"><div class="med"><svg viewBox="0 0 60 80" aria-hidden="true"><use href="#cd-eye"/></svg><span class="num" id="cdDays">000</span></div><p class="lbl">Days<span lang="ta">நாட்கள்</span></p></div>
+    <div class="cd-eye"><div class="med"><svg viewBox="0 0 60 80" aria-hidden="true"><use href="#cd-eye"/></svg><span class="num" id="cdHours">00</span></div><p class="lbl">Hours<span lang="ta">மணி</span></p></div>
+    <div class="cd-eye"><div class="med"><svg viewBox="0 0 60 80" aria-hidden="true"><use href="#cd-eye"/></svg><span class="num" id="cdMins">00</span></div><p class="lbl">Mins<span lang="ta">நிமிடம்</span></p></div>
+    <div class="cd-eye"><div class="med"><svg viewBox="0 0 60 80" aria-hidden="true"><use href="#cd-eye"/></svg><span class="num" id="cdSecs">00</span></div><p class="lbl">Secs<span lang="ta">நொடி</span></p></div>
+  </div>
+  <p class="cd-when reveal"><span data-bind="dateLong">Sunday, 24 January 2027</span> · <span data-bind="time">9:00 AM</span></p>
+</section>
+
+<!-- ============ WISHES ============ -->
+<section id="wishes" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="வாழ்த்துப் புத்தகம்">Guest book</p>
+    <h2 class="sec-title"><span lang="ta">ஆசீர்வாதங்கள்</span><small>Blessings</small></h2>
+    <p class="sec-sub" data-ta="சில வார்த்தைகளில் எங்கள் குழந்தையை ஆசீர்வதியுங்கள். அந்தச் சிறப்பு நாளில் ஒவ்வொன்றையும் படிப்போம்.">Bless our little one with a few words. We'll read every one of them on the special day.</p>
+  </div>
+
+  <form id="wishForm" class="wish-form reveal">
+    <label class="field"><span data-ta="உங்கள் பெயர்">Your name</span><input id="wishName" maxlength="60" placeholder="e.g. Selvi Athai" data-ta-ph="எ.கா. செல்வி அத்தை" required></label>
+    <label class="field"><span data-ta="உங்கள் ஆசீர்வாதம்">Your blessing</span><textarea id="wishMessage" maxlength="500" rows="3" placeholder="Write your blessing…" data-ta-ph="உங்கள் ஆசீர்வாதத்தை எழுதுங்கள்…" required></textarea></label>
+    <button class="btn" type="submit" data-ta="ஆசி அனுப்பு 🙏">Send your blessing 🙏</button>
+  </form>
+
+  <div id="wishesWall" class="wall">
+    <template>
+    <figure class="wish reveal"><blockquote data-field="message">Happy first birthday, kanna! Murugan's blessings always.</blockquote><figcaption data-field="name">Selvi Athai</figcaption></figure>
+    </template>
+  </div>
+  <p id="wishesEmpty" class="wishes-empty" hidden data-ta="எங்கள் குழந்தையை முதலில் ஆசீர்வதியுங்கள் 🙏">Be the first to bless our little one 🙏</p>
+  <div class="wishes-more"><button id="wishesMore" class="btn ghost" type="button" data-ta="மேலும் ஆசீர்வாதங்கள்">Show more blessings</button></div>
+</section>
+
+<div class="vel-div" aria-hidden="true"><svg viewBox="0 0 160 24"><use href="#vel-h"/></svg></div>
+
+<!-- ============ HELP & CONTACTS ============ -->
+<section id="stay" class="section">
+  <div class="help reveal">
+    <span class="help-badge" aria-hidden="true"><svg viewBox="0 0 40 40"><use href="#rooster"/></svg></span>
+    <h2 class="sec-title"><span lang="ta">உதவி தேவையா?</span><small>We're here to help</small></h2>
+    <p id="stayText" data-bind="help">Coming from out of town? Call us and we'll help with your stay and travel.</p>
+    <div id="coordinators">
+    <template>
+    <div class="coord">
+        <span class="av" aria-hidden="true"><svg viewBox="0 0 40 40"><use href="#rooster"/></svg></span>
+        <div class="who"><p class="c-name" data-field="name">Kumaran's parents</p><p class="c-phone" data-field="phone">+91 90000 00000</p></div>
+        <a class="btn" data-href="tel" href="tel:+919000000000"><svg><use href="#i-phone"/></svg><span data-ta="அழைக்க">Call</span></a>
+      </div>
+    </template>
+  </div>
+  </div>
+</section>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <svg class="foot-hills" viewBox="0 0 400 80" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <path d="M0 80V58C14 52 22 38 34 38s22 14 32 16c12 0 22-26 34-26s22 22 34 24c12-2 22-30 34-30s20 24 32 22c12-6 24-40 36-40s24 40 34 42c12 0 22-24 34-24s22 22 32 22c12-2 22-20 34-20s18 10 22 12L400 38V80Z" fill="#072a45"/>
+  </svg>
+  <svg class="foot-vel" viewBox="0 0 80 300" aria-hidden="true" focusable="false"><use href="#vel"/></svg>
+  <p class="arogara" lang="ta">வெற்றிவேல் முருகனுக்கு அரோகரா!</p>
+  <p class="hashtag" data-bind="hashtag">#KumaranTurnsOne</p>
+  <p class="thanks" data-ta="எங்கள் குழந்தையை ஆசீர்வதித்ததற்கு நன்றி">Thank you for blessing our little one</p>
+  <div class="abodes">
+    <h3><span lang="ta">ஆறுபடை வீடுகள்</span> · The six abodes</h3>
+    <ul lang="ta">
+      <li>திருப்பரங்குன்றம்</li><li>திருச்செந்தூர்</li><li>பழனி</li><li>சுவாமிமலை</li><li>திருத்தணி</li><li>பழமுதிர்சோலை</li>
+    </ul>
+  </div>
+</footer>
+
+<button id="musicToggle" type="button" aria-label="Play or pause music"><svg><use href="#i-note"/></svg></button>
+<audio id="bgMusic" loop preload="auto"></audio>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* Intro and bilingual labels. js/invite.js opens the intro on tap (adds .open, then .hidden after data-hide-after);
+   this plays the theme's effect, then unlocks scrolling and starts the hero's entrance. */
+(function(){
+  var html=document.documentElement, overlay=document.getElementById("curtain-overlay");
+  var reduce=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
+  var COLORS=["#f3d27a","#fff1c1","#1fc6c2","#2aa760","#ff8a1d"];
+  // Golden sparks drift up from the tail as it fans open.
+  function sparks(x,y){
+    if(reduce) return;
+    var box=document.createElement("div"); box.className="sparks";
+    for(var i=0;i<46;i++){
+      var p=document.createElement("i"), a=Math.PI+Math.random()*Math.PI, d=90+Math.random()*230, s=3+Math.random()*5;
+      p.style.background=COLORS[i%COLORS.length]; p.style.width=p.style.height=s+"px";
+      p.style.left=x+"px"; p.style.top=y+"px"; p.style.boxShadow="0 0 8px "+COLORS[i%COLORS.length];
+      box.appendChild(p);
+      p.animate([
+        {transform:"translate(-50%,-50%) scale(.4)",opacity:0},
+        {transform:"translate("+Math.cos(a)*d*.6+"px,"+Math.sin(a)*d*.6+"px) scale(1)",opacity:1,offset:.4},
+        {transform:"translate("+Math.cos(a)*d+"px,"+(Math.sin(a)*d-60)+"px) scale(.6)",opacity:0}
+      ],{duration:1300+Math.random()*700,delay:Math.random()*250,easing:"cubic-bezier(.2,.7,.3,1)",fill:"both"});
+    }
+    document.body.appendChild(box);
+    setTimeout(function(){ box.remove(); },2600);
+  }
+
+  if(overlay&&!html.classList.contains("intro-open")){
+    // Admin thumbnails and framed previews start on the page itself.
+    overlay.remove();
+  }else if(overlay){
+    var opened=false;
+    overlay.querySelectorAll("[data-open-invite]").forEach(function(b){
+      b.addEventListener("click",function(){
+        if(opened) return;
+        opened=true;
+        var r=overlay.querySelector(".feather-btn").getBoundingClientRect();
+        setTimeout(function(){ sparks(r.left+r.width*.5,r.top+r.height*.62); },420);
+        overlay.classList.add("open");
+        setTimeout(function(){ html.classList.remove("intro-open"); },reduce?0:1500);
+      });
+    });
+  }
+
+  // Labels with data-ta (and placeholders with data-ta-ph) switch to that Tamil text when the guest picks தமிழ்.
+  var lang="en";
+  function labels(root){
+    root.querySelectorAll("[data-ta]").forEach(function(n){
+      if(n.dataset.en===undefined) n.dataset.en=n.textContent;
+      n.textContent=lang==="ta"?n.dataset.ta:n.dataset.en;
+    });
+    root.querySelectorAll("[data-ta-ph]").forEach(function(n){
+      if(n.dataset.enPh===undefined) n.dataset.enPh=n.placeholder;
+      n.placeholder=lang==="ta"?n.dataset.taPh:n.dataset.enPh;
+    });
+  }
+  document.addEventListener("invite:render",function(e){
+    lang=e.detail&&e.detail.lang==="ta"?"ta":"en";
+    labels(document);
+  });
+  // New wishes arrive without a full render, so label them as they are added.
+  var wall=document.getElementById("wishesWall");
+  if(wall&&window.MutationObserver) new MutationObserver(function(){ labels(wall); }).observe(wall,{childList:true});
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<!--
+  Glass Slipper — birthday template
+  A fairy-tale royal-ball invitation for kids about 3–10: an ornate clock stands at 11:59 above a castle on a hill;
+  tap it and it strikes twelve (the minute hand sweeps up, the numerals light one by one, twelve chime rings and a
+  swirl of sparkle dust). Then a royal invitation on pearl paper with a sparkling glass slipper on a velvet cushion,
+  an oval silver portrait-mirror frame with a tiara, a pumpkin carriage on the road to the palace, a programme of
+  pearl cards with silver filigree, ornate medallion countdown, royal letters for wishes, and palace arches and a
+  balcony balustrade between night and day.
+  Palette: midnight #16204a / #233070 · periwinkle #8ea4f0 · ice #e7eeff · silver #cfd7ea · pearl #fbfaff
+           · starlight gold #e8c56a · soft pink #f6c6d9 · pumpkin #f08a24
+  Fonts:   Pinyon Script (title, signatures) · Cormorant Garamond (headings, numbers) · Mulish (body) · Noto Sans Tamil (Tamil)
+  A birthday template for the invitation site; it follows TEMPLATES.md, and js/invite.js fills in the names, title,
+  date, photo, events, countdown, wishes and contacts. Labels with data-ta switch to Tamil with the தமிழ் button.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#16204a">
+<title>Ananya turns 5! — Glass Slipper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Mulish:wght@400;600;700;800&family=Noto+Sans+Tamil:wght@400;600&display=swap" rel="stylesheet">
+<script>
+  /* Runs before paint: mark JS, and decide whether the intro overlay is shown (not in admin previews or frames). */
+  (function(){
+    var d=document.documentElement, skip=/[?&]preview/.test(location.search);
+    try{ skip=skip||window.self!==window.top; }catch(e){ skip=true; }
+    d.className+=" js"+(skip?"":" intro-open");
+  })();
+</script>
+<style>
+:root{
+  --mid:#16204a; --mid2:#233070; --mid3:#2e3d8c; --deep:#0c1230; --peri:#8ea4f0; --peri-d:#5a70c8;
+  --ice:#e7eeff; --silver:#cfd7ea; --silver-d:#9aa6c6; --pearl:#fbfaff; --line:#d9e0f2;
+  --gold:#e8c56a; --gold-d:#866419; --gold-l:#fff1c2; --pink:#f6c6d9; --pink-d:#c4577f; --pumpkin:#f08a24;
+  --ink:#16204a; --muted:#4a5687;
+  --script:'Pinyon Script','Noto Sans Tamil',cursive;
+  --serif:'Cormorant Garamond','Noto Sans Tamil',Georgia,serif;
+  --body:'Mulish','Noto Sans Tamil',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --ease:cubic-bezier(.22,.8,.26,1);
+  --stars:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><g fill='%23fff'><circle cx='14' cy='22' r='1.1' opacity='.9'/><circle cx='62' cy='8' r='.7' opacity='.6'/><circle cx='104' cy='40' r='1.3'/><circle cx='150' cy='14' r='.8' opacity='.7'/><circle cx='206' cy='30' r='1' opacity='.8'/><circle cx='230' cy='84' r='.7' opacity='.5'/><circle cx='176' cy='70' r='.6' opacity='.6'/><circle cx='36' cy='92' r='.8' opacity='.7'/><circle cx='84' cy='118' r='1.1' opacity='.9'/><circle cx='132' cy='96' r='.6' opacity='.5'/><circle cx='196' cy='136' r='1.2' opacity='.9'/><circle cx='12' cy='160' r='.7' opacity='.6'/><circle cx='58' cy='190' r='1' opacity='.8'/><circle cx='118' cy='170' r='.7' opacity='.6'/><circle cx='160' cy='210' r='.9' opacity='.7'/><circle cx='222' cy='194' r='.6' opacity='.5'/><circle cx='96' cy='226' r='.6' opacity='.6'/></g><g fill='%23ffe9a8'><circle cx='44' cy='52' r='.9'/><circle cx='166' cy='164' r='.8'/></g><g fill='%23c9d5ff'><circle cx='214' cy='108' r='.9'/><circle cx='28' cy='130' r='.8'/></g></svg>");
+  --glints:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><g fill='%238ea4f0' opacity='.32'><path d='M24 14c.5 3.5 1.5 4.5 5 5-3.5.5-4.5 1.5-5 5-.5-3.5-1.5-4.5-5-5 3.5-.5 4.5-1.5 5-5z'/><path d='M100 74c.4 2.8 1.2 3.6 4 4-2.8.4-3.6 1.2-4 4-.4-2.8-1.2-3.6-4-4 2.8-.4 3.6-1.2 4-4z'/><circle cx='70' cy='30' r='1.3'/><circle cx='120' cy='122' r='1.3'/><circle cx='36' cy='104' r='1.1'/></g></svg>");
+  --arches:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='24'><path d='M0 0H60V24H58C58 11 46 5 30 5S2 11 2 24H0Z' fill='%23e7eeff'/><path d='M2 24C2 11 14 5 30 5S58 11 58 24' fill='none' stroke='%23b4bfdd' stroke-width='1.4'/><path d='M30 1.5l2.4 3.2-2.4 3.2-2.4-3.2z' fill='%23e8c56a'/></svg>");
+  --balusters:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='44'><rect width='36' height='8' fill='%23e7eeff'/><rect y='8' width='36' height='2' fill='%23b4bfdd'/><path d='M9 10h10v2c0 2-3 3-3 5.5 0 4 5 6.5 5 11.5 0 4-3 5.5-3 7h-8c0-1.5-3-3-3-7 0-5 5-7.5 5-11.5 0-2.5-3-3.5-3-5.5z' fill='%23e7eeff'/><path d='M16 12c0 2 0 3.5 0 5.5 0 4 5 6.5 5 11.5 0 4-3 5.5-3 7h-2z' fill='%23d3dcf5'/><rect y='36' width='36' height='8' fill='%23e7eeff'/><rect y='36' width='36' height='1.6' fill='%23b4bfdd'/></svg>");
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+html.intro-open,html.intro-open body{overflow:hidden}
+body{font-variant-numeric:lining-nums;
+  margin:0;min-height:100vh;overflow-x:hidden;font-family:var(--body);font-size:1.05rem;line-height:1.65;color:var(--ink);
+  background:var(--glints) 0 0/140px 140px,var(--ice);
+}
+h1,h2,h3,p{margin:0}
+a{color:inherit}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--peri-d);outline-offset:3px;border-radius:12px}
+[lang="ta"]{font-family:var(--body)}
+.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- shared bits ---------- */
+.section{position:relative;padding:clamp(64px,10vw,104px) 16px}
+.sec-head{text-align:center;max-width:620px;margin:0 auto clamp(30px,5vw,48px)}
+.eyebrow{font-weight:800;font-size:.76rem;letter-spacing:.24em;text-transform:uppercase;color:var(--gold-d)}
+.sec-title{font-family:var(--serif);font-weight:600;font-size:clamp(2.2rem,8vw,3.3rem);line-height:1.05;margin-top:8px;color:var(--ink)}
+.flourish{display:block;width:180px;height:22px;margin:14px auto 0;color:var(--silver-d)}
+.sec-sub{margin:14px auto 0;max-width:40ch;font-family:var(--serif);font-style:italic;font-size:1.25rem;line-height:1.45;color:var(--muted)}
+.night{color:var(--silver);background:var(--stars) 0 0/240px 240px,linear-gradient(180deg,var(--deep),var(--mid) 45%,var(--mid2))}
+.night .eyebrow{color:var(--gold)}
+.night .sec-title{color:var(--pearl)}
+.night .flourish{color:var(--gold)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:50px;padding:0 26px;border:0;border-radius:999px;cursor:pointer;
+  text-decoration:none;font-weight:800;font-size:.8rem;letter-spacing:.16em;text-transform:uppercase;color:var(--pearl);
+  background:linear-gradient(180deg,#2c3c8a,var(--mid));
+  box-shadow:inset 0 0 0 3px var(--mid),inset 0 0 0 4px rgba(232,197,106,.9),0 8px 20px rgba(22,32,74,.22);
+  transition:transform .2s var(--ease),box-shadow .2s;
+}
+.btn:hover{transform:translateY(-2px);box-shadow:inset 0 0 0 3px var(--mid),inset 0 0 0 4px var(--gold),0 12px 26px rgba(22,32,74,.3)}
+.btn:active{transform:translateY(1px)}
+.btn.pearl:hover,.event:nth-of-type(even) .btn:hover{box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 4px var(--gold),0 12px 26px rgba(22,32,74,.22)}
+.btn svg{width:18px;height:18px;flex:none}
+.btn.pearl,.event:nth-of-type(even) .btn{color:var(--ink);background:linear-gradient(180deg,#fff,#eef1fb);box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 4px rgba(184,145,58,.75),0 8px 20px rgba(22,32,74,.14)}
+.ic{width:20px;height:20px;flex:none}
+.corner{position:absolute;width:52px;height:52px;color:var(--silver-d);pointer-events:none}
+.corner.tl{top:8px;left:8px}.corner.tr{top:8px;right:8px;transform:scaleX(-1)}
+.corner.bl{bottom:8px;left:8px;transform:scaleY(-1)}.corner.br{bottom:8px;right:8px;transform:scale(-1)}
+.tw{position:absolute;width:var(--z,12px);height:var(--z,12px);color:#fff;animation:twinkle 3.2s ease-in-out var(--d,0s) infinite}
+.tw.g{color:var(--gold)}
+@keyframes twinkle{0%,100%{opacity:.25;transform:scale(.55) rotate(0)}50%{opacity:1;transform:scale(1) rotate(45deg)}}
+.dust{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.dust i{position:absolute;width:4px;height:4px;border-radius:50%;background:#fff;box-shadow:0 0 6px 1px rgba(255,255,255,.7);opacity:0;animation:dust 9s linear infinite}
+.dust i.g{background:var(--gold-l);box-shadow:0 0 6px 1px rgba(232,197,106,.8)}
+@keyframes dust{0%{opacity:0;transform:translate(0,0) scale(var(--s,1))}20%{opacity:.9}80%{opacity:.6}100%{opacity:0;transform:translate(var(--dx,0),-170px) scale(calc(var(--s,1)*.4))}}
+/* palace arches along the top of a night band, a balcony balustrade along the bottom */
+.arches-top::before{content:"";position:absolute;left:0;right:0;top:-1px;height:24px;background:var(--arches) 50% 0/60px 24px repeat-x;z-index:1}
+.balcony{height:56px;background:var(--balusters) 50% 100%/46px 56px repeat-x}
+
+/* reveal on scroll (the runtime adds .in) */
+.js .reveal{opacity:0;transform:translateY(26px)}
+.js .reveal.in{opacity:1;transform:none;transition:opacity .8s ease,transform .9s var(--ease)}
+
+/* ---------- intro: the clock strikes twelve ---------- */
+#curtain-overlay{
+  position:fixed;inset:0;z-index:50;display:none;overflow:hidden;color:var(--pearl);
+  background:radial-gradient(circle at 50% 42%,rgba(142,164,240,.34),rgba(142,164,240,0) 46%),var(--stars) 0 0/240px 240px,linear-gradient(180deg,var(--deep),var(--mid) 50%,var(--mid2));
+}
+.intro-open #curtain-overlay{display:block}
+#curtain-overlay.open{opacity:0;transition:opacity .8s ease 1.85s;pointer-events:none}
+#curtain-overlay.hidden{display:none}
+.intro-realm{position:absolute;left:0;right:0;bottom:0;height:clamp(190px,30vh,270px);pointer-events:none}
+.intro-realm svg{display:block;width:100%;height:100%}
+.intro-body{position:relative;z-index:1;min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:28px 16px clamp(150px,24vh,220px);text-align:center}
+.intro-eyebrow{font-weight:800;font-size:.74rem;letter-spacing:.26em;text-transform:uppercase;color:var(--gold)}
+.intro-line{display:grid;font-family:var(--script);font-size:clamp(2.1rem,9.6vw,3.4rem);line-height:1.15;color:var(--pearl);text-shadow:0 0 18px rgba(142,164,240,.6)}
+.intro-line span{grid-area:1/1;transition:opacity .5s ease,transform .7s var(--ease)}
+.intro-line .l2{opacity:0;transform:translateY(10px);color:var(--gold-l)}
+.clock-wrap{position:relative;width:min(74vw,300px);aspect-ratio:1;margin:10px 0 6px}
+.clock-btn{position:relative;display:block;width:100%;height:100%;padding:0;border:0;background:none;cursor:pointer;border-radius:50%;-webkit-tap-highlight-color:transparent;animation:float 5s ease-in-out infinite}
+.clock-btn svg{display:block;width:100%;height:100%;overflow:visible}
+.clock-wrap::after{content:"";position:absolute;inset:4%;border-radius:50%;border:2px solid rgba(232,197,106,.7);animation:tapring 2.2s ease-out infinite;pointer-events:none}
+.chimes{position:absolute;inset:0;pointer-events:none}
+.chimes i{position:absolute;inset:5%;border-radius:50%;border:2px solid rgba(255,233,168,.95);box-shadow:0 0 16px rgba(232,197,106,.6),inset 0 0 12px rgba(232,197,106,.35);opacity:0}
+.intro-hint{display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:.8rem;letter-spacing:.24em;text-transform:uppercase;color:var(--silver);transition:opacity .4s}
+.intro-hint svg{width:14px;height:14px;color:var(--gold);animation:twinkle 2s ease-in-out infinite}
+.clock-halo{transform-box:fill-box;transform-origin:center;animation:breathe 3.4s ease-in-out infinite}
+.hand{transform-box:view-box;transform-origin:150px 150px}
+.hand.hr{transform:rotate(359.5deg)}
+.hand.mn{transform:rotate(354deg);animation:tremble 1s steps(1) infinite}
+.num text{font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:19px;fill:var(--mid2);text-anchor:middle;dominant-baseline:central}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes tapring{0%{transform:scale(.96);opacity:.85}100%{transform:scale(1.22);opacity:0}}
+@keyframes breathe{0%,100%{opacity:.45;transform:scale(.96)}50%{opacity:.8;transform:scale(1.03)}}
+@keyframes tremble{0%{transform:rotate(354deg)}50%{transform:rotate(354.6deg)}}
+/* on tap */
+.open .clock-btn{animation:none}
+.open .clock-wrap::after,.open .intro-hint,.open .intro-eyebrow{opacity:0;animation:none}
+.open .intro-line .l1{opacity:0;transform:translateY(-10px)}
+.open .intro-line .l2{opacity:1;transform:none;transition-delay:.9s}
+.open .hand.mn{animation:sweep .75s cubic-bezier(.5,0,.3,1) forwards}
+.open .hand.hr{animation:sweepH .75s cubic-bezier(.5,0,.3,1) forwards}
+.open .clock-halo{animation:bloom 1.8s ease .6s forwards}
+.open .num text{animation:numglow .6s ease calc(.72s + var(--i)*.09s) forwards}
+.open .chimes i{animation:chime 1.25s cubic-bezier(.2,.6,.3,1) calc(.7s + var(--i)*.09s) forwards}
+.open .clock-svg{animation:clockglow 1.9s ease .6s forwards}
+@keyframes sweep{0%{transform:rotate(354deg)}28%{transform:rotate(351.5deg)}78%{transform:rotate(361.2deg)}100%{transform:rotate(360deg)}}
+@keyframes sweepH{to{transform:rotate(360deg)}}
+@keyframes bloom{0%{opacity:.6;transform:scale(1)}40%{opacity:1;transform:scale(1.35)}100%{opacity:.9;transform:scale(1.2)}}
+@keyframes numglow{to{fill:#b8913a}}
+@keyframes chime{0%{opacity:0;transform:scale(.92)}15%{opacity:.95}100%{opacity:0;transform:scale(2.4)}}
+@keyframes clockglow{0%{filter:none}35%{filter:drop-shadow(0 0 22px rgba(255,233,168,.95)) brightness(1.08)}100%{filter:drop-shadow(0 0 14px rgba(255,233,168,.6))}}
+.swirl{position:fixed;inset:0;z-index:70;pointer-events:none;overflow:hidden}
+.swirl i{position:absolute;left:0;top:0;border-radius:50%}
+.swirl i.st{border-radius:0;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)}
+
+/* ---------- hero: the royal invitation ---------- */
+#hero{position:relative;overflow:hidden;text-align:center;padding:84px 16px 0}
+#hero .sky{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 18%,rgba(142,164,240,.3),rgba(142,164,240,0) 55%)}
+.lang{position:absolute;top:14px;right:14px;z-index:3;display:flex;gap:2px;padding:3px;border-radius:999px;background:rgba(251,250,255,.1);border:1px solid rgba(207,215,234,.45)}
+.lang-btn{min-width:52px;min-height:42px;border:0;background:none;cursor:pointer;font-weight:800;font-size:.8rem;letter-spacing:.06em;padding:0 12px;border-radius:999px;color:var(--silver)}
+.lang-btn.active{background:var(--pearl);color:var(--mid)}
+.card{
+  position:relative;z-index:2;max-width:600px;margin:0 auto;padding:46px clamp(18px,5vw,56px) 58px;border-radius:14px;
+  background:radial-gradient(ellipse at 30% 0%,#fff 0,rgba(255,255,255,0) 60%),linear-gradient(160deg,#fdfcff 0%,#f4f1fb 40%,#fbf6fa 70%,#eef2fd 100%);
+  box-shadow:0 0 0 1px rgba(207,215,234,.9),0 30px 70px rgba(5,9,30,.55),0 0 60px rgba(142,164,240,.25);
+}
+.card::before{content:"";position:absolute;inset:12px;border:1px solid var(--silver);border-radius:8px;pointer-events:none}
+.card .corner{width:58px;height:58px}
+.hero-crown{display:block;width:44px;height:33px;margin:0 auto 10px}
+.hero-eyebrow{font-family:var(--serif);font-style:italic;font-weight:600;font-size:1.22rem;line-height:1.35;color:var(--muted)}
+.title{
+  display:inline-block;margin:6px -.25em 0;padding:.12em .25em .2em;font-family:var(--script);font-weight:400;
+  font-size:clamp(3.3rem,15vw,5.4rem);line-height:1.08;text-wrap:balance;
+  background:linear-gradient(100deg,#16204a 0%,#2f4096 36%,#e8c56a 46%,#fff4d0 50%,#e8c56a 54%,#2f4096 64%,#16204a 100%) 100% 0/300% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.card .flourish{margin-top:2px;color:var(--gold)}
+/* portrait-mirror frame with a tiara, and the slipper on its cushion */
+.portrait{position:relative;width:min(64vw,250px);aspect-ratio:240/300;margin:44px auto 0}
+.portrait .frame{position:absolute;inset:0;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 10px 18px rgba(22,32,74,.2))}
+.portrait .photo{position:absolute;left:10.83%;top:8.67%;width:78.34%;height:82.66%;border-radius:50%;overflow:hidden;background:var(--ice)}
+.portrait .photo img,.portrait .photo svg{display:block;width:100%;height:100%;object-fit:cover}
+.portrait .photo::after{content:"";position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,.4) 0,rgba(255,255,255,0) 34%,rgba(255,255,255,0) 70%,rgba(255,255,255,.14) 100%);pointer-events:none}
+.tiara{position:absolute;left:50%;top:-11%;width:46%;transform:translateX(-50%);filter:drop-shadow(0 4px 6px rgba(22,32,74,.25))}
+.cushion{position:relative;width:min(80vw,320px);margin:-74px auto 0;z-index:2}
+.cushion > svg:not(.tw){display:block;width:100%;height:auto;overflow:visible}
+.cushion .tw{color:#fff}
+.slip{filter:drop-shadow(0 0 10px rgba(207,220,255,.85))}
+.honour{margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.honour-l{font-weight:800;font-size:.7rem;letter-spacing:.28em;text-transform:uppercase;color:var(--gold-d)}
+.honour-name{font-family:var(--serif);font-weight:700;font-size:1.65rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mid)}
+#heroTagline{max-width:32ch;margin:16px auto 0;font-family:var(--serif);font-style:italic;font-weight:500;font-size:1.3rem;line-height:1.45;color:var(--muted)}
+.ribbon-row{margin-top:30px;padding:0 14px}
+#heroDatePill{
+  position:relative;display:inline-block;padding:12px 16px 11px;font-family:var(--serif);font-weight:700;font-size:clamp(1rem,4.3vw,1.2rem);line-height:1.3;letter-spacing:.01em;color:var(--pearl);
+  background:linear-gradient(180deg,#2f3f90,var(--mid));box-shadow:inset 0 2px 0 rgba(232,197,106,.9),inset 0 -2px 0 rgba(232,197,106,.9),0 8px 18px rgba(22,32,74,.25);
+}
+#heroDatePill::before,#heroDatePill::after{
+  content:"";position:absolute;top:9px;bottom:-9px;width:34px;z-index:-1;background:#101842;
+  clip-path:polygon(0 0,100% 0,100% 100%,0 100%,32% 50%);
+}
+#heroDatePill::before{left:-24px}
+#heroDatePill::after{right:-24px;transform:scaleX(-1)}
+.ribbon-row{position:relative;z-index:0;isolation:isolate}
+.scroll-cue{position:relative;z-index:2;display:inline-flex;flex-direction:column;align-items:center;gap:6px;margin-top:30px;font-weight:800;font-size:.72rem;letter-spacing:.24em;text-transform:uppercase;color:var(--silver);text-decoration:none;padding:8px 12px}
+.scroll-cue i{width:12px;height:12px;border-right:2px solid var(--gold);border-bottom:2px solid var(--gold);transform:rotate(45deg);animation:nudge 1.8s ease-in-out infinite}
+@keyframes nudge{50%{transform:translate(0,6px) rotate(45deg)}}
+.realm{position:relative;height:clamp(170px,20vw,256px);margin:-14px -16px 0;pointer-events:none}
+.realm svg{display:block;width:100%;height:100%}
+#hero .balcony{position:relative;background-color:#121a47;margin:0 -16px}
+.rise{animation:rise 1s var(--ease) both}
+.title.rise{animation:rise 1s var(--ease) both,shimmer 8s ease-in-out 1.6s infinite}
+.r1{animation-delay:.15s}.r2{animation-delay:.3s}.r3{animation-delay:.45s}.r4{animation-delay:.6s}
+.title.rise.r1{animation-delay:.15s,1.6s}
+html.intro-open .rise{animation-play-state:paused}
+@keyframes rise{from{opacity:0;transform:translateY(26px) scale(.97)}}
+@keyframes shimmer{0%,60%{background-position:100% 0}100%{background-position:0 0}}
+
+/* ---------- events: the royal programme ---------- */
+.events{display:grid;gap:30px;max-width:900px;margin:0 auto;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
+.event{
+  --tx:var(--ink);--mu:var(--muted);--fil:var(--silver-d);--rule:var(--silver);--chip:#eef2fd;
+  position:relative;padding:40px 26px 34px;text-align:center;border-radius:12px;color:var(--tx);
+  background:linear-gradient(165deg,#fff 0%,#f6f4fc 55%,#eef2fd 100%);
+  box-shadow:0 0 0 1px var(--line),0 22px 50px rgba(22,32,74,.12);
+}
+.event::before{content:"";position:absolute;inset:10px;border:1px solid var(--rule);border-radius:6px;pointer-events:none}
+.event:nth-of-type(even){
+  --tx:var(--pearl);--mu:#c3cdee;--fil:#aeb9dc;--rule:rgba(207,215,234,.4);--chip:rgba(142,164,240,.18);
+  background:var(--stars) 0 0/240px 240px,radial-gradient(ellipse at 50% 0,#33449a,rgba(51,68,154,0) 60%),linear-gradient(170deg,#202d6a,var(--mid));
+  box-shadow:0 0 0 1px #2b3a80,0 22px 50px rgba(22,32,74,.3);
+}
+.event .corner{color:var(--fil);width:46px;height:46px}
+.ev-medal{
+  width:70px;height:70px;margin:0 auto;border-radius:50%;display:grid;place-items:center;font-size:2rem;line-height:1;
+  background:radial-gradient(circle at 40% 35%,#fff,#eef1fb 70%);
+  box-shadow:0 0 0 3px #fff,0 0 0 4.5px var(--silver-d),0 0 0 8px rgba(207,215,234,.5),0 8px 18px rgba(22,32,74,.18);
+}
+.ev-medal img{width:60%;height:60%;object-fit:contain}
+.ev-num{margin-top:18px;font-family:var(--serif);font-style:italic;font-weight:600;font-size:1.15rem;color:var(--gold-d)}
+.event:nth-of-type(even) .ev-num{color:var(--gold)}
+.event h3{font-family:var(--serif);font-weight:700;font-size:clamp(1.9rem,7vw,2.3rem);line-height:1.1;margin-top:2px}
+.ev-rule{width:150px;height:18px;margin:8px auto 18px;color:var(--fil)}
+.ev-meta{list-style:none;margin:0 auto 18px;padding:0;display:grid;gap:12px;text-align:left;max-width:300px}
+.ev-meta li{display:flex;gap:14px;align-items:flex-start}
+.ev-meta .ic-wrap{width:36px;height:36px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--chip);color:var(--peri-d)}
+.event:nth-of-type(even) .ev-meta .ic-wrap{color:var(--gold)}
+.ev-meta .ic{width:19px;height:19px}
+.ev-meta span{padding-top:6px}
+.ev-meta strong{display:block;font-family:var(--serif);font-weight:700;font-size:1.2rem;line-height:1.25}
+.ev-meta small{display:block;font-size:.94rem;color:var(--mu);margin-top:2px}
+.ev-desc{font-family:var(--serif);font-style:italic;font-size:1.22rem;line-height:1.45;color:var(--mu);margin:0 auto 22px;max-width:28ch}
+.event .btn{margin-top:4px}
+
+/* ---------- countdown: medallions ---------- */
+#countdown{padding-top:clamp(84px,12vw,120px);padding-bottom:0;overflow:hidden}
+#countdown .tw{opacity:.8}
+.medals{position:relative;z-index:1;display:flex;justify-content:center;gap:clamp(6px,2.6vw,28px)}
+.medal{position:relative;width:clamp(78px,21vw,132px);text-align:center}
+.medal .m-art{position:relative;aspect-ratio:1}
+.medal svg.m-bg{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 6px 12px rgba(0,0,0,.35))}
+.medal .m-num{position:absolute;inset:0;display:grid;place-items:center;padding-top:.06em;font-family:var(--serif);font-weight:700;font-size:clamp(1.5rem,6.6vw,2.7rem);line-height:1;color:var(--pearl);text-shadow:0 0 12px rgba(232,197,106,.45)}
+.medal .m-star{position:absolute;left:50%;top:21%;width:9%;height:9%;margin-left:-4.5%;color:var(--gold);animation:twinkle 3s ease-in-out infinite}
+.medal:nth-child(2) .m-star{animation-delay:-.8s}.medal:nth-child(3) .m-star{animation-delay:-1.6s}.medal:nth-child(4) .m-star{animation-delay:-2.4s}
+.medal .lbl{margin-top:10px;font-weight:800;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--silver)}
+.cd-when{position:relative;z-index:1;text-align:center;margin:30px auto 0;padding:0 8px;font-family:var(--serif);font-weight:600;font-size:1.3rem;color:var(--pearl)}
+.cd-when span{white-space:nowrap}
+.cd-when .dot{color:var(--gold);margin:0 6px}
+.cd-note{position:relative;z-index:1;text-align:center;margin-top:6px;font-family:var(--serif);font-style:italic;font-size:1.15rem;color:var(--silver)}
+#countdown .balcony{margin:clamp(48px,7vw,72px) -16px 0}
+
+/* ---------- wishes: royal letters ---------- */
+.decree{
+  position:relative;max-width:560px;margin:0 auto 48px;padding:52px 26px 30px;border-radius:12px;display:grid;gap:16px;
+  background:linear-gradient(165deg,#fff,#f6f4fc 60%,#eef2fd);box-shadow:0 0 0 1px var(--line),0 22px 50px rgba(22,32,74,.12);
+}
+.decree::before{content:"";position:absolute;inset:10px;border:1px solid var(--silver);border-radius:6px;pointer-events:none}
+.decree .corner{width:44px;height:44px}
+.seal{
+  position:absolute;left:50%;top:-30px;width:62px;height:62px;margin-left:-31px;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 38% 32%,#ffd9e6,#e999b6 55%,#c4577f);box-shadow:0 0 0 4px rgba(246,198,217,.45),0 8px 16px rgba(196,87,127,.35);
+}
+.seal svg{width:34px;height:26px;opacity:.95}
+.field{position:relative;display:grid;gap:6px;font-weight:800;font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.field input,.field textarea{
+  width:100%;border:1px solid var(--silver);background:#f7f8ff;border-radius:12px;padding:12px 14px;font-family:var(--serif);font-weight:600;font-size:1.2rem;
+  letter-spacing:0;text-transform:none;color:var(--ink);resize:vertical;transition:border-color .2s,box-shadow .2s;
+}
+.field input::placeholder,.field textarea::placeholder{font-style:italic;font-weight:500;color:#8a93b8}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--peri);box-shadow:0 0 0 4px rgba(142,164,240,.25)}
+.decree .btn{justify-self:center;margin-top:6px}
+.letters{display:grid;gap:26px;max-width:980px;margin:0 auto;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr))}
+.letter{
+  --paper:#fdfcff;--crease:rgba(142,164,240,.1);
+  position:relative;margin:0;padding:34px 24px 24px;text-align:center;border-radius:4px;rotate:-.8deg;
+  background:linear-gradient(180deg,transparent 33%,var(--crease) 33.3%,transparent 34%,transparent 66.3%,var(--crease) 66.6%,transparent 67.3%),var(--paper);
+  box-shadow:0 0 0 1px var(--line),0 14px 30px rgba(22,32,74,.1);
+}
+.letter:nth-of-type(3n+2){--paper:#fff7fb;--crease:rgba(246,198,217,.32);rotate:.9deg}
+.letter:nth-of-type(3n+3){--paper:#f6f8ff;rotate:-.4deg}
+.letter .crown-mark{display:block;width:34px;height:26px;margin:0 auto 12px}
+.letter blockquote{margin:0 0 14px;font-family:var(--serif);font-style:italic;font-weight:500;font-size:1.3rem;line-height:1.42;color:var(--ink)}
+.letter figcaption{font-family:var(--script);font-size:1.9rem;line-height:1.15;color:var(--mid2)}
+.letter figcaption::before{content:"— ";font-family:var(--serif);font-size:1.1rem;color:var(--silver-d)}
+.wishes-more{display:flex;justify-content:center;margin-top:40px}
+
+/* ---------- help & royal helpers ---------- */
+#stay{padding-top:clamp(40px,6vw,64px)}
+.help{
+  position:relative;max-width:620px;margin:0 auto;text-align:center;padding:30px 24px 30px;border-radius:12px;
+  background:linear-gradient(165deg,#fff,#f6f4fc 60%,#eef2fd);box-shadow:0 0 0 1px var(--line),0 22px 50px rgba(22,32,74,.12);
+}
+.help::before{content:"";position:absolute;inset:10px;border:1px solid var(--silver);border-radius:6px;pointer-events:none}
+.help .corner{width:44px;height:44px}
+.help-art{display:block;width:120px;height:92px;margin:-80px auto 6px;filter:drop-shadow(0 8px 12px rgba(22,32,74,.2))}
+.help .sec-title{font-size:clamp(1.9rem,7vw,2.6rem);text-wrap:balance}
+#stayText{margin:12px auto 22px;max-width:34ch;font-family:var(--serif);font-style:italic;font-size:1.25rem;line-height:1.45;color:var(--muted)}
+.helpers-h{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px;font-weight:800;font-size:.74rem;letter-spacing:.24em;text-transform:uppercase;color:var(--gold-d)}
+.helpers-h::before,.helpers-h::after{content:"";width:34px;height:1px;background:var(--silver-d)}
+#coordinators{position:relative;display:grid;gap:12px}
+.coord{display:flex;align-items:center;gap:12px;text-align:left;padding:12px;border-radius:14px;background:#f1f4fe;box-shadow:inset 0 0 0 1px var(--line)}
+.coord .av{width:48px;height:48px;flex:none;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 40% 35%,#34449a,var(--mid));box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--silver-d)}
+.coord .av svg{width:26px;height:20px}
+.coord .who{flex:1;min-width:0}
+.coord .c-name{font-family:var(--serif);font-weight:700;font-size:1.22rem;line-height:1.2}
+.coord .c-phone{font-size:.92rem;color:var(--muted);white-space:nowrap}
+@media (max-width:440px){.coord{flex-wrap:wrap}.coord .btn{flex:1 0 100%}}
+.coord .btn{min-height:46px;padding:0 18px;letter-spacing:.12em}
+.coord .btn svg{width:16px;height:16px}
+
+/* ---------- footer: happily ever after ---------- */
+footer{position:relative;overflow:hidden;margin-top:24px;padding:82px 16px 96px;text-align:center}
+.foot-slipper{display:block;width:120px;height:58px;margin:0 auto 14px;filter:drop-shadow(0 0 12px rgba(185,200,247,.8))}
+.ever-after{max-width:16ch;margin:0 auto;font-family:var(--script);font-size:clamp(2.2rem,9.6vw,3.4rem);line-height:1.15;color:var(--pearl);text-shadow:0 0 18px rgba(142,164,240,.55)}
+footer .flourish{color:var(--gold);margin:18px auto 12px}
+.hashtag{font-family:var(--serif);font-weight:700;font-size:clamp(1.5rem,6.4vw,2.3rem);line-height:1.2;color:var(--gold);word-break:break-word}
+.thanks{max-width:34ch;margin:10px auto 0;color:var(--silver)}
+
+/* ---------- music + toast ---------- */
+#musicToggle{
+  position:fixed;right:16px;bottom:16px;z-index:40;width:56px;height:56px;border:0;border-radius:50%;cursor:pointer;display:grid;place-items:center;
+  color:var(--gold);background:radial-gradient(circle at 40% 35%,#34449a,var(--mid));
+  box-shadow:0 0 0 2px var(--pearl),0 0 0 4px var(--silver-d),0 10px 22px rgba(12,18,48,.4);
+}
+#musicToggle::before{content:"";position:absolute;inset:5px;border-radius:50%;border:2px dotted rgba(232,197,106,.75)}
+#musicToggle svg{width:24px;height:24px}
+#musicToggle.spinning::before{animation:spin 6s linear infinite}
+#musicToggle.spinning svg{animation:bob 1.2s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes bob{50%{transform:translateY(-3px) rotate(-6deg)}}
+#toast{
+  position:fixed;left:50%;bottom:88px;z-index:60;transform:translate(-50%,20px);opacity:0;pointer-events:none;max-width:calc(100% - 32px);
+  padding:12px 22px;border-radius:999px;background:var(--mid);color:var(--pearl);font-weight:700;font-size:.92rem;text-align:center;
+  box-shadow:inset 0 0 0 1px rgba(232,197,106,.8),0 10px 26px rgba(12,18,48,.35);transition:.3s;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  html{scroll-behavior:auto}
+  .dust{display:none}
+}
+/* Tamil labels: no English-style letter-spacing or capitals. */
+html[lang="ta"] [data-ta]{letter-spacing:0;text-transform:none}
+/* The uploaded photo covers the stand-in illustration (it starts as a transparent pixel). */
+:where(.cover-slot){position:relative}
+.cover-img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;display:block}
+.wishes-empty{text-align:center;margin:10px auto 22px;max-width:40ch;font-weight:600;opacity:.85}
+</style>
+</head>
+<body>
+
+<!-- shared gradients, icons and ornaments -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="silverG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f9fbff"/><stop offset=".3" stop-color="#cfd7ea"/><stop offset=".52" stop-color="#97a3c4"/><stop offset=".74" stop-color="#eef1fa"/><stop offset="1" stop-color="#aeb8d4"/></linearGradient>
+    <linearGradient id="goldG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3c9"/><stop offset=".4" stop-color="#e8c56a"/><stop offset=".7" stop-color="#b8913a"/><stop offset="1" stop-color="#f3d98f"/></linearGradient>
+    <radialGradient id="nightG" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#34449a"/><stop offset=".7" stop-color="#1d2963"/><stop offset="1" stop-color="#121a45"/></radialGradient>
+    <radialGradient id="faceG" cx=".42" cy=".38" r=".7"><stop offset="0" stop-color="#ffffff"/><stop offset=".75" stop-color="#f3f5fd"/><stop offset="1" stop-color="#dfe5f6"/></radialGradient>
+    <linearGradient id="glassG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".35" stop-color="#e7eeff" stop-opacity=".72"/><stop offset=".7" stop-color="#b9c8f7" stop-opacity=".6"/><stop offset="1" stop-color="#8ea4f0" stop-opacity=".78"/></linearGradient>
+    <radialGradient id="pumpG" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#ffc27a"/><stop offset=".55" stop-color="#f08a24"/><stop offset="1" stop-color="#c25e14"/></radialGradient>
+    <radialGradient id="glowG"><stop offset="0" stop-color="#ffe9a8" stop-opacity=".9"/><stop offset="1" stop-color="#ffe9a8" stop-opacity="0"/></radialGradient>
+  </defs>
+  <symbol id="i-cal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></g></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.2 2"/></g></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></g></symbol>
+  <symbol id="i-go" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></g></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path fill="currentColor" d="M9 17.5V6.2l10-2.2v11.3a3 3 0 1 1-2-2.83V7.5l-6 1.3v8.7a3 3 0 1 1-2-2.83z"/></symbol>
+  <!-- four-point sparkle -->
+  <symbol id="spark" viewBox="-10 -10 20 20"><path fill="currentColor" d="M0-10C.8-2.6 2.6-.8 10 0 2.6.8.8 2.6 0 10-.8 2.6-2.6.8-10 0-2.6-.8-.8-2.6 0-10Z"/></symbol>
+  <!-- small crown mark -->
+  <symbol id="crown" viewBox="0 0 40 30">
+    <path d="M5 24L3 9l9 7 8-12 8 12 9-7-2 15z" fill="url(#goldG)" stroke="#a8822c" stroke-width=".8" stroke-linejoin="round"/>
+    <rect x="4.5" y="23" width="31" height="4.5" rx="1.6" fill="url(#goldG)" stroke="#a8822c" stroke-width=".8"/>
+    <circle cx="3" cy="8" r="2.1" fill="#e8c56a"/><circle cx="20" cy="3.4" r="2.3" fill="#e8c56a"/><circle cx="37" cy="8" r="2.1" fill="#e8c56a"/>
+    <circle cx="20" cy="17.5" r="2.3" fill="#f6c6d9"/><circle cx="12.5" cy="19.5" r="1.4" fill="#8ea4f0"/><circle cx="27.5" cy="19.5" r="1.4" fill="#8ea4f0"/>
+  </symbol>
+  <!-- filigree corner (top-left; flipped with CSS for the others) -->
+  <symbol id="corner" viewBox="0 0 64 64">
+    <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <path d="M4 60V22C4 12 12 4 22 4H60"/>
+      <path d="M10 44V26C10 17 17 10 26 10H44"/>
+      <path d="M18 38C18 26 26 18 38 18C46 18 48 26 43 28C39 30 36 26 39 24"/>
+      <path d="M18 38C18 46 26 48 28 43C30 39 26 36 24 39"/>
+    </g>
+    <circle cx="17" cy="17" r="2.6" fill="currentColor"/><circle cx="60" cy="4" r="1.8" fill="currentColor"/><circle cx="4" cy="60" r="1.8" fill="currentColor"/>
+  </symbol>
+  <!-- scroll flourish divider -->
+  <symbol id="flourish" viewBox="0 0 220 26">
+    <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <path d="M97 13C84 13 77 4 67 6C59 8 61 17 67 16C71 15 70 10 66 11"/><path d="M97 13H26"/><path d="M88 13C80 18 72 21 62 20"/>
+      <path d="M123 13C136 13 143 4 153 6C161 8 159 17 153 16C149 15 150 10 154 11"/><path d="M123 13H194"/><path d="M132 13C140 18 148 21 158 20"/>
+    </g>
+    <path d="M110 4l7 9-7 9-7-9z" fill="currentColor"/><circle cx="20" cy="13" r="2.4" fill="currentColor"/><circle cx="200" cy="13" r="2.4" fill="currentColor"/>
+  </symbol>
+  <!-- ornate medallion for the countdown -->
+  <symbol id="medal" viewBox="0 0 100 100">
+    <path d="M50.0 6.0A7.92 7.92 0 0 1 63.6 8.2A7.92 7.92 0 0 1 75.9 14.4A7.92 7.92 0 0 1 85.6 24.1A7.92 7.92 0 0 1 91.8 36.4A7.92 7.92 0 0 1 94.0 50.0A7.92 7.92 0 0 1 91.8 63.6A7.92 7.92 0 0 1 85.6 75.9A7.92 7.92 0 0 1 75.9 85.6A7.92 7.92 0 0 1 63.6 91.8A7.92 7.92 0 0 1 50.0 94.0A7.92 7.92 0 0 1 36.4 91.8A7.92 7.92 0 0 1 24.1 85.6A7.92 7.92 0 0 1 14.4 75.9A7.92 7.92 0 0 1 8.2 63.6A7.92 7.92 0 0 1 6.0 50.0A7.92 7.92 0 0 1 8.2 36.4A7.92 7.92 0 0 1 14.4 24.1A7.92 7.92 0 0 1 24.1 14.4A7.92 7.92 0 0 1 36.4 8.2A7.92 7.92 0 0 1 50.0 6.0Z" fill="url(#silverG)" stroke="#8f9bc0" stroke-width=".6"/>
+    <circle cx="50" cy="50" r="38.5" fill="#121a45"/>
+    <circle cx="50" cy="50" r="35.5" fill="none" stroke="#e8c56a" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="0 5.576"/>
+    <circle cx="50" cy="50" r="31.5" fill="url(#nightG)" stroke="#e8c56a" stroke-width=".8"/>
+  </symbol>
+  <!-- the glass slipper (toe to the left) -->
+  <symbol id="slipper" viewBox="4 40 210 102">
+    <path d="M12 118C12 111 24 105 40 101C64 95 92 90 110 84C130 86 160 74 186 58C194 53 200 49 204 47C209 58 207 78 200 90C195 102 191 118 190 136L180 136C180 120 177 104 170 94C150 100 126 118 104 132C96 137 60 138 36 136C20 135 12 127 12 118Z" fill="url(#glassG)" stroke="#7f95e6" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M110 84C130 86 160 74 186 58C194 53 200 49 204 47C198 58 176 76 150 86C132 92 118 90 110 84Z" fill="#5a70c8" fill-opacity=".38"/>
+    <g fill="none" stroke-linecap="round">
+      <path d="M198 88C176 92 140 108 108 124C88 132 56 132 28 124" stroke="#fff" stroke-opacity=".7" stroke-width="1.4"/>
+      <path d="M36 136C60 138 96 137 104 132C126 118 150 100 170 94" stroke="#6f86de" stroke-width="2.2"/>
+      <path d="M24 110C44 102 74 95 106 87" stroke="#fff" stroke-width="3" stroke-dasharray="46 8 22 200"/>
+      <path d="M201 94C197 106 194 120 193 132" stroke="#fff" stroke-opacity=".75" stroke-width="2"/>
+      <path d="M205 52C207 62 205 76 201 86" stroke="#fff" stroke-opacity=".85" stroke-width="1.6"/>
+      <path d="M52 104L64 130M80 98L92 126M150 100L160 114" stroke="#fff" stroke-opacity=".45" stroke-width="1.1"/>
+      <path d="M120 88C140 86 166 74 190 56" stroke="#fff" stroke-opacity=".8" stroke-width="1.3"/>
+    </g>
+    <ellipse cx="25" cy="117" rx="7" ry="3.4" fill="#fff" opacity=".85" transform="rotate(-22 25 117)"/>
+    <g stroke="#fff" stroke-width=".8" stroke-opacity=".9">
+      <path d="M110 84C100 73 90 79 97 86C101 90 107 87 110 84Z" fill="#f6c6d9" fill-opacity=".9"/>
+      <path d="M110 84C118 71 129 77 122 85C118 90 112 87 110 84Z" fill="#f6c6d9" fill-opacity=".9"/>
+    </g>
+    <circle cx="110" cy="84" r="3" fill="#fff"/>
+  </symbol>
+  <!-- pumpkin carriage -->
+  <symbol id="carriage" viewBox="0 0 124 94">
+    <g fill="none" stroke="#e8c56a" stroke-linecap="round">
+      <circle cx="92" cy="74" r="16" stroke-width="3"/><path d="M92 58v32M76 74h32M80.7 62.7l22.6 22.6M80.7 85.3l22.6-22.6" stroke-width="1.6"/>
+      <circle cx="30" cy="78" r="12" stroke-width="3"/><path d="M30 66v24M18 78h24M21.5 69.5l17 17M21.5 86.5l17-17" stroke-width="1.6"/>
+      <path d="M24 70C42 84 78 86 104 68" stroke-width="3"/>
+      <path d="M22 62C12 60 8 50 14 44C19 40 25 45 21 49" stroke-width="2.6"/>
+    </g>
+    <circle cx="92" cy="74" r="3.6" fill="#e8c56a"/><circle cx="30" cy="78" r="3" fill="#e8c56a"/>
+    <ellipse cx="62" cy="44" rx="40" ry="31" fill="url(#pumpG)"/>
+    <g fill="none" stroke="#b35512" stroke-opacity=".7" stroke-width="1.6"><path d="M46 15C32 27 32 61 46 73"/><path d="M78 15C92 27 92 61 78 73"/><path d="M34 22C24 34 24 56 34 66"/><path d="M90 22C100 34 100 56 90 66"/></g>
+    <ellipse cx="62" cy="42" rx="12.5" ry="15.5" fill="#fff1c9" stroke="#e8c56a" stroke-width="2.6"/>
+    <path d="M62 27v30M50 42h24" stroke="#e8c56a" stroke-width="1.2"/>
+    <path d="M27 58C40 74 84 74 97 58" fill="none" stroke="#e8c56a" stroke-width="2.2"/>
+    <path d="M62 13C61 5 67 1 72 4C76 7 73 12 69 10" fill="none" stroke="#e8c56a" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M62 13C58 8 52 9 51 13" fill="none" stroke="#6f8f3c" stroke-width="2.4" stroke-linecap="round"/>
+    <ellipse cx="46" cy="30" rx="6" ry="10" fill="#fff" opacity=".22" transform="rotate(20 46 30)"/>
+  </symbol>
+  <!-- the realm: hills, a road with lanterns and the palace (an original, generic castle) -->
+  <symbol id="realm" viewBox="0 0 1200 240">
+    <path d="M0 168C120 148 230 140 330 152C430 164 500 150 590 136C680 122 760 128 850 142C950 158 1060 150 1200 136V240H0Z" fill="#1f2c6a"/>
+    <path d="M0 206C140 196 260 200 380 192C470 186 540 168 600 160C640 155 760 154 800 160C870 170 940 192 1040 198C1110 202 1160 200 1200 198V240H0Z" fill="#121a47"/>
+    <g transform="translate(-40 0)">
+    <g fill="#0a1131">
+      <rect x="628" y="100" width="22" height="62"/><path d="M623 102L639 60L655 102Z"/>
+      <path d="M650 122h30v40h-30zM650 116h5v7h-5zM660 116h5v7h-5zM670 116h5v7h-5z"/>
+      <rect x="680" y="88" width="50" height="74"/><path d="M680 81h6v8h-6zM692 81h6v8h-6zM712 81h6v8h-6zM724 81h6v8h-6z"/>
+      <rect x="696" y="50" width="18" height="40"/><path d="M691 53L705 12L719 53Z"/>
+      <rect x="723" y="72" width="11" height="18"/><path d="M720 74L728.5 54L737 74Z"/>
+      <path d="M730 126h30v36h-30zM735 120h5v7h-5zM745 120h5v7h-5zM755 120h5v7h-5z"/>
+      <rect x="760" y="96" width="22" height="66"/><path d="M755 98L771 62L787 98Z"/>
+      <path d="M705 12V1" stroke="#0a1131" stroke-width="1.6"/>
+    </g>
+    <path d="M705 2l17 4.5-17 4.5z" fill="#f6c6d9"/>
+    <g fill="url(#glowG)" opacity=".5"><circle cx="639" cy="119" r="16"/><circle cx="705" cy="67" r="18"/><circle cx="705" cy="150" r="30"/><circle cx="771" cy="115" r="16"/><circle cx="705" cy="107" r="26"/></g>
+    <g fill="#f3d27a"><rect x="636" y="114" width="6" height="10" rx="3"/><rect x="702" y="62" width="6" height="11" rx="3"/><rect x="689" y="102" width="6" height="10" rx="3"/><rect x="715" y="102" width="6" height="10" rx="3"/><rect x="768" y="110" width="6" height="10" rx="3"/><rect x="726" y="78" width="5" height="8" rx="2.5"/><rect x="662" y="132" width="5" height="8" rx="2.5"/><rect x="743" y="136" width="5" height="8" rx="2.5"/><path d="M697 162v-14a8 8 0 0 1 16 0v14z"/></g>
+    </g>
+    <path d="M330 240C390 222 450 214 505 206C565 197 610 186 665 163" fill="none" stroke="#2a3878" stroke-width="7" stroke-linecap="round"/>
+    <g fill="url(#glowG)" opacity=".55"><circle cx="430" cy="218" r="12"/><circle cx="500" cy="207" r="11"/><circle cx="566" cy="196" r="10"/><circle cx="618" cy="182" r="9"/></g>
+    <g fill="#f3d27a"><circle cx="430" cy="218" r="2.4"/><circle cx="500" cy="207" r="2.2"/><circle cx="566" cy="196" r="2"/><circle cx="618" cy="182" r="1.8"/></g>
+  </symbol>
+</svg>
+
+<!-- ============ INTRO: the clock strikes twelve ============ -->
+<div id="curtain-overlay" data-hide-after="2700">
+  <div class="intro-realm" aria-hidden="true"><svg viewBox="0 0 1200 240" preserveAspectRatio="xMidYMax slice"><use href="#realm" width="1200" height="240"/></svg></div>
+  <svg class="tw" style="left:9%;top:9%;--z:14px" aria-hidden="true"><use href="#spark"/></svg>
+  <svg class="tw g" style="right:12%;top:15%;--z:10px;--d:-1.2s" aria-hidden="true"><use href="#spark"/></svg>
+  <svg class="tw" style="left:16%;top:44%;--z:9px;--d:-2.1s" aria-hidden="true"><use href="#spark"/></svg>
+  <svg class="tw" style="right:8%;top:50%;--z:13px;--d:-.6s" aria-hidden="true"><use href="#spark"/></svg>
+  <div class="intro-body">
+    <p class="intro-eyebrow" data-ta="ஒரு அரச அழைப்பு காத்திருக்கிறது">A royal invitation awaits</p>
+    <p class="intro-line"><span class="l1" data-ta="கடிகாரம் பன்னிரண்டு அடிக்கும்போது…">When the clock strikes twelve…</span><span class="l2" aria-hidden="true" data-ta="…விழா தொடங்கும்!">…the ball begins!</span></p>
+    <div class="clock-wrap">
+      <span class="chimes" aria-hidden="true"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:8"></i><i style="--i:9"></i><i style="--i:10"></i><i style="--i:11"></i></span>
+      <button type="button" class="clock-btn" id="openCurtainBtn" data-open-invite aria-label="Tap the clock to open the invitation">
+        <svg class="clock-svg" viewBox="0 -22 300 322" aria-hidden="true" focusable="false">
+          <circle class="clock-halo" cx="150" cy="150" r="170" fill="url(#glowG)"/>
+          <path d="M150.0 16.0A14.01 14.01 0 0 1 173.3 18.0A14.01 14.01 0 0 1 195.8 24.1A14.01 14.01 0 0 1 217.0 34.0A14.01 14.01 0 0 1 236.1 47.4A14.01 14.01 0 0 1 252.6 63.9A14.01 14.01 0 0 1 266.0 83.0A14.01 14.01 0 0 1 275.9 104.2A14.01 14.01 0 0 1 282.0 126.7A14.01 14.01 0 0 1 284.0 150.0A14.01 14.01 0 0 1 282.0 173.3A14.01 14.01 0 0 1 275.9 195.8A14.01 14.01 0 0 1 266.0 217.0A14.01 14.01 0 0 1 252.6 236.1A14.01 14.01 0 0 1 236.1 252.6A14.01 14.01 0 0 1 217.0 266.0A14.01 14.01 0 0 1 195.8 275.9A14.01 14.01 0 0 1 173.3 282.0A14.01 14.01 0 0 1 150.0 284.0A14.01 14.01 0 0 1 126.7 282.0A14.01 14.01 0 0 1 104.2 275.9A14.01 14.01 0 0 1 83.0 266.0A14.01 14.01 0 0 1 63.9 252.6A14.01 14.01 0 0 1 47.4 236.1A14.01 14.01 0 0 1 34.0 217.0A14.01 14.01 0 0 1 24.1 195.8A14.01 14.01 0 0 1 18.0 173.3A14.01 14.01 0 0 1 16.0 150.0A14.01 14.01 0 0 1 18.0 126.7A14.01 14.01 0 0 1 24.1 104.2A14.01 14.01 0 0 1 34.0 83.0A14.01 14.01 0 0 1 47.4 63.9A14.01 14.01 0 0 1 63.9 47.4A14.01 14.01 0 0 1 83.0 34.0A14.01 14.01 0 0 1 104.2 24.1A14.01 14.01 0 0 1 126.7 18.0A14.01 14.01 0 0 1 150.0 16.0Z" fill="url(#silverG)" stroke="#8f9bc0" stroke-width="1"/>
+          <circle cx="150" cy="150" r="127" fill="#121a45"/>
+          <circle cx="150" cy="150" r="122" fill="none" stroke="#e8c56a" stroke-width="4" stroke-linecap="round" stroke-dasharray="0 9.58"/>
+          <circle cx="150" cy="150" r="116" fill="url(#faceG)" stroke="#cfd7ea" stroke-width="1.5"/>
+          <circle cx="150" cy="150" r="109" fill="none" stroke="#233070" stroke-width="5" stroke-dasharray="1.1 10.314" stroke-dashoffset=".55"/>
+          <circle cx="150" cy="150" r="109" fill="none" stroke="#233070" stroke-width="9" stroke-dasharray="2.6 54.47" stroke-dashoffset="1.3"/>
+          <circle cx="150" cy="150" r="104" fill="none" stroke="#cfd7ea" stroke-width="1"/>
+          <circle cx="150" cy="150" r="80" fill="none" stroke="#cfd7ea" stroke-width="1"/>
+          <g fill="none" stroke="#dfe5f6" stroke-width="1"><circle cx="150" cy="150" r="58"/><circle cx="150" cy="150" r="52" stroke-dasharray="2 4"/></g>
+          <use href="#crown" x="136" y="186" width="28" height="21"/>
+          <use href="#spark" x="143" y="94" width="14" height="14" style="color:#b9c8f7"/>
+          <g class="num"><text x="196.5" y="69.5" style="--i:0">I</text><text x="230.5" y="103.5" style="--i:1">II</text><text x="243" y="150" style="--i:2">III</text><text x="230.5" y="196.5" style="--i:3">IV</text><text x="196.5" y="230.5" style="--i:4">V</text><text x="150" y="243" style="--i:5">VI</text><text x="103.5" y="230.5" style="--i:6">VII</text><text x="69.5" y="196.5" style="--i:7">VIII</text><text x="57" y="150" style="--i:8">IX</text><text x="69.5" y="103.5" style="--i:9">X</text><text x="103.5" y="69.5" style="--i:10">XI</text><text x="150" y="57" style="--i:11">XII</text></g>
+          <g class="hand hr" fill="#1d2a6b"><rect x="148.3" y="116" width="3.4" height="50" rx="1.2"/><circle cx="150" cy="108" r="8" fill="none" stroke="#1d2a6b" stroke-width="3.2"/><path d="M146 101L150 82L154 101Z"/><circle cx="150" cy="169" r="5"/></g>
+          <g class="hand mn" fill="#1d2a6b"><rect x="148.9" y="74" width="2.2" height="100" rx="1"/><circle cx="150" cy="67" r="5.6" fill="none" stroke="#1d2a6b" stroke-width="2.4"/><path d="M147.4 62L150 38L152.6 62Z"/><path d="M150 172l4 8-4 8-4-8z"/></g>
+          <circle cx="150" cy="150" r="8" fill="url(#goldG)" stroke="#a8822c" stroke-width=".8"/><circle cx="150" cy="150" r="3" fill="#f6c6d9"/>
+          <g transform="translate(118 -20) scale(1.6)"><use href="#crown" width="40" height="30"/></g>
+        </svg>
+      </button>
+    </div>
+    <p class="intro-hint"><svg aria-hidden="true"><use href="#spark"/></svg><span data-ta="கடிகாரத்தைத் தொடுங்கள்">Tap the clock</span><svg aria-hidden="true"><use href="#spark"/></svg></p>
+  </div>
+</div>
+
+<!-- ============ HERO ============ -->
+<header id="hero" class="night">
+  <div class="sky" aria-hidden="true">
+    <div class="dust" data-n="22"></div>
+    <svg class="tw" style="left:6%;top:3%;--z:13px" ><use href="#spark"/></svg>
+    <svg class="tw g" style="left:24%;top:1.6%;--z:9px;--d:-1.4s"><use href="#spark"/></svg>
+    <svg class="tw" style="right:30%;top:2.4%;--z:11px;--d:-.7s"><use href="#spark"/></svg>
+    <svg class="tw" style="left:3%;top:30%;--z:10px;--d:-2s"><use href="#spark"/></svg>
+    <svg class="tw g" style="right:2.5%;top:40%;--z:12px;--d:-2.6s"><use href="#spark"/></svg>
+    <svg class="tw" style="left:4%;top:62%;--z:9px;--d:-.3s"><use href="#spark"/></svg>
+    <svg class="tw" style="right:4%;top:70%;--z:14px;--d:-1.8s"><use href="#spark"/></svg>
+  </div>
+  <nav class="lang" aria-label="Language">
+    <button type="button" class="lang-btn active" data-lang="en">EN</button>
+    <button type="button" class="lang-btn" data-lang="ta" lang="ta">தமிழ்</button>
+  </nav>
+
+  <div class="card rise">
+    <svg class="corner tl" aria-hidden="true"><use href="#corner"/></svg><svg class="corner tr" aria-hidden="true"><use href="#corner"/></svg>
+    <svg class="corner bl" aria-hidden="true"><use href="#corner"/></svg><svg class="corner br" aria-hidden="true"><use href="#corner"/></svg>
+    <svg class="hero-crown rise" viewBox="0 0 40 30" aria-hidden="true"><use href="#crown"/></svg>
+    <p class="hero-eyebrow rise r1" data-ta="அரச விழாவுக்கு உங்களை அன்புடன் அழைக்கிறோம்">You are invited to the royal ball of</p>
+    <h1 class="title rise r1" data-bind="title">Ananya turns 5!</h1>
+    <svg class="flourish rise r1" aria-hidden="true"><use href="#flourish"/></svg>
+
+    <div class="portrait rise r2">
+      <svg class="frame" viewBox="0 0 240 300" aria-hidden="true" focusable="false">
+        <g fill="none" stroke="#9aa6c6" stroke-width="1.6" stroke-linecap="round">
+          <path d="M12 150c-9-9-6-22 4-23 7 0 9 8 4 10M12 150c-9 9-6 22 4 23 7 0 9-8 4-10"/>
+          <path d="M228 150c9-9 6-22-4-23-7 0-9 8-4 10M228 150c9 9 6 22-4 23-7 0-9-8-4-10"/>
+        </g>
+        <path d="M2 150l5-5 5 5-5 5zM238 150l-5-5-5 5 5 5z" fill="#e8c56a"/>
+        <ellipse cx="120" cy="150" rx="113" ry="143" fill="none" stroke="#b4bfdd" stroke-width="1.2"/>
+        <ellipse cx="120" cy="150" rx="104" ry="134" fill="none" stroke="url(#silverG)" stroke-width="17"/>
+        <ellipse cx="120" cy="150" rx="104" ry="134" fill="none" stroke="#fbfaff" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="0 7.6"/>
+        <ellipse cx="120" cy="150" rx="95" ry="125" fill="none" stroke="#8f9bc0" stroke-width="1.5"/>
+      </svg>
+      <!-- cover photo goes here (data-bind="cover"); a little princess portrait stands in for the preview -->
+      <div class="cover-slot photo" role="img" aria-label="Birthday photo">
+        <svg viewBox="0 0 188 248" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+          <defs><linearGradient id="phBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c3cffb"/><stop offset=".6" stop-color="#e4e3fb"/><stop offset="1" stop-color="#f8d7e5"/></linearGradient></defs>
+          <rect width="188" height="248" fill="url(#phBg)"/>
+          <circle cx="94" cy="118" r="70" fill="#fff" opacity=".45"/>
+          <g fill="#fff"><use href="#spark" x="26" y="52" width="12" height="12"/><use href="#spark" x="150" y="70" width="9" height="9"/><use href="#spark" x="36" y="150" width="8" height="8"/><use href="#spark" x="146" y="146" width="11" height="11"/></g>
+          <path d="M38 248c0-42 24-66 56-66s56 24 56 66z" fill="#f4a3c0"/>
+          <circle cx="54" cy="200" r="19" fill="#f8bfd3"/><circle cx="134" cy="200" r="19" fill="#f8bfd3"/>
+          <path d="M70 186q24 20 48 0" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="94" cy="200" r="3.4" fill="#e8c56a"/>
+          <path d="M44 128c-6-48 18-74 50-74s56 26 50 74c-2 22-6 40-10 52H54c-4-12-8-30-10-52z" fill="#2b1c1d"/>
+          <circle cx="50" cy="66" r="17" fill="#2b1c1d"/><circle cx="138" cy="66" r="17" fill="#2b1c1d"/>
+          <rect x="84" y="154" width="20" height="26" rx="8" fill="#b77a52"/>
+          <circle cx="58" cy="122" r="7" fill="#c98b62"/><circle cx="130" cy="122" r="7" fill="#c98b62"/>
+          <circle cx="58" cy="132" r="2.6" fill="#e8c56a"/><circle cx="130" cy="132" r="2.6" fill="#e8c56a"/>
+          <ellipse cx="94" cy="120" rx="36" ry="39" fill="#c98b62"/>
+          <path d="M58 112c0-28 16-40 36-40s36 12 36 40c-8-12-20-18-30-17-6-5-18-6-26 1-6 3-12 9-16 16z" fill="#2b1c1d"/>
+          <ellipse cx="80" cy="122" rx="4.2" ry="5.2" fill="#2b1c1d"/><ellipse cx="108" cy="122" rx="4.2" ry="5.2" fill="#2b1c1d"/>
+          <circle cx="81.6" cy="120" r="1.6" fill="#fff"/><circle cx="109.6" cy="120" r="1.6" fill="#fff"/>
+          <ellipse cx="71" cy="134" rx="7" ry="4.4" fill="#f07a9a" opacity=".45"/><ellipse cx="117" cy="134" rx="7" ry="4.4" fill="#f07a9a" opacity=".45"/>
+          <path d="M86 138q8 8 16 0" fill="none" stroke="#6e3328" stroke-width="2.6" stroke-linecap="round"/>
+          <path d="M92 128q2.4 2 4 0" fill="none" stroke="#a5694a" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="94" cy="104" r="2.3" fill="#d6416a"/>
+          <g transform="translate(136 56)"><circle r="6" fill="#f6c6d9"/><circle cx="-6" cy="-4" r="5" fill="#f6c6d9"/><circle cx="2" cy="-8" r="5" fill="#f6c6d9"/><circle cx="7" cy="-2" r="5" fill="#f6c6d9"/><circle cx="-3" cy="5" r="5" fill="#f6c6d9"/><circle cx="0" cy="-1" r="3.4" fill="#e8c56a"/></g>
+        </svg>
+      
+<img class="cover-img" data-bind="cover" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+</div>
+      <svg class="tiara" viewBox="0 0 120 60" aria-hidden="true" focusable="false">
+        <path d="M10 50C14 36 22 30 30 36C34 26 42 22 48 30C52 16 56 8 60 4C64 8 68 16 72 30C78 22 86 26 90 36C98 30 106 36 110 50C90 42 30 42 10 50Z" fill="url(#goldG)" stroke="#a8822c" stroke-width=".9" stroke-linejoin="round"/>
+        <path d="M8 50C30 41 90 41 112 50L110 57C90 48 30 48 10 57Z" fill="url(#goldG)" stroke="#a8822c" stroke-width=".9"/>
+        <path class="gem" d="M60 16c4 6 6 10 6 13a6 6 0 0 1-12 0c0-3 2-7 6-13z" fill="#f6c6d9" stroke="#fff" stroke-width=".9"/>
+        <circle class="gem" cx="38" cy="39" r="3.6" fill="#8ea4f0" stroke="#fff" stroke-width=".8" style="animation-delay:-1s"/>
+        <circle class="gem" cx="82" cy="39" r="3.6" fill="#8ea4f0" stroke="#fff" stroke-width=".8" style="animation-delay:-1.8s"/>
+        <g fill="#fbfaff" stroke="#cfd7ea" stroke-width=".6"><circle cx="30" cy="35" r="2.3"/><circle cx="48" cy="29" r="2.3"/><circle cx="60" cy="4" r="2.8"/><circle cx="72" cy="29" r="2.3"/><circle cx="90" cy="35" r="2.3"/></g>
+        <g fill="#fff6d6"><circle cx="30" cy="50" r="1.4"/><circle cx="45" cy="47.6" r="1.4"/><circle cx="60" cy="47" r="1.6"/><circle cx="75" cy="47.6" r="1.4"/><circle cx="90" cy="50" r="1.4"/></g>
+      </svg>
+    </div>
+    <div class="cushion rise r2">
+      <svg viewBox="0 6 260 168" aria-hidden="true" focusable="false">
+        <defs><radialGradient id="periGlow"><stop offset="0" stop-color="#b9c8f7" stop-opacity=".75"/><stop offset="1" stop-color="#b9c8f7" stop-opacity="0"/></radialGradient></defs>
+        <ellipse cx="130" cy="90" rx="128" ry="70" fill="url(#periGlow)"/>
+        <g stroke="#a8822c" stroke-width=".7">
+          <path d="M22 122l-8 6M238 122l8 6" fill="none" stroke="#e8c56a" stroke-width="2"/>
+          <path d="M10 131L5 156h18l-5-25z" fill="url(#goldG)"/><path d="M250 131l5 25h-18l5-25z" fill="url(#goldG)"/>
+          <circle cx="14" cy="130" r="4.4" fill="url(#goldG)"/><circle cx="246" cy="130" r="4.4" fill="url(#goldG)"/>
+          <path d="M10 136l-1 18M14 136v18M18 136l1 18M250 136l1 18M246 136v18M242 136l-1 18" fill="none" stroke="#a8822c" stroke-opacity=".7"/>
+        </g>
+        <path d="M22 122C40 146 80 160 130 160C180 160 220 146 238 122C236 134 222 162 130 170C38 162 24 134 22 122Z" fill="#0d1438"/>
+        <path d="M22 122C40 98 80 86 130 86C180 86 220 98 238 122C220 146 180 160 130 160C80 160 40 146 22 122Z" fill="url(#nightG)"/>
+        <path d="M22 122C40 98 80 86 130 86C180 86 220 98 238 122C220 146 180 160 130 160C80 160 40 146 22 122ZM22 122C24 134 38 162 130 170C222 162 236 134 238 122" fill="none" stroke="#e8c56a" stroke-width="2.2" stroke-linejoin="round"/>
+        <ellipse cx="96" cy="104" rx="46" ry="9" fill="#fff" opacity=".1" transform="rotate(-6 96 104)"/>
+        <g fill="#0b1233" opacity=".55"><circle cx="66" cy="124" r="2.6"/><circle cx="194" cy="124" r="2.6"/></g>
+        <ellipse cx="130" cy="124" rx="84" ry="8" fill="#060b26" opacity=".55"/>
+        <use class="slip" href="#slipper" x="34" y="34" width="190" height="92"/>
+      </svg>
+      <svg class="tw" style="left:13%;top:55%;--z:16px" aria-hidden="true"><use href="#spark"/></svg>
+      <svg class="tw" style="left:79%;top:12%;--z:18px;--d:-1.1s" aria-hidden="true"><use href="#spark"/></svg>
+      <svg class="tw g" style="left:57%;top:20%;--z:11px;--d:-2s" aria-hidden="true"><use href="#spark"/></svg>
+      <svg class="tw" style="left:31%;top:39%;--z:9px;--d:-2.6s" aria-hidden="true"><use href="#spark"/></svg>
+    </div>
+
+    <p class="honour rise r3"><span class="honour-l" data-ta="சிறப்பு விருந்தினர்">Guest of honour</span><span class="honour-name" data-bind="names">Ananya</span></p>
+    <p id="heroTagline" class="rise r3" data-bind="tagline">Bring your sparkle! Join us for a magical evening of games, dancing and cake as our little princess turns five.</p>
+    <p class="ribbon-row rise r4"><span id="heroDatePill" data-bind="dateLine">👑 21st August 2027 • Coimbatore</span></p>
+  </div>
+  <a class="scroll-cue rise r4" href="#events"><span data-ta="அரச நிகழ்ச்சிகள்">The royal programme</span><i aria-hidden="true"></i></a>
+  <div class="realm" aria-hidden="true">
+    <svg viewBox="0 0 1200 240" preserveAspectRatio="xMidYMax slice" focusable="false">
+      <use href="#realm" width="1200" height="240"/>
+      <g fill="#fff"><use class="sp-trail" href="#spark" x="398" y="186" width="8" height="8"/><use href="#spark" x="384" y="200" width="6" height="6" opacity=".7"/><use href="#spark" x="370" y="208" width="5" height="5" opacity=".5"/></g>
+      <use href="#carriage" x="408" y="146" width="84" height="64"/>
+    </svg>
+  </div>
+  <div class="balcony" aria-hidden="true"></div>
+</header>
+
+<main>
+<!-- ============ EVENTS ============ -->
+<section id="events" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="அரச ஆணைப்படி">By royal decree</p>
+    <h2 class="sec-title" data-ta="அரச நிகழ்ச்சிகள்">The royal programme</h2>
+    <svg class="flourish" aria-hidden="true"><use href="#flourish"/></svg>
+  </div>
+
+  <div id="eventsGrid" class="events">
+    <template>
+    <article class="event reveal">
+      <svg class="corner tl" aria-hidden="true"><use href="#corner"/></svg><svg class="corner tr" aria-hidden="true"><use href="#corner"/></svg>
+      <svg class="corner bl" aria-hidden="true"><use href="#corner"/></svg><svg class="corner br" aria-hidden="true"><use href="#corner"/></svg>
+      <div class="ev-medal" data-field="icon">👑</div>
+      <p class="ev-num"><span data-ta="எண்">No.</span> <span data-field="number">01</span></p>
+      <h3 data-field="name">The Royal Ball</h3>
+      <svg class="ev-rule" aria-hidden="true"><use href="#flourish"/></svg>
+      <ul class="ev-meta">
+        <li><span class="ic-wrap"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg></span><span data-field="date">21st August 2027</span></li>
+        <li><span class="ic-wrap"><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg></span><span data-field="time">5:00 PM to 7:30 PM</span></li>
+        <li><span class="ic-wrap"><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg></span><span><strong data-field="place">Crystal Palace Hall</strong><small data-field="venue">R.S. Puram, Coimbatore - 641002</small></span></li>
+      </ul>
+      <p class="ev-desc" data-field="desc">Dress-up, a magic show and the grand cake cutting.</p>
+      <a class="btn" data-href="map" href="https://www.google.com/maps/dir/?api=1&amp;destination=R.S.+Puram+Coimbatore+641002" target="_blank" rel="noopener"><span data-ta="வழி காட்டு">Get directions</span> <svg aria-hidden="true"><use href="#i-go"/></svg></a>
+    </article>
+    </template>
+  </div>
+</section>
+
+<!-- ============ COUNTDOWN ============ -->
+<section id="countdown" class="section night arches-top">
+  <svg class="tw" style="left:7%;top:18%;--z:12px" aria-hidden="true"><use href="#spark"/></svg>
+  <svg class="tw g" style="right:9%;top:24%;--z:10px;--d:-1.5s" aria-hidden="true"><use href="#spark"/></svg>
+  <svg class="tw" style="left:14%;top:70%;--z:9px;--d:-2.4s" aria-hidden="true"><use href="#spark"/></svg>
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="டிக், டாக், டிக், டாக்">Tick, tock, tick, tock</p>
+    <h2 class="sec-title" data-ta="விழா தொடங்க இன்னும்">Until the ball begins</h2>
+    <svg class="flourish" aria-hidden="true"><use href="#flourish"/></svg>
+  </div>
+  <div class="medals reveal" role="timer" aria-label="Time left until the ball">
+    <div class="medal"><div class="m-art"><svg class="m-bg" viewBox="0 0 100 100" aria-hidden="true"><use href="#medal"/></svg><svg class="m-star" aria-hidden="true"><use href="#spark"/></svg><span class="m-num" id="cdDays">000</span></div><p class="lbl" data-ta="நாட்கள்">Days</p></div>
+    <div class="medal"><div class="m-art"><svg class="m-bg" viewBox="0 0 100 100" aria-hidden="true"><use href="#medal"/></svg><svg class="m-star" aria-hidden="true"><use href="#spark"/></svg><span class="m-num" id="cdHours">00</span></div><p class="lbl" data-ta="மணி">Hours</p></div>
+    <div class="medal"><div class="m-art"><svg class="m-bg" viewBox="0 0 100 100" aria-hidden="true"><use href="#medal"/></svg><svg class="m-star" aria-hidden="true"><use href="#spark"/></svg><span class="m-num" id="cdMins">00</span></div><p class="lbl" data-ta="நிமிடம்">Mins</p></div>
+    <div class="medal"><div class="m-art"><svg class="m-bg" viewBox="0 0 100 100" aria-hidden="true"><use href="#medal"/></svg><svg class="m-star" aria-hidden="true"><use href="#spark"/></svg><span class="m-num" id="cdSecs">00</span></div><p class="lbl" data-ta="வினாடி">Secs</p></div>
+  </div>
+  <p class="cd-when reveal"><span data-bind="dateLong">Saturday, 21 August 2027</span><span class="dot">✦</span><span data-bind="time">5:00 PM</span></p>
+  <p class="cd-note reveal" data-ta="ரதம் காத்திருக்கும்.">The carriage will be waiting.</p>
+  <div class="balcony" aria-hidden="true"></div>
+</section>
+
+<!-- ============ WISHES ============ -->
+<section id="wishes" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="வாழ்த்துப் புத்தகம்">Guest book</p>
+    <h2 class="sec-title" data-ta="அரச வாழ்த்துகள்">Royal wishes</h2>
+    <svg class="flourish" aria-hidden="true"><use href="#flourish"/></svg>
+    <p class="sec-sub" data-ta="பிறந்தநாள் இளவரசிக்கு ஒரு அரச கடிதம் அனுப்புங்கள். ஒவ்வொரு வார்த்தையையும் பொக்கிஷமாகப் போற்றுவாள்.">Send the birthday princess a royal letter. She will treasure every word.</p>
+  </div>
+
+  <form id="wishForm" class="decree reveal">
+    <svg class="corner tl" aria-hidden="true"><use href="#corner"/></svg><svg class="corner tr" aria-hidden="true"><use href="#corner"/></svg>
+    <svg class="corner bl" aria-hidden="true"><use href="#corner"/></svg><svg class="corner br" aria-hidden="true"><use href="#corner"/></svg>
+    <span class="seal" aria-hidden="true"><svg viewBox="0 0 40 30"><use href="#crown"/></svg></span>
+    <label class="field"><span data-ta="உங்கள் பெயர்">Your name</span><input id="wishName" maxlength="60" placeholder="e.g. Swathi Aunty" data-ta-ph="எ.கா. சுவாதி அத்தை" required></label>
+    <label class="field"><span data-ta="உங்கள் வாழ்த்து">Your wish</span><textarea id="wishMessage" maxlength="500" rows="3" placeholder="Write something magical…" data-ta-ph="மாயாஜாலமாக ஏதாவது எழுதுங்கள்…" required></textarea></label>
+    <button class="btn" type="submit"><span data-ta="அனுப்பு">Seal &amp; send</span> <svg aria-hidden="true"><use href="#i-go"/></svg></button>
+  </form>
+
+  <div id="wishesWall" class="letters">
+    <template>
+    <figure class="letter reveal"><svg class="crown-mark" viewBox="0 0 40 30" aria-hidden="true"><use href="#crown"/></svg><blockquote data-field="message">Happy birthday to the sweetest princess! Have a magical day.</blockquote><figcaption data-field="name">Swathi Aunty</figcaption></figure>
+    </template>
+  </div>
+  <p id="wishesEmpty" class="wishes-empty" hidden data-ta="இன்னும் கடிதங்கள் இல்லை — இளவரசிக்கு முதல் கடிதத்தை நீங்களே எழுதுங்கள்.">No letters yet — be the first to write to the princess.</p>
+  <div class="wishes-more"><button id="wishesMore" class="btn pearl" type="button" data-ta="மேலும் கடிதங்கள்">Read more letters</button></div>
+</section>
+
+<!-- ============ HELP & CONTACTS ============ -->
+<section id="stay" class="section">
+  <div class="help reveal">
+    <svg class="corner tl" aria-hidden="true"><use href="#corner"/></svg><svg class="corner tr" aria-hidden="true"><use href="#corner"/></svg>
+    <svg class="corner bl" aria-hidden="true"><use href="#corner"/></svg><svg class="corner br" aria-hidden="true"><use href="#corner"/></svg>
+    <svg class="help-art" viewBox="0 0 124 94" aria-hidden="true" focusable="false"><use href="#carriage"/></svg>
+    <h2 class="sec-title" data-ta="அரண்மனைக்கு வழி தெரியவில்லையா?">Lost your way to the palace?</h2>
+    <p id="stayText" data-bind="help">Need help finding the palace? Call us any time.</p>
+    <p class="helpers-h" data-ta="அரச உதவியாளர்கள்">Royal helpers</p>
+    <div id="coordinators">
+    <template>
+    <div class="coord">
+        <span class="av" aria-hidden="true"><svg viewBox="0 0 40 30"><use href="#crown"/></svg></span>
+        <div class="who"><p class="c-name" data-field="name">Ananya's parents</p><p class="c-phone" data-field="phone">+91 90000 00000</p></div>
+        <a class="btn" data-href="tel" href="tel:+919000000000"><svg aria-hidden="true"><use href="#i-phone"/></svg><span data-ta="அழைக்க">Call</span></a>
+      </div>
+    </template>
+  </div>
+  </div>
+</section>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="night arches-top">
+  <div class="dust" data-n="12" aria-hidden="true"></div>
+  <svg class="tw" style="left:8%;top:30%;--z:12px" aria-hidden="true"><use href="#spark"/></svg>
+  <svg class="tw g" style="right:10%;top:22%;--z:10px;--d:-1.3s" aria-hidden="true"><use href="#spark"/></svg>
+  <svg class="tw" style="right:16%;top:72%;--z:9px;--d:-2.2s" aria-hidden="true"><use href="#spark"/></svg>
+  <svg class="foot-slipper" viewBox="4 40 210 102" aria-hidden="true"><use href="#slipper"/></svg>
+  <p class="ever-after" data-ta="…எல்லோரும் என்றென்றும் மகிழ்ச்சியாகக் கொண்டாடினார்கள்">…and they all celebrated happily ever after</p>
+  <svg class="flourish" aria-hidden="true"><use href="#flourish"/></svg>
+  <p class="hashtag" data-bind="hashtag">#AnanyasRoyalBall</p>
+  <p class="thanks" data-ta="இந்தப் பிறந்தநாளை ஒரு தேவதைக் கதையாக மாற்றியதற்கு நன்றி.">Thank you for making this birthday a fairy tale.</p>
+</footer>
+
+<button id="musicToggle" type="button" aria-label="Play or pause music"><svg aria-hidden="true"><use href="#i-note"/></svg></button>
+<audio id="bgMusic" loop preload="auto"></audio>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* Decoration (part of the template): drifting sparkle dust in the night skies, and a swirl of
+   sparkle dust spinning out of the clock when it is tapped. Skipped for reduced motion. */
+(function(){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  document.querySelectorAll(".dust").forEach(function(box){
+    for(var i=0,n=+box.dataset.n||14;i<n;i++){
+      var p=document.createElement("i");
+      p.style.cssText="left:"+(Math.random()*100).toFixed(1)+"%;top:"+(8+Math.random()*88).toFixed(1)+"%;--dx:"+Math.round(Math.random()*70-35)+"px;--s:"+(.5+Math.random()*.8).toFixed(2)+
+        ";animation-duration:"+(6+Math.random()*7).toFixed(1)+"s;animation-delay:-"+(Math.random()*12).toFixed(1)+"s";
+      if(i%3===0) p.className="g";
+      box.appendChild(p);
+    }
+  });
+  var btn=document.getElementById("openCurtainBtn"), done=false;
+  var COLORS=["#fff6d6","#e8c56a","#ffffff","#cfd7ea","#b9c8f7","#f6c6d9"];
+  if(btn) btn.addEventListener("click",function(){
+    if(done) return; done=true;
+    var r=btn.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2, size=r.width/2;
+    setTimeout(function(){ swirl(cx,cy,size); },650);
+  });
+  function swirl(cx,cy,size){
+    var box=document.createElement("div"); box.className="swirl";
+    for(var i=0;i<90;i++){
+      var p=document.createElement("i"), star=i%3===0, s=star?8+Math.random()*9:3+Math.random()*3.5;
+      var a0=Math.random()*Math.PI*2, turn=(1.4+Math.random()*1.2)*Math.PI, R=size*(1.2+Math.random()*1.9), frames=[];
+      p.className=star?"st":""; p.style.width=p.style.height=s+"px";
+      p.style.background=COLORS[i%COLORS.length];
+      if(!star) p.style.boxShadow="0 0 8px 2px rgba(255,233,168,.7)";
+      for(var k=0;k<=10;k++){
+        var t=k/10, rad=size*.35+t*R, ang=a0+t*turn;
+        frames.push({transform:"translate("+(cx+Math.cos(ang)*rad-s/2).toFixed(1)+"px,"+(cy+Math.sin(ang)*rad*.9-t*t*90-s/2).toFixed(1)+"px) rotate("+Math.round(t*360)+"deg) scale("+(t<.15?.4+t*4:1-t*.5).toFixed(2)+")",
+          opacity:t===0?0:(t<.75?1:(1-t)*4)});
+      }
+      p.animate(frames,{duration:1500+Math.random()*1000,delay:Math.random()*350,easing:"cubic-bezier(.25,.6,.35,1)",fill:"both"});
+      box.appendChild(p);
+    }
+    document.body.appendChild(box);
+    setTimeout(function(){ box.remove(); },3200);
+  }
+})();
+</script>
+<script>
+/* Intro and bilingual labels. js/invite.js opens the intro on tap (adds .open, then .hidden after data-hide-after);
+   this plays the theme's effect, then unlocks scrolling and starts the hero's entrance. */
+(function(){
+  var html=document.documentElement, overlay=document.getElementById("curtain-overlay");
+  var reduce=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
+  
+
+  if(overlay&&!html.classList.contains("intro-open")){
+    // Admin thumbnails and framed previews start on the page itself.
+    overlay.remove();
+  }else if(overlay){
+    var opened=false;
+    overlay.querySelectorAll("[data-open-invite]").forEach(function(b){
+      b.addEventListener("click",function(){
+        if(opened) return;
+        opened=true;
+        overlay.classList.add("open");
+        setTimeout(function(){ html.classList.remove("intro-open"); },reduce?0:1900);
+      });
+    });
+  }
+
+  // Labels with data-ta (and placeholders with data-ta-ph) switch to that Tamil text when the guest picks தமிழ்.
+  var lang="en";
+  function labels(root){
+    root.querySelectorAll("[data-ta]").forEach(function(n){
+      if(n.dataset.en===undefined) n.dataset.en=n.textContent;
+      n.textContent=lang==="ta"?n.dataset.ta:n.dataset.en;
+    });
+    root.querySelectorAll("[data-ta-ph]").forEach(function(n){
+      if(n.dataset.enPh===undefined) n.dataset.enPh=n.placeholder;
+      n.placeholder=lang==="ta"?n.dataset.taPh:n.dataset.enPh;
+    });
+  }
+  document.addEventListener("invite:render",function(e){
+    lang=e.detail&&e.detail.lang==="ta"?"ta":"en";
+    labels(document);
+  });
+  // New wishes arrive without a full render, so label them as they are added.
+  var wall=document.getElementById("wishesWall");
+  if(wall&&window.MutationObserver) new MutationObserver(function(){ labels(wall); }).observe(wall,{childList:true});
+})();
+</script>
+</body>
+</html>
