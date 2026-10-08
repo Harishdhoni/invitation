@@ -67,7 +67,8 @@ export const DEFAULT_CONFIG = {
 export const DEFAULT_CATEGORIES = [
   { id: "wedding", name: "Weddings", order: 1 },
   { id: "housewarming", name: "Housewarmings", order: 2 },
-  { id: "birthday", name: "Birthdays", order: 3 }
+  { id: "birthday", name: "Birthdays", order: 3 },
+  { id: "baby-shower", name: "Baby Showers", order: 4 }
 ];
 export const isWedding = cfg => (cfg?.category || "wedding") === "wedding";
 
@@ -120,6 +121,29 @@ const SAMPLES = {
         name: { en: "Dinner", ta: "" }, date: { en: "18th April 2027", ta: "" }, time: { en: "7:00 PM onwards", ta: "" },
         place: { en: "Little Hearts Party Hall", ta: "" }, venue: { en: "T. Nagar, Chennai - 600017", ta: "" },
         desc: { en: "", ta: "" }, mapQuery: "T. Nagar Chennai 600017", mapUrl: "" }
+    ]
+  },
+  // The mother-to-be is the first name; the partner is the optional second one.
+  "baby-shower": {
+    groomName: { en: "Divya", ta: "" },
+    brideName: { en: "Arun", ta: "" },
+    title: { en: "Divya's Baby Shower", ta: "" },
+    weddingDateTimeISO: "2027-03-21T10:00:00+05:30",
+    hashtag: "#DivyasBabyShower",
+    curtainVerse: "",
+    tagline: { en: "A little one is on the way! Join us to shower Divya with love, blessings and bangles as our family gets ready to grow.", ta: "" },
+    heroDateLine: { en: "🌸 21st March 2027 • Chennai", ta: "" },
+    accommodationText: { en: "Need help finding the venue? Call us any time.", ta: "" },
+    coordinators: [{ name: { en: "Divya's family", ta: "" }, phones: ["+91 90000 00000"] }],
+    events: [
+      { id: "valaikappu", icon: { type: "emoji", emoji: "🌸", imageId: "" },
+        name: { en: "Valaikappu Ceremony", ta: "" }, date: { en: "21st March 2027", ta: "" }, time: { en: "10:00 AM to 12:30 PM", ta: "" },
+        place: { en: "Sri Lakshmi Mahal", ta: "" }, venue: { en: "Mylapore, Chennai - 600004", ta: "" },
+        desc: { en: "Bangles, blessings and songs for the mother-to-be.", ta: "" }, mapQuery: "Mylapore Chennai 600004", mapUrl: "" },
+      { id: "lunch", icon: { type: "emoji", emoji: "🍃", imageId: "" },
+        name: { en: "Lunch", ta: "" }, date: { en: "21st March 2027", ta: "" }, time: { en: "12:30 PM onwards", ta: "" },
+        place: { en: "Sri Lakshmi Mahal", ta: "" }, venue: { en: "Mylapore, Chennai - 600004", ta: "" },
+        desc: { en: "A traditional banana-leaf feast.", ta: "" }, mapQuery: "Mylapore Chennai 600004", mapUrl: "" }
     ]
   }
 };

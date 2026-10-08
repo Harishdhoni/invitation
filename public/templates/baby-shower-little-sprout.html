@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<!--
+  Little Sprout — baby shower template
+  A calm, botanical and gender-neutral invitation for a baby shower, valaikappu or seemantham: "a little one is growing".
+  The intro is a terracotta pot with a single seed (tap to water it, and a sprout grows and unfurls its leaves). The
+  hero has layered watercolour leaves, an arched photo window with eucalyptus sprigs and the date on a kraft plant tag;
+  events are seed packets, the countdown is four pots with sprouts growing taller, and wishes hang from twine.
+  Palette: cream #fbf7ef · oat #eadfcc · sage #9cb59a / #5d7a5b · terracotta #c97b5a / #a85f42 · blush #f1d6cb · ink #33402f
+  Fonts:   Fraunces (headings, italic title) · Karla (body) · Noto Serif Tamil / Noto Sans Tamil (Tamil)
+  A baby-shower template for the invitation site; it follows TEMPLATES.md, and js/invite.js fills in the names, title,
+  date, photo, events, countdown, wishes and contacts. Labels with data-ta switch to Tamil with the தமிழ் button.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5d7a5b">
+<title>Divya's Baby Shower — Little Sprout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Karla:wght@400;500;700&family=Noto+Sans+Tamil:wght@400;600&family=Noto+Serif+Tamil:wght@500;600&display=swap" rel="stylesheet">
+<script>
+  /* Runs before paint: mark JS, and decide whether the intro overlay is shown (not in admin previews or frames). */
+  (function(){
+    var d=document.documentElement, skip=/[?&]preview/.test(location.search);
+    try{ skip=skip||window.self!==window.top; }catch(e){ skip=true; }
+    d.className+=" js"+(skip?"":" intro-open");
+  })();
+</script>
+<style>
+:root{
+  --cream:#fbf7ef; --paper:#fffdf8; --oat:#eadfcc; --oat-l:#f4ecdf; --kraft:#dcc19a; --kraft-d:#b8976b;
+  --sage:#9cb59a; --sage-d:#5d7a5b; --sage-dd:#46613f; --sage-l:#e2ebdd; --sage-ll:#eff4ea;
+  --terra:#c97b5a; --terra-d:#a85f42; --blush:#f1d6cb; --blush-l:#f8e9e2;
+  --ink:#33402f; --ink2:#59664f; --twine:#a88a62; --soil:#6e4f3a;
+  --serif:'Fraunces','Noto Serif Tamil',Georgia,serif;
+  --sans:'Karla','Noto Sans Tamil',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --ease:cubic-bezier(.22,.8,.3,1);
+  --soft:cubic-bezier(.34,1.4,.64,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+html.intro-open,html.intro-open body{overflow:hidden}
+body{
+  margin:0;min-height:100vh;overflow-x:hidden;font-family:var(--sans);font-size:1.06rem;line-height:1.65;color:var(--ink);
+  background:var(--cream);
+}
+h1,h2,h3,p{margin:0}
+a{color:inherit}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--terra);outline-offset:3px;border-radius:12px}
+.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.serif{font-family:var(--serif);font-variation-settings:"SOFT" 100;font-variant-numeric:lining-nums}
+
+/* ---------- shared bits ---------- */
+.section{position:relative;padding:clamp(64px,10vw,104px) 16px;overflow-x:clip}
+.sec-head{text-align:center;max-width:620px;margin:0 auto clamp(30px,5vw,48px)}
+.eyebrow{font-weight:700;font-size:.8rem;letter-spacing:.22em;text-transform:uppercase;color:var(--sage-d)}
+.sec-title{
+  font-family:var(--serif);font-variation-settings:"SOFT" 100;font-style:italic;font-weight:400;
+  font-size:clamp(2.1rem,8vw,3.2rem);line-height:1.08;margin-top:8px;color:var(--ink);
+}
+.sprig{display:block;width:120px;height:22px;margin:14px auto 0;color:var(--sage)}
+.sec-sub{margin:14px auto 0;max-width:40ch;color:var(--ink2)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;border:0;cursor:pointer;text-decoration:none;
+  font-family:var(--sans);font-weight:700;font-size:1rem;line-height:1.1;padding:13px 24px;border-radius:999px;
+  background:var(--terra-d);color:#fff;box-shadow:0 6px 16px rgba(168,95,66,.25);transition:transform .2s var(--ease),box-shadow .2s,background .2s;
+}
+.btn:hover{transform:translateY(-2px);background:#9a5439;box-shadow:0 10px 22px rgba(168,95,66,.3)}
+.btn:active{transform:translateY(1px)}
+.btn svg{width:18px;height:18px;flex:none}
+.btn.ghost{background:transparent;color:var(--sage-dd);box-shadow:inset 0 0 0 2px var(--sage)}
+.btn.ghost:hover{background:var(--sage-ll)}
+.ic{width:20px;height:20px;flex:none}
+
+/* reveal on scroll (the runtime adds .in) */
+.js .reveal{opacity:0;transform:translateY(26px)}
+.js .reveal.in{opacity:1;transform:none;transition:opacity .8s ease,transform 1s var(--ease)}
+
+/* ---------- intro: water the seed ---------- */
+#curtain-overlay{
+  position:fixed;inset:0;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;padding:24px 16px;text-align:center;overflow:hidden;
+  background:
+    radial-gradient(ellipse 70% 42% at 50% 64%,rgba(156,181,154,.3),transparent 70%),
+    radial-gradient(ellipse 55% 30% at 85% 8%,rgba(241,214,203,.7),transparent 70%),
+    radial-gradient(ellipse 55% 30% at 10% 96%,rgba(241,214,203,.6),transparent 70%),var(--cream);
+}
+.intro-open #curtain-overlay{display:flex}
+#curtain-overlay.open{opacity:0;transition:opacity .75s ease 2.4s;pointer-events:none}
+#curtain-overlay.hidden{display:none}
+.intro-leaves{position:absolute;width:min(56vw,300px);height:auto;pointer-events:none}
+.intro-leaves.tl{top:-10px;left:-14px}
+.intro-leaves.br{bottom:-10px;right:-14px;transform:rotate(180deg)}
+.intro-eyebrow{position:relative;font-weight:700;font-size:.8rem;letter-spacing:.24em;text-transform:uppercase;color:var(--sage-d)}
+.intro-title{
+  position:relative;font-family:var(--serif);font-variation-settings:"SOFT" 100;font-style:italic;font-weight:350;
+  font-size:clamp(2.3rem,10.5vw,3.5rem);line-height:1.05;color:var(--ink);margin-top:8px;max-width:14ch;
+}
+.pot-btn{position:relative;background:none;border:0;padding:0;margin:0;cursor:pointer;width:min(76vw,320px);-webkit-tap-highlight-color:transparent}
+.pot-btn svg{display:block;width:100%;height:auto;overflow:visible}
+.pot-btn:focus-visible{outline-offset:-6px}
+.intro-hint{position:relative;display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;background:rgba(255,253,248,.85);box-shadow:0 0 0 1px var(--oat);font-weight:700;color:var(--sage-dd);animation:breathe 2.4s ease-in-out infinite}
+.intro-hint .ic{color:#7fb0b5}
+.open .intro-hint{opacity:0;transition:opacity .3s;animation:none}
+@keyframes breathe{50%{transform:translateY(-3px)}}
+
+.tap-ring{transform-box:fill-box;transform-origin:center;animation:ring 2.2s ease-out infinite}
+.tap-ring.t2{animation-delay:-1.1s}
+.sun{transform-box:fill-box;transform-origin:center;animation:glowSun 5s ease-in-out infinite alternate}
+@keyframes glowSun{from{transform:scale(.92);opacity:.8}to{transform:scale(1.04);opacity:1}}
+.seed{transform-box:fill-box;transform-origin:50% 80%;animation:nod 2.6s ease-in-out infinite}
+.can{opacity:0;transform-origin:182px 72px}
+.drop,.splash,.spark{opacity:0}
+.wet{opacity:0}
+.splash,.spark{transform-box:fill-box;transform-origin:center}
+.stem{stroke-dasharray:1;stroke-dashoffset:1;opacity:0}
+.lv{transform-box:fill-box;transform:scale(0)}
+.lv1{transform-origin:100% 100%}
+.lv2{transform-origin:0 100%}
+.lv3{transform-origin:50% 100%}
+@keyframes ring{0%{transform:scale(.6);opacity:.8}100%{transform:scale(1.9);opacity:0}}
+@keyframes nod{0%,100%{transform:none}50%{transform:rotate(-12deg) translateY(-1px)}}
+.open .tap-ring{animation:fade .3s forwards}
+.open .can{animation:canTip 1.6s var(--ease) forwards}
+.open .drop{animation:drip .5s ease-in forwards}
+.open .d1{animation-delay:.62s}.open .d2{animation-delay:.74s}.open .d3{animation-delay:.86s}.open .d4{animation-delay:.98s}
+.open .wet{animation:wet .6s ease 1.05s forwards}
+.open .splash{animation:splash .7s ease-out 1.05s}
+.open .seed{animation:seedGo .45s ease 1.25s forwards}
+.open .stem{animation:grow .8s var(--ease) 1.3s forwards}
+.open .lv1{animation:unfurl .7s var(--soft) 1.7s forwards}
+.open .lv2{animation:unfurl .7s var(--soft) 1.88s forwards}
+.open .lv3{animation:unfurl .6s var(--soft) 2.08s forwards}
+.open .spark{animation:twinkle 1s ease 2.2s}
+.open .spark.s2{animation-delay:2.32s}.open .spark.s3{animation-delay:2.42s}
+@keyframes fade{to{opacity:0}}
+@keyframes canTip{0%{opacity:0;transform:translate(46px,-34px) rotate(14deg)}22%{opacity:1;transform:none}38%,72%{opacity:1;transform:rotate(-34deg)}100%{opacity:0;transform:translate(26px,-26px) rotate(-8deg)}}
+@keyframes drip{0%{opacity:0;transform:none}15%,85%{opacity:1}100%{opacity:0;transform:translateY(66px)}}
+@keyframes wet{to{opacity:.8}}
+@keyframes splash{0%{opacity:.9;transform:scale(.3)}100%{opacity:0;transform:scale(1.7)}}
+@keyframes seedGo{to{opacity:0;transform:scale(.5)}}
+@keyframes grow{from{opacity:1;stroke-dashoffset:1}to{opacity:1;stroke-dashoffset:0}}
+@keyframes unfurl{0%{transform:scale(0) rotate(-20deg)}100%{transform:none}}
+@keyframes twinkle{0%{opacity:0;transform:scale(.2)}50%{opacity:1;transform:scale(1.15)}100%{opacity:0;transform:scale(.6) rotate(45deg)}}
+/* ---------- hero ---------- */
+#hero{
+  position:relative;overflow:hidden;overflow:clip;text-align:center;padding:118px 16px clamp(36px,7vw,80px);
+  background:
+    radial-gradient(ellipse 60% 26% at 50% 46%,rgba(241,214,203,.55),transparent 72%),
+    radial-gradient(ellipse 80% 30% at 50% 0,rgba(226,235,221,.9),transparent 70%),var(--cream);
+}
+.hero-leaves{position:absolute;top:-8px;width:min(50vw,300px);height:auto;pointer-events:none;transform-origin:0 0;animation:sway 9s ease-in-out infinite alternate}
+.hero-leaves.tl{left:-10px}
+.hero-leaves.tr{right:-10px;transform-origin:50% 0;animation-name:swayR}
+@keyframes sway{from{transform:rotate(-1.5deg)}to{transform:rotate(2deg)}}
+@keyframes swayR{from{transform:scaleX(-1) rotate(-1.5deg)}to{transform:scaleX(-1) rotate(2deg)}}
+.lang{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:3;display:flex;gap:2px;padding:4px;border-radius:999px;background:rgba(255,253,248,.92);box-shadow:0 0 0 1px var(--oat),0 6px 16px rgba(51,64,47,.08)}
+.lang-btn{border:0;background:none;cursor:pointer;min-width:52px;min-height:40px;font-weight:700;font-size:.86rem;padding:6px 14px;border-radius:999px;color:var(--ink2)}
+.lang-btn.active{background:var(--sage-d);color:#fff}
+.hero-inner{position:relative;max-width:660px;margin:0 auto}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:.8rem;letter-spacing:.22em;text-transform:uppercase;color:var(--sage-d)}
+.hero-eyebrow .ic{width:18px;height:18px;color:var(--sage)}
+.title{
+  font-family:var(--serif);font-variation-settings:"SOFT" 100;font-style:italic;font-weight:350;
+  font-size:clamp(2.8rem,12.6vw,5.2rem);line-height:1.02;margin-top:14px;color:var(--ink);letter-spacing:-.01em;
+}
+.names{margin-top:14px;font-family:var(--serif);font-variation-settings:"SOFT" 100;font-weight:500;font-size:clamp(1.3rem,5.4vw,1.8rem);color:var(--sage-dd)}
+.names::before,.names::after{content:"";display:inline-block;width:26px;height:1.5px;margin:0 12px;vertical-align:middle;background:var(--sage)}
+.names .hero-amp{font-style:italic;font-weight:400;color:var(--terra-d)}
+html[lang="ta"] .title{font-size:clamp(2.2rem,10vw,4.4rem);line-height:1.2}
+/* Tamil glyphs come from Noto Serif Tamil: keep them upright instead of a fake slant. */
+.title,.intro-title,.pk-name,.pk-love,.pk-desc,.hashtag,.wish figcaption,.cd-when{font-synthesis:none}
+
+.arch-wrap{position:relative;width:min(70vw,310px);margin:34px auto 8px}
+.arch{
+  position:relative;z-index:1;aspect-ratio:3/4;padding:10px;background:var(--paper);
+  border-radius:50% 50% 16px 16px/37.5% 37.5% 16px 16px;box-shadow:0 0 0 1px var(--oat),0 24px 44px rgba(51,64,47,.14);
+}
+.arch::after{content:"";position:absolute;inset:4px;z-index:2;pointer-events:none;border:1px solid var(--oat);border-radius:inherit}
+.arch-photo{width:100%;height:100%;overflow:hidden;border-radius:50% 50% 10px 10px/37.5% 37.5% 10px 10px;background:var(--sage-ll)}
+.arch-photo svg{display:block;width:100%;height:100%}
+.euc{position:absolute;height:auto;pointer-events:none;transform-origin:50% 100%}
+.euc.e1{z-index:2;width:27%;left:-11%;bottom:1%;transform:rotate(-22deg);animation:sprigL 7s ease-in-out infinite alternate}
+.euc.e2{z-index:0;width:23%;right:-9%;top:12%;transform:rotate(22deg);animation:sprigR 8s ease-in-out infinite alternate}
+@keyframes sprigL{to{transform:rotate(-17deg)}}
+@keyframes sprigR{to{transform:rotate(27deg)}}
+.mini-pot{position:absolute;z-index:3;width:26%;right:-9%;bottom:-5%;height:auto;filter:drop-shadow(0 6px 8px rgba(110,79,58,.2))}
+
+#heroTagline{max-width:34ch;margin:26px auto 0;font-size:1.08rem;color:var(--ink2)}
+.tag-wrap{position:relative;display:inline-block;max-width:100%;margin-top:28px;padding-left:34px;transform:rotate(-2deg);filter:drop-shadow(0 7px 10px rgba(110,79,58,.18))}
+.tag{
+  position:relative;text-align:left;padding:14px 20px 13px 46px;
+  clip-path:polygon(20px 0,100% 0,100% 100%,20px 100%,0 50%);
+  background:
+    repeating-linear-gradient(112deg,rgba(255,255,255,.08) 0 2px,transparent 2px 7px),
+    repeating-linear-gradient(28deg,rgba(120,86,48,.06) 0 1px,transparent 1px 5px),
+    linear-gradient(170deg,#e6d0ab,#d5b78c);
+}
+.tag::before{content:"";position:absolute;left:21px;top:50%;width:12px;height:12px;margin-top:-6px;border-radius:50%;background:var(--cream);box-shadow:0 0 0 4px #efe0c4,inset 0 1px 2px rgba(0,0,0,.3)}
+.tag::after{content:"";position:absolute;inset:5px 6px 5px 22px;border:1px dashed rgba(110,79,58,.3);pointer-events:none}
+#heroDatePill{font-family:var(--serif);font-variation-settings:"SOFT" 100;font-weight:500;font-size:1.06rem;line-height:1.35;color:#4a3826;font-variant-numeric:lining-nums}
+.twine{position:absolute;z-index:1;left:-13px;top:50%;width:90px;height:70px;margin-top:-35px;pointer-events:none}
+.scroll-cue{display:inline-flex;flex-direction:column;align-items:center;gap:6px;margin-top:34px;padding:6px 10px;font-weight:700;font-size:.76rem;letter-spacing:.22em;text-transform:uppercase;color:var(--sage-d);text-decoration:none}
+.scroll-cue i{width:11px;height:11px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);animation:nudge 1.8s ease-in-out infinite}
+@keyframes nudge{50%{transform:translate(0,6px) rotate(45deg)}}
+.rise{animation:rise 1.1s var(--ease) both}
+.r1{animation-delay:.15s}.r2{animation-delay:.3s}.r3{animation-delay:.45s}.r4{animation-delay:.6s}
+html.intro-open .rise{animation-play-state:paused}
+@keyframes rise{from{opacity:0;transform:translateY(26px)}}
+.tag-wrap.rise{animation-name:riseTag}
+@keyframes riseTag{from{opacity:0;transform:translateY(26px) rotate(-6deg)}}
+/* ---------- events: seed packets ---------- */
+.packets{display:grid;gap:48px 34px;max-width:880px;margin:0 auto;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));align-items:start}
+.packet{
+  --pc:#e6eee1;--pcd:#c9d9c3;--pa:var(--sage-dd);--pw:#f4f8f0;--pm:#c9a983;--ps:#f6dccd;
+  position:relative;max-width:440px;width:100%;margin:0 auto;rotate:-.8deg;filter:drop-shadow(0 16px 22px rgba(51,64,47,.13));
+}
+.packet:nth-of-type(even){--pc:#f7e6dd;--pcd:#ecc8b6;--pa:var(--terra-d);--pw:#fdf3ed;--pm:#bf9a74;--ps:#e3ecdc;rotate:.8deg}
+.crimp{
+  position:relative;height:30px;margin-top:8px;border-radius:2px 2px 0 0;
+  background:repeating-linear-gradient(90deg,rgba(51,64,47,.09) 0 1.5px,transparent 1.5px 5px),var(--pcd);
+}
+.crimp::before{content:"";position:absolute;left:0;right:0;top:-7px;height:8px;background:conic-gradient(from 135deg at 50% 0,var(--pcd) 90deg,#0000 0) 0 0/12px 8px repeat-x}
+.crimp::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:linear-gradient(rgba(51,64,47,.12),transparent);transform:translateY(100%)}
+.pk-body{
+  position:relative;padding:20px 22px 28px;text-align:center;border-radius:0 0 8px 8px;
+  background:radial-gradient(ellipse at 20% 10%,rgba(255,255,255,.45),transparent 60%),var(--pc);
+  box-shadow:inset 0 0 0 8px var(--pc),inset 0 0 0 9px color-mix(in srgb,var(--pa) 35%,transparent);
+}
+.pk-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:4px 6px 10px;border-bottom:1px solid color-mix(in srgb,var(--pa) 25%,transparent)}
+.pk-no{white-space:nowrap;font-weight:700;font-size:.76rem;letter-spacing:.2em;text-transform:uppercase;color:var(--pa)}
+.pk-love{font-family:var(--serif);font-variation-settings:"SOFT" 100;font-style:italic;font-size:.98rem;color:var(--pa)}
+.pk-window{
+  position:relative;height:156px;margin:16px 0 18px;border-radius:16px;overflow:hidden;
+  background:linear-gradient(var(--pw),#fff);box-shadow:inset 0 0 0 2px rgba(255,255,255,.85),0 0 0 1px color-mix(in srgb,var(--pa) 22%,transparent);
+}
+.pk-art{position:absolute;inset:0;width:100%;height:100%}
+.pk-sun{fill:var(--ps)}
+.pk-mound{fill:var(--pm)}
+.pk-icon{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);display:grid;place-items:center;width:84px;height:84px;font-size:3.1rem;line-height:1;filter:drop-shadow(0 6px 6px rgba(51,64,47,.18));animation:bob 5s ease-in-out infinite}
+.pk-icon img{width:64px;height:64px;object-fit:contain}
+@keyframes bob{50%{transform:translate(-50%,calc(-50% - 6px))}}
+.pk-name{font-family:var(--serif);font-variation-settings:"SOFT" 100;font-style:italic;font-weight:400;font-size:clamp(1.75rem,7vw,2.1rem);line-height:1.12;color:var(--ink)}
+.pk-info{margin:16px 0 0;padding:0;text-align:left}
+.pk-info>div{display:flex;gap:12px;align-items:baseline;padding:11px 4px;border-top:1px dashed color-mix(in srgb,var(--pa) 35%,transparent)}
+.pk-info>div:last-child{border-bottom:1px dashed color-mix(in srgb,var(--pa) 35%,transparent)}
+.pk-info dt{flex:none;width:86px;display:flex;align-items:center;gap:7px;font-weight:700;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--pa)}
+.pk-info dt .ic{width:17px;height:17px;align-self:center}
+.pk-info dd{margin:0;flex:1;min-width:0;font-size:1rem;line-height:1.45;font-variant-numeric:lining-nums}
+.pk-info strong{display:block;font-weight:700}
+.pk-info small{display:block;font-size:.94rem;color:var(--ink2)}
+.pk-desc{margin:16px auto 22px;max-width:32ch;font-family:var(--serif);font-variation-settings:"SOFT" 100;font-style:italic;font-size:1.06rem;color:var(--ink2)}
+.packet:nth-of-type(even) .btn{background:var(--sage-d);box-shadow:0 6px 16px rgba(93,122,91,.28)}
+.packet:nth-of-type(even) .btn:hover{background:var(--sage-dd)}
+html[lang="ta"] .pk-info dt{width:72px}
+html[lang="ta"] .pk-love{font-size:.86rem}
+/* ---------- countdown: pots on a shelf ---------- */
+#countdown{background:var(--oat-l);margin:34px 0}
+#countdown::before,#countdown::after{
+  content:"";position:absolute;left:0;right:0;height:30px;pointer-events:none;
+  background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='30' viewBox='0 0 400 30' preserveAspectRatio='none'><path d='M0 30V17C70 3 130 3 205 15S335 31 400 12V30Z' fill='%23f4ecdf'/></svg>") 0 0/100% 100%;
+}
+#countdown::before{top:-29px}
+#countdown::after{bottom:-29px;transform:scale(-1,-1)}
+.pots{display:grid;grid-template-columns:repeat(4,1fr);gap:0 12px;max-width:620px;margin:0 auto;align-items:end}
+.cpot{display:flex;flex-direction:column;min-width:0}
+.cp-sprout{display:block;width:72%;margin:0 auto -6px;height:auto;overflow:visible;transform-origin:50% 100%;animation:grow2 4.5s ease-in-out infinite alternate}
+.cpot:nth-child(2) .cp-sprout{animation-delay:-1.2s}
+.cpot:nth-child(3) .cp-sprout{animation-delay:-2.4s}
+.cpot:nth-child(4) .cp-sprout{animation-delay:-3.4s}
+@keyframes grow2{from{transform:rotate(-2.5deg)}to{transform:rotate(2.5deg)}}
+.cp-rim{position:relative;z-index:1;height:clamp(14px,3.6vw,20px);border-radius:4px;background:linear-gradient(90deg,#c06f4c,#dc9a7a 45%,#b3684a);box-shadow:0 3px 0 rgba(142,75,48,.25)}
+.cp-rim::before{content:"";position:absolute;left:7%;right:7%;top:-3px;height:7px;border-radius:50%;background:var(--soil);box-shadow:inset 0 1px 0 rgba(0,0,0,.15)}
+.cp-body{
+  display:grid;place-items:center;margin:0 8%;aspect-ratio:1/.95;
+  clip-path:polygon(0 0,100% 0,88% 100%,12% 100%);
+  background:linear-gradient(90deg,#b8673f,#d38a69 45%,#a85f42);
+}
+.cp-label{
+  min-width:68%;padding:.16em .2em .1em;border-radius:6px;text-align:center;background:#fbf3e7;box-shadow:inset 0 0 0 1px #e6d3bb;
+  font-weight:600;font-size:clamp(1.25rem,5.6vw,2.1rem);line-height:1.15;color:var(--ink);margin-top:-8%;
+}
+.cp-shelf{height:12px;margin:0 -6px;background:linear-gradient(#d9bd94,#b8976b);box-shadow:0 6px 10px rgba(110,79,58,.16)}
+.cpot:first-child .cp-shelf{margin-left:-14px;border-radius:6px 0 0 6px}
+.cpot:last-child .cp-shelf{margin-right:-14px;border-radius:0 6px 6px 0}
+.cp-unit{margin-top:12px;text-align:center;font-weight:700;font-size:.8rem;letter-spacing:.18em;text-transform:uppercase;color:var(--sage-dd)}
+.cd-when{text-align:center;margin-top:30px;font-family:var(--serif);font-variation-settings:"SOFT" 100;font-style:italic;font-size:1.2rem;color:var(--ink);font-variant-numeric:lining-nums}
+.cd-when span:last-child{color:var(--terra-d)}
+/* ---------- wishes: notes hung on twine ---------- */
+.wish-form{
+  position:relative;max-width:560px;margin:0 auto 54px;padding:30px 24px 28px;border-radius:24px;background:var(--paper);
+  box-shadow:0 0 0 1px var(--oat),0 18px 40px rgba(51,64,47,.08);display:grid;gap:16px;
+  outline:1.5px dashed var(--sage);outline-offset:-10px;
+}
+.wf-leaves{position:absolute;top:-34px;right:-10px;width:112px;height:auto;transform:scaleX(-1) rotate(-8deg);pointer-events:none}
+.field{position:relative;display:grid;gap:7px;font-weight:700;font-size:.92rem;color:var(--ink2)}
+.field input,.field textarea{
+  width:100%;border:1.5px solid var(--oat);background:var(--cream);border-radius:14px;padding:13px 15px;font-size:1rem;color:var(--ink);
+  resize:vertical;transition:border-color .2s,box-shadow .2s;
+}
+.field input::placeholder,.field textarea::placeholder{color:#8b9384}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--sage-d);box-shadow:0 0 0 4px var(--sage-l)}
+.wish-form .btn{justify-self:center;margin-top:4px}
+.wall{display:grid;gap:30px 26px;max-width:980px;margin:0 auto;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr));align-items:start}
+.wish{
+  --t:var(--paper);--a:var(--sage-d);position:relative;margin:30px 0 0;padding:30px 22px 20px;background:var(--t);
+  border-radius:4px 4px 14px 14px;box-shadow:0 1px 0 var(--oat),0 12px 24px rgba(51,64,47,.09);rotate:-1.2deg;
+}
+.wish:nth-of-type(4n+2){--t:var(--sage-ll);--a:var(--sage-dd);rotate:1deg}
+.wish:nth-of-type(4n+3){--t:var(--blush-l);--a:var(--terra-d);rotate:-.6deg}
+.wish:nth-of-type(4n+4){--t:var(--oat-l);--a:#7d6243;rotate:1.3deg}
+.wish::before{
+  content:"";position:absolute;left:-12px;right:-12px;top:-30px;height:30px;pointer-events:none;
+  background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 30' preserveAspectRatio='none'><path d='M0 3Q50 36 100 3' fill='none' stroke='%23a88a62' stroke-width='2' vector-effect='non-scaling-stroke'/></svg>") 0 0/100% 100%;
+}
+.wish::after{
+  content:"";position:absolute;left:50%;top:-15px;width:12px;height:30px;margin-left:-6px;border-radius:3px;
+  background:linear-gradient(transparent 46%,#8f704b 46% 54%,transparent 54%),linear-gradient(90deg,#dcbf95,#c09a6a);box-shadow:0 2px 4px rgba(0,0,0,.16);
+}
+.wish blockquote{margin:6px 0 14px;font-size:1.02rem;line-height:1.6;color:var(--ink)}
+.wish figcaption{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-variation-settings:"SOFT" 100;font-style:italic;font-weight:500;font-size:1.08rem;color:var(--a)}
+.wish figcaption::before{content:"";flex:none;width:22px;height:10px;background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 10'><path d='M0 5h22' stroke='black' stroke-width='1.4'/><ellipse cx='16' cy='3' rx='4' ry='1.8' transform='rotate(-25 16 3)'/><ellipse cx='10' cy='7' rx='4' ry='1.8' transform='rotate(25 10 7)'/></svg>") center/contain no-repeat;
+          mask:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 10'><path d='M0 5h22' stroke='black' stroke-width='1.4'/><ellipse cx='16' cy='3' rx='4' ry='1.8' transform='rotate(-25 16 3)'/><ellipse cx='10' cy='7' rx='4' ry='1.8' transform='rotate(25 10 7)'/></svg>") center/contain no-repeat;
+}
+.wishes-more{display:flex;justify-content:center;margin-top:40px}
+/* ---------- help & contacts ---------- */
+#stay{padding-top:clamp(90px,12vw,120px)}
+.help{
+  position:relative;max-width:620px;margin:0 auto;text-align:center;padding:40px clamp(14px,4vw,26px) 24px;border-radius:28px;background:var(--paper);
+  box-shadow:0 0 0 1px var(--oat),0 18px 40px rgba(51,64,47,.08);
+}
+.help-art{display:block;width:120px;height:auto;margin:-96px auto 10px}
+.help .sec-title{font-size:clamp(1.9rem,7vw,2.5rem)}
+#stayText{margin:10px auto 22px;max-width:36ch;color:var(--ink2)}
+#coordinators{display:grid;gap:12px}
+.coord{display:flex;align-items:center;gap:12px;text-align:left;padding:12px 12px 12px 14px;border-radius:18px;background:var(--sage-ll);box-shadow:inset 0 0 0 1px var(--sage-l)}
+.coord .av{width:48px;height:48px;flex:none;border-radius:50%;display:grid;place-items:center;background:#fff;font-size:1.4rem;box-shadow:0 0 0 2px var(--sage-l)}
+.coord .who{flex:1;min-width:0}
+.c-name{font-family:var(--serif);font-variation-settings:"SOFT" 100;font-weight:500;font-size:1.15rem;line-height:1.25;overflow-wrap:anywhere}
+.c-phone{font-size:.95rem;color:var(--ink2);font-variant-numeric:lining-nums}
+.coord .btn{padding:11px 18px;min-height:46px;flex:none}
+
+/* ---------- footer ---------- */
+.foot{position:relative;margin-top:60px;padding:40px 16px 96px;text-align:center;color:#f3f1e6;background:linear-gradient(#536f50,#425c40)}
+.fringe{position:absolute;left:0;right:0;top:-50px;display:block;pointer-events:none}
+.foot-sprout{display:block;width:62px;height:auto;margin:0 auto 10px}
+.foot-eyebrow{font-weight:700;font-size:.8rem;letter-spacing:.22em;text-transform:uppercase;color:#d4e2cf}
+.hashtag{margin-top:6px;font-family:var(--serif);font-variation-settings:"SOFT" 100;font-style:italic;font-weight:400;font-size:clamp(2rem,8.6vw,3.4rem);line-height:1.1;overflow-wrap:anywhere}
+.thanks{margin:12px auto 0;max-width:32ch;color:#e6ece0}
+
+/* ---------- music + toast ---------- */
+#musicToggle{
+  position:fixed;right:16px;bottom:16px;z-index:40;width:54px;height:54px;border:0;border-radius:50%;cursor:pointer;
+  display:grid;place-items:center;background:var(--terra-d);color:#fff;box-shadow:0 0 0 4px rgba(251,247,239,.85),0 10px 22px rgba(110,79,58,.3);
+}
+#musicToggle svg{width:24px;height:24px}
+#musicToggle.spinning svg{animation:spin 4s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#toast{
+  position:fixed;left:50%;bottom:88px;z-index:60;transform:translate(-50%,20px);opacity:0;pointer-events:none;max-width:calc(100% - 32px);
+  padding:12px 20px;border-radius:999px;background:var(--ink);color:#fff;font-weight:700;font-size:.95rem;text-align:center;transition:.3s;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- wider screens ---------- */
+@media (min-width:760px){
+  #hero{padding-top:110px}
+  .hero-leaves{width:min(30vw,340px)}
+  .lang{left:auto;right:20px;transform:none}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0s!important}
+  html{scroll-behavior:auto}
+}
+/* Tamil labels: no English-style letter-spacing, capitals or italics. */
+html[lang="ta"] [data-ta]{letter-spacing:0;text-transform:none}
+html[lang="ta"] .sec-title[data-ta]{font-style:normal;font-weight:600;font-size:clamp(1.55rem,6.2vw,2.3rem);line-height:1.35}
+/* The uploaded photo covers the stand-in illustration (it starts as a transparent pixel). */
+:where(.cover-slot){position:relative}
+.cover-img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;display:block}
+.wishes-empty{text-align:center;margin:10px auto 22px;max-width:40ch;color:var(--ink2)}
+</style>
+</head>
+<body>
+
+<!-- shared leaves, gradients and small line icons -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="gL1" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6f8d6c"/><stop offset="1" stop-color="#a9c1a5"/></linearGradient>
+    <linearGradient id="gL2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9db79a"/><stop offset="1" stop-color="#d3e1cd"/></linearGradient>
+    <linearGradient id="gL3" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4f6c4c"/><stop offset="1" stop-color="#86a283"/></linearGradient>
+    <linearGradient id="gEuc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b9cdc3"/><stop offset="1" stop-color="#7d998f"/></linearGradient>
+    <linearGradient id="gPot" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b8673f"/><stop offset=".45" stop-color="#d38a69"/><stop offset="1" stop-color="#a85f42"/></linearGradient>
+    <linearGradient id="gRim" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c06f4c"/><stop offset=".45" stop-color="#dc9a7a"/><stop offset="1" stop-color="#b3684a"/></linearGradient>
+    <!-- one leaf: base at 0,0, tip at 30,-4 -->
+    <path id="lf" d="M0 0C8-9 20-11 30-4C20 3 8 4 0 0Z"/>
+    <g id="lfv"><use href="#lf"/><path d="M1.5 0C11-3 20-4.5 28.5-4" fill="none" stroke="#fff" stroke-opacity=".4" stroke-width=".55" stroke-linecap="round"/></g>
+  </defs>
+  <symbol id="sprig" viewBox="0 0 120 22"><path d="M8 11h104" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><g fill="currentColor"><ellipse cx="24" cy="6.5" rx="7" ry="3" transform="rotate(-28 24 6.5)"/><ellipse cx="24" cy="15.5" rx="7" ry="3" transform="rotate(28 24 15.5)"/><ellipse cx="41" cy="6.5" rx="6" ry="2.6" transform="rotate(-28 41 6.5)"/><ellipse cx="41" cy="15.5" rx="6" ry="2.6" transform="rotate(28 41 15.5)"/><ellipse cx="96" cy="6.5" rx="7" ry="3" transform="rotate(28 96 6.5)"/><ellipse cx="96" cy="15.5" rx="7" ry="3" transform="rotate(-28 96 15.5)"/><ellipse cx="79" cy="6.5" rx="6" ry="2.6" transform="rotate(28 79 6.5)"/><ellipse cx="79" cy="15.5" rx="6" ry="2.6" transform="rotate(-28 79 15.5)"/></g><circle cx="60" cy="11" r="3.6" fill="#c97b5a"/></symbol>
+  <symbol id="euc" viewBox="0 0 60 150"><path d="M30 150C27 112 34 72 29 2" fill="none" stroke="#7d8f78" stroke-width="2" stroke-linecap="round"/><g fill="url(#gEuc)" stroke="#fff" stroke-opacity=".35" stroke-width=".8"><ellipse cx="17" cy="130" rx="12" ry="10" transform="rotate(-20 17 130)"/><ellipse cx="43" cy="112" rx="11.5" ry="9.5" transform="rotate(20 43 112)"/><ellipse cx="18" cy="93" rx="10.5" ry="9" transform="rotate(-20 18 93)"/><ellipse cx="42" cy="75" rx="9.5" ry="8" transform="rotate(20 42 75)"/><ellipse cx="20" cy="57" rx="8.5" ry="7" transform="rotate(-20 20 57)"/><ellipse cx="38" cy="41" rx="7" ry="6" transform="rotate(20 38 41)"/><ellipse cx="23" cy="27" rx="6" ry="5"/><ellipse cx="34" cy="15" rx="4.8" ry="4"/><circle cx="29" cy="5" r="3.6"/></g></symbol>
+  <symbol id="corner" viewBox="0 0 240 220">
+    <use href="#lfv" fill="url(#gL2)" transform="translate(-6 -4) rotate(22) scale(5)"/>
+    <use href="#lfv" fill="url(#gL2)" transform="translate(-4 -6) rotate(64) scale(4.6)"/>
+    <use href="#lfv" fill="url(#gL1)" transform="translate(-8 -8) rotate(42) scale(4.4)"/>
+    <use href="#euc" width="60" height="150" transform="translate(131 89) rotate(135)"/>
+    <use href="#lfv" fill="url(#gL1)" transform="translate(-2 6) rotate(6) scale(3.6)"/>
+    <use href="#lfv" fill="url(#gL1)" transform="translate(-10 0) rotate(84) scale(3.8)"/>
+    <use href="#lfv" fill="url(#gL3)" transform="translate(-6 -6) rotate(28) scale(3.4)"/>
+    <use href="#lfv" fill="url(#gL3)" transform="translate(-8 -4) rotate(58) scale(3.2)"/>
+    <g fill="#ebc3b2"><circle cx="118" cy="106" r="5.4"/><circle cx="129" cy="99" r="4"/><circle cx="110" cy="117" r="3.6"/><circle cx="160" cy="36" r="3.4"/><circle cx="168" cy="44" r="2.6"/></g>
+    <g fill="#c97b5a" opacity=".5"><circle cx="119" cy="104.5" r="1.7"/><circle cx="160" cy="35" r="1.2"/></g>
+  </symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10.5h17"/></g></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></g></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></g></symbol>
+  <symbol id="i-go" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></g></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path fill="currentColor" d="M9 17.5V6.2l10-2.2v11.3a3 3 0 1 1-2-2.83V7.5l-6 1.3v8.7a3 3 0 1 1-2-2.83z"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path fill="currentColor" d="M4 20C4 10 10 4 21 3c0 11-6 17-15 17l-2 1zm2.5-2.5C10 14 13 11 17 7.5"/><path d="M5 19.5C9 15 12.5 11.5 17 7.5" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1.2" stroke-linecap="round"/></symbol>
+</svg>
+
+<!-- ============ INTRO: water the seed ============ -->
+<div id="curtain-overlay" data-hide-after="3200">
+  <svg class="intro-leaves tl" viewBox="0 0 240 220" aria-hidden="true" focusable="false"><use href="#corner"/></svg>
+  <svg class="intro-leaves br" viewBox="0 0 240 220" aria-hidden="true" focusable="false"><use href="#corner"/></svg>
+  <p class="intro-eyebrow" data-ta="உங்களை அன்புடன் அழைக்கிறோம்">You're warmly invited</p>
+  <p class="intro-title" data-bind="title">Divya's Baby Shower</p>
+  <button type="button" class="pot-btn" id="openCurtainBtn" data-open-invite aria-label="Water the seed to open the invitation">
+    <svg class="pot-svg" viewBox="0 18 240 280" aria-hidden="true" focusable="false">
+      <defs><radialGradient id="spGlow"><stop offset="0" stop-color="#f6d6c6"/><stop offset=".6" stop-color="#f8e2d6" stop-opacity=".7"/><stop offset="1" stop-color="#f8e2d6" stop-opacity="0"/></radialGradient></defs>
+      <circle class="sun" cx="120" cy="104" r="92" fill="url(#spGlow)"/>
+      <g fill="#fff" opacity=".9"><circle cx="70" cy="70" r="2"/><circle cx="178" cy="122" r="1.6"/><circle cx="86" cy="138" r="1.4"/><circle cx="160" cy="40" r="1.4"/></g>
+      <ellipse cx="120" cy="284" rx="74" ry="8" fill="#5d7a5b" opacity=".14"/>
+      <!-- pot -->
+      <path d="M60 190L75 274Q120 286 165 274L180 190Z" fill="url(#gPot)"/>
+      <path d="M61 199H179" stroke="#8e4b30" stroke-opacity=".3" stroke-width="5"/>
+      <path d="M78 232q10.5-7 21 0t21 0 21 0 21 0" fill="none" stroke="#f6dccd" stroke-opacity=".75" stroke-width="2.4" stroke-linecap="round"/>
+      <g fill="#f6dccd" opacity=".7"><circle cx="89" cy="250" r="2.3"/><circle cx="110" cy="252" r="2.3"/><circle cx="131" cy="252" r="2.3"/><circle cx="152" cy="250" r="2.3"/></g>
+      <rect x="50" y="164" width="140" height="32" rx="7" fill="url(#gRim)"/>
+      <path d="M58 188H182" stroke="#fff" stroke-opacity=".18" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="120" cy="167" rx="64" ry="8.5" fill="#8f4f33"/>
+      <ellipse cx="120" cy="168" rx="60" ry="7" fill="#6e4f3a"/>
+      <ellipse class="wet" cx="120" cy="168" rx="60" ry="7" fill="#46301f"/>
+      <g fill="#8d6b52"><circle cx="86" cy="167" r="1.4"/><circle cx="101" cy="171" r="1.2"/><circle cx="142" cy="170" r="1.4"/><circle cx="158" cy="166" r="1.2"/><circle cx="73" cy="169" r="1"/></g>
+      <ellipse class="splash" cx="123" cy="167" rx="13" ry="3.6" fill="none" stroke="#9fc3c6" stroke-width="1.8"/>
+      <!-- tap target ring and the seed -->
+      <circle class="tap-ring" cx="120" cy="163" r="16" fill="none" stroke="#a85f42" stroke-width="2.4"/>
+      <circle class="tap-ring t2" cx="120" cy="163" r="16" fill="none" stroke="#5d7a5b" stroke-width="2"/>
+      <!-- the sprout (hidden until the seed is watered) -->
+      <path class="stem" pathLength="1" d="M120 166C118 146 124 128 120 108C117 94 121 84 120 72" fill="none" stroke="#5d7a5b" stroke-width="4.5" stroke-linecap="round"/>
+      <g class="lv lv1"><use href="#lfv" fill="url(#gL1)" transform="translate(121 132) rotate(-152) scale(2.05)"/></g>
+      <g class="lv lv2"><use href="#lfv" fill="url(#gL3)" transform="translate(121 116) rotate(-30) scale(2.15)"/></g>
+      <g class="lv lv3"><use href="#lfv" fill="url(#gL2)" transform="translate(120 73) rotate(-118) scale(1.3)"/><use href="#lfv" fill="url(#gL1)" transform="translate(120 73) rotate(-62) scale(1.3)"/></g>
+      <g transform="rotate(-18 120 163)"><ellipse class="seed" cx="120" cy="163" rx="7.5" ry="4.8" fill="#c9a072" stroke="#8a6440" stroke-width="1.2"/></g>
+      <!-- water -->
+      <g fill="#9fc3c6">
+        <path class="drop d1" d="M124 90c2 4 3 6 3 7.5a3 3 0 0 1-6 0c0-1.5 1-3.5 3-7.5z"/>
+        <path class="drop d2" d="M130 88c2 4 3 6 3 7.5a3 3 0 0 1-6 0c0-1.5 1-3.5 3-7.5z"/>
+        <path class="drop d3" d="M120 94c2 4 3 6 3 7.5a3 3 0 0 1-6 0c0-1.5 1-3.5 3-7.5z"/>
+        <path class="drop d4" d="M127 96c2 4 3 6 3 7.5a3 3 0 0 1-6 0c0-1.5 1-3.5 3-7.5z"/>
+      </g>
+      <g class="can">
+        <path d="M174 51C176 26 226 28 205 76" fill="none" stroke="#5d7a5b" stroke-width="5.5" stroke-linecap="round"/>
+        <path d="M161 86L131 58" stroke="#86a283" stroke-width="6.5" stroke-linecap="round"/>
+        <ellipse cx="127.5" cy="54.5" rx="4.6" ry="7.6" fill="#6f8d6c" transform="rotate(-45 127.5 54.5)"/>
+        <rect x="158" y="50" width="48" height="44" rx="8" fill="#9cb59a"/>
+        <rect x="158" y="60" width="48" height="6" fill="#86a283"/>
+        <path d="M166 70v16" stroke="#fff" stroke-opacity=".4" stroke-width="3" stroke-linecap="round"/>
+      </g>
+      <g class="spark" fill="#d99a7c"><path d="M88 62l1.6-4.4L91.2 62l4.4 1.6-4.4 1.6-1.6 4.4-1.6-4.4-4.4-1.6z"/></g>
+      <g class="spark s2" fill="#9cb59a"><path d="M154 50l1.4-3.8 1.4 3.8 3.8 1.4-3.8 1.4-1.4 3.8-1.4-3.8-3.8-1.4z"/></g>
+      <g class="spark s3" fill="#d99a7c"><path d="M160 100l1.2-3.2 1.2 3.2 3.2 1.2-3.2 1.2-1.2 3.2-1.2-3.2-3.2-1.2z"/></g>
+    </svg>
+  </button>
+  <p class="intro-hint"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3c3.5 5 6 8.3 6 11.2A6 6 0 0 1 6 14.2C6 11.3 8.5 8 12 3z"/></svg><span data-ta="விதைக்குத் தண்ணீர் ஊற்றத் தொடுங்கள்">Tap to water the seed</span></p>
+</div>
+
+<!-- ============ HERO ============ -->
+<header id="hero">
+  <svg class="hero-leaves tl" viewBox="0 0 240 220" aria-hidden="true" focusable="false"><use href="#corner"/></svg>
+  <svg class="hero-leaves tr" viewBox="0 0 240 220" aria-hidden="true" focusable="false"><use href="#corner"/></svg>
+  <nav class="lang" aria-label="Language">
+    <button type="button" class="lang-btn active" data-lang="en">EN</button>
+    <button type="button" class="lang-btn" data-lang="ta" lang="ta">தமிழ்</button>
+  </nav>
+
+  <div class="hero-inner">
+    <p class="hero-eyebrow rise"><svg class="ic" aria-hidden="true"><use href="#i-leaf"/></svg><span data-ta="ஒரு சின்னஞ்சிறு உயிர் வளர்கிறது">A little one is growing</span></p>
+    <h1 class="title rise r1" data-bind="title">Divya's Baby Shower</h1>
+    <p class="names rise r1" data-bind="names"><span class="name-part">Divya</span> <span class="hero-amp">&amp;</span> <span class="name-part">Arun</span></p>
+
+    <div class="arch-wrap rise r2">
+      <svg class="euc e1" viewBox="0 0 60 150" aria-hidden="true" focusable="false"><use href="#euc"/></svg>
+      <svg class="euc e2" viewBox="0 0 60 150" aria-hidden="true" focusable="false"><use href="#euc"/></svg>
+      <div class="arch">
+        <!-- cover photo goes here (data-bind="cover"); a sprout in a watercolour meadow stands in for the preview -->
+        <div class="cover-slot arch-photo" role="img" aria-label="Cover photo">
+          <svg viewBox="0 0 300 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+            <defs>
+              <linearGradient id="spSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5e1d6"/><stop offset=".55" stop-color="#f9f0e6"/><stop offset="1" stop-color="#edf2e6"/></linearGradient>
+              <radialGradient id="spSun"><stop offset="0" stop-color="#f6d2c0"/><stop offset=".55" stop-color="#f6d7c7" stop-opacity=".8"/><stop offset="1" stop-color="#f6d7c7" stop-opacity="0"/></radialGradient>
+            </defs>
+            <rect width="300" height="400" fill="url(#spSky)"/>
+            <circle cx="150" cy="176" r="104" fill="url(#spSun)"/>
+            <circle cx="150" cy="176" r="50" fill="#f1c4ad" opacity=".55"/>
+            <g fill="#fff" opacity=".75"><circle cx="64" cy="118" r="2.2"/><circle cx="236" cy="96" r="1.8"/><circle cx="214" cy="150" r="2.4"/><circle cx="84" cy="196" r="1.6"/><circle cx="250" cy="208" r="1.6"/></g>
+            <path d="M0 268C60 236 110 250 160 262S260 246 300 232V400H0Z" fill="#d3e0cc"/>
+            <path d="M0 298C70 280 130 300 190 294S268 280 300 288V400H0Z" fill="#b2c8ad"/>
+            <path d="M150 336C148 306 154 276 150 232" fill="none" stroke="#5d7a5b" stroke-width="5" stroke-linecap="round"/>
+            <use href="#lfv" fill="url(#gL1)" transform="translate(151 286) rotate(-154) scale(2.5)"/>
+            <use href="#lfv" fill="url(#gL3)" transform="translate(151 266) rotate(-28) scale(2.7)"/>
+            <use href="#lfv" fill="url(#gL2)" transform="translate(150 234) rotate(-120) scale(1.4)"/>
+            <use href="#lfv" fill="url(#gL1)" transform="translate(150 234) rotate(-60) scale(1.4)"/>
+            <path d="M0 328C80 314 160 336 300 318V400H0Z" fill="#8fab8c"/>
+            <g fill="#e9bfae"><circle cx="58" cy="322" r="5"/><circle cx="70" cy="316" r="3.6"/><circle cx="246" cy="314" r="4.4"/><circle cx="234" cy="320" r="3"/></g>
+          </svg>
+          <img class="cover-img" data-bind="cover" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+        </div>
+      </div>
+      <svg class="mini-pot" viewBox="0 0 80 100" aria-hidden="true" focusable="false">
+        <path d="M40 62C39 50 42 40 40 26" fill="none" stroke="#5d7a5b" stroke-width="2.6" stroke-linecap="round"/>
+        <use href="#lfv" fill="url(#gL1)" transform="translate(40 46) rotate(-150) scale(.95)"/>
+        <use href="#lfv" fill="url(#gL3)" transform="translate(40 38) rotate(-32) scale(1)"/>
+        <use href="#lfv" fill="url(#gL2)" transform="translate(40 27) rotate(-100) scale(.6)"/>
+        <path d="M18 70L24 96Q40 100 56 96L62 70Z" fill="url(#gPot)"/>
+        <rect x="14" y="60" width="52" height="12" rx="3" fill="url(#gRim)"/>
+        <ellipse cx="40" cy="61" rx="22" ry="3" fill="#6e4f3a"/>
+      </svg>
+    </div>
+
+    <p id="heroTagline" class="rise r3" data-bind="tagline">A little one is on the way! Join us to shower Divya with love, blessings and bangles as our family gets ready to grow.</p>
+
+    <div class="tag-wrap rise r4">
+      <svg class="twine" viewBox="0 0 90 70" aria-hidden="true" focusable="false">
+        <path d="M74 35C56 12 22 6 10 22C0 36 22 54 46 44C60 38 68 36 74 35C62 48 42 62 14 66" fill="none" stroke="#a88a62" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M74 35C56 12 22 6 10 22C0 36 22 54 46 44C60 38 68 36 74 35C62 48 42 62 14 66" fill="none" stroke="#d9c2a0" stroke-width="1" stroke-dasharray="2 3" stroke-linecap="round"/>
+      </svg>
+      <div class="tag"><p id="heroDatePill" data-bind="dateLine">🌸 21st March 2027 • Chennai</p></div>
+    </div>
+    <br>
+    <a class="scroll-cue rise r4" href="#events"><span data-ta="விவரங்களைப் பாருங்கள்">See the details</span><i aria-hidden="true"></i></a>
+  </div>
+</header>
+
+<main>
+<!-- ============ EVENTS: seed packets ============ -->
+<section id="events" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="விழா நிகழ்ச்சிகள்">The celebration</p>
+    <h2 class="sec-title" data-ta="எங்களுடன் கொண்டாட வாருங்கள்">Come grow with us</h2>
+    <svg class="sprig" viewBox="0 0 120 22" aria-hidden="true" focusable="false"><use href="#sprig"/></svg>
+    <p class="sec-sub" data-ta="ஒவ்வொரு விதைப் பொட்டலத்திலும் உங்களுடன் பகிர விரும்பும் ஓர் இனிய தருணம்.">Each little packet holds a moment we'd love to share with you.</p>
+  </div>
+
+  <div id="eventsGrid" class="packets">
+    <template>
+    <article class="packet reveal">
+      <div class="crimp" aria-hidden="true"></div>
+      <div class="pk-body">
+        <div class="pk-top">
+          <p class="pk-no"><span data-ta="பொட்டலம் எண்">Packet No.</span> <span data-field="number">01</span></p>
+          <p class="pk-love" data-ta="அன்புடன் விதைத்தது">sown with love</p>
+        </div>
+        <div class="pk-window">
+          <svg class="pk-art" viewBox="0 0 300 150" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+            <circle cx="150" cy="70" r="46" class="pk-sun"/>
+            <use href="#lfv" fill="url(#gL2)" transform="translate(28 150) rotate(-62) scale(2.3)"/>
+            <use href="#lfv" fill="url(#gL1)" transform="translate(42 150) rotate(-100) scale(1.9)"/>
+            <use href="#lfv" fill="url(#gL3)" transform="translate(16 150) rotate(-38) scale(1.6)"/>
+            <use href="#lfv" fill="url(#gL2)" transform="translate(272 150) rotate(-118) scale(2.3)"/>
+            <use href="#lfv" fill="url(#gL1)" transform="translate(258 150) rotate(-80) scale(1.9)"/>
+            <use href="#lfv" fill="url(#gL3)" transform="translate(284 150) rotate(-142) scale(1.6)"/>
+            <path d="M70 150C92 118 208 118 230 150Z" class="pk-mound"/>
+            <path d="M96 132C124 122 176 122 204 132" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="3" stroke-linecap="round"/>
+            <g fill="#fff" opacity=".35"><circle cx="118" cy="140" r="1.6"/><circle cx="168" cy="137" r="1.4"/><circle cx="146" cy="144" r="1.2"/></g>
+            <g fill="#fff" opacity=".8"><circle cx="96" cy="40" r="2"/><circle cx="214" cy="34" r="1.6"/><circle cx="226" cy="84" r="2"/></g>
+          </svg>
+          <span class="pk-icon" data-field="icon">🌸</span>
+        </div>
+        <h3 class="pk-name" data-field="name">Valaikappu Ceremony</h3>
+        <dl class="pk-info">
+          <div data-if="date"><dt><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg><span data-ta="நாள்">Date</span></dt><dd data-field="date">21st March 2027</dd></div>
+          <div data-if="time"><dt><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg><span data-ta="நேரம்">Time</span></dt><dd data-field="time">10:00 AM to 12:30 PM</dd></div>
+          <div><dt><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg><span data-ta="இடம்">Venue</span></dt><dd><strong data-field="place">Sri Lakshmi Mahal</strong><small data-field="venue">Mylapore, Chennai - 600004</small></dd></div>
+        </dl>
+        <p class="pk-desc" data-field="desc">Bangles, blessings and songs for the mother-to-be.</p>
+        <a class="btn" data-href="map" href="https://www.google.com/maps/dir/?api=1&amp;destination=Mylapore+Chennai+600004" target="_blank" rel="noopener"><span data-ta="வழி காட்டு">Get directions</span><svg aria-hidden="true"><use href="#i-go"/></svg></a>
+      </div>
+    </article>
+    </template>
+  </div>
+</section>
+
+<!-- ============ COUNTDOWN: four pots, growing ============ -->
+<section id="countdown" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="நாட்களை எண்ணுகிறோம்">Counting the days</p>
+    <h2 class="sec-title" data-ta="ஒவ்வொரு நாளும் நெருங்குகிறோம்">Growing closer every day</h2>
+  </div>
+  <div class="pots reveal" role="timer" aria-label="Time left until the celebration">
+    <div class="cpot">
+      <svg class="cp-sprout" viewBox="0 0 80 120" aria-hidden="true" focusable="false">
+        <path d="M40 122C40 112 41 106 40 101" fill="none" stroke="#5d7a5b" stroke-width="2.6" stroke-linecap="round"/>
+        <use href="#lfv" fill="url(#gL1)" transform="translate(40 102) rotate(-160) scale(.75)"/>
+        <use href="#lfv" fill="url(#gL3)" transform="translate(40 102) rotate(-20) scale(.75)"/>
+      </svg>
+      <div class="cp-rim"></div>
+      <div class="cp-body"><span class="cp-label serif" id="cdDays">000</span></div>
+      <div class="cp-shelf"></div>
+      <p class="cp-unit" data-ta="நாட்கள்">Days</p>
+    </div>
+    <div class="cpot">
+      <svg class="cp-sprout" viewBox="0 0 80 120" aria-hidden="true" focusable="false">
+        <path d="M40 122C38 104 42 92 40 78" fill="none" stroke="#5d7a5b" stroke-width="2.6" stroke-linecap="round"/>
+        <use href="#lfv" fill="url(#gL1)" transform="translate(40 101) rotate(-155) scale(1)"/>
+        <use href="#lfv" fill="url(#gL3)" transform="translate(40 93) rotate(-25) scale(1.05)"/>
+        <use href="#lfv" fill="url(#gL2)" transform="translate(40 79) rotate(-112) scale(.6)"/>
+        <use href="#lfv" fill="url(#gL1)" transform="translate(40 79) rotate(-68) scale(.6)"/>
+      </svg>
+      <div class="cp-rim"></div>
+      <div class="cp-body"><span class="cp-label serif" id="cdHours">00</span></div>
+      <div class="cp-shelf"></div>
+      <p class="cp-unit" data-ta="மணி">Hours</p>
+    </div>
+    <div class="cpot">
+      <svg class="cp-sprout" viewBox="0 0 80 120" aria-hidden="true" focusable="false">
+        <path d="M40 122C37 98 43 78 40 52" fill="none" stroke="#5d7a5b" stroke-width="2.6" stroke-linecap="round"/>
+        <use href="#lfv" fill="url(#gL1)" transform="translate(40 104) rotate(-155) scale(1.05)"/>
+        <use href="#lfv" fill="url(#gL3)" transform="translate(41 95) rotate(-25) scale(1.1)"/>
+        <use href="#lfv" fill="url(#gL2)" transform="translate(41 79) rotate(-150) scale(.95)"/>
+        <use href="#lfv" fill="url(#gL1)" transform="translate(41 69) rotate(-30) scale(.95)"/>
+        <use href="#lfv" fill="url(#gL2)" transform="translate(40 53) rotate(-112) scale(.65)"/>
+        <use href="#lfv" fill="url(#gL3)" transform="translate(40 53) rotate(-68) scale(.65)"/>
+      </svg>
+      <div class="cp-rim"></div>
+      <div class="cp-body"><span class="cp-label serif" id="cdMins">00</span></div>
+      <div class="cp-shelf"></div>
+      <p class="cp-unit" data-ta="நிமிடம்">Mins</p>
+    </div>
+    <div class="cpot">
+      <svg class="cp-sprout" viewBox="0 0 80 120" aria-hidden="true" focusable="false">
+        <path d="M40 122C36 94 44 66 40 22" fill="none" stroke="#5d7a5b" stroke-width="2.6" stroke-linecap="round"/>
+        <use href="#lfv" fill="url(#gL1)" transform="translate(39 106) rotate(-155) scale(1.1)"/>
+        <use href="#lfv" fill="url(#gL3)" transform="translate(39 97) rotate(-25) scale(1.15)"/>
+        <use href="#lfv" fill="url(#gL2)" transform="translate(41 83) rotate(-150) scale(1.05)"/>
+        <use href="#lfv" fill="url(#gL1)" transform="translate(41 72) rotate(-30) scale(1.05)"/>
+        <use href="#lfv" fill="url(#gL3)" transform="translate(42 57) rotate(-152) scale(.9)"/>
+        <use href="#lfv" fill="url(#gL2)" transform="translate(41 46) rotate(-28) scale(.9)"/>
+        <use href="#lfv" fill="url(#gL1)" transform="translate(40 24) rotate(-114) scale(.7)"/>
+        <use href="#lfv" fill="url(#gL3)" transform="translate(40 24) rotate(-66) scale(.7)"/>
+        <ellipse cx="40" cy="18" rx="3.6" ry="5.2" fill="#e5b3a0"/>
+      </svg>
+      <div class="cp-rim"></div>
+      <div class="cp-body"><span class="cp-label serif" id="cdSecs">00</span></div>
+      <div class="cp-shelf"></div>
+      <p class="cp-unit" data-ta="வினாடி">Secs</p>
+    </div>
+  </div>
+  <p class="cd-when reveal"><span data-bind="dateLong">Sunday, 21 March 2027</span> · <span data-bind="time">10:00 AM</span></p>
+</section>
+
+<!-- ============ WISHES: notes on the twine ============ -->
+<section id="wishes" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="வாழ்த்துப் புத்தகம்">Guest book</p>
+    <h2 class="sec-title" data-ta="வளரும் குழந்தைக்கு வாழ்த்துகள்">Words to grow on</h2>
+    <svg class="sprig" viewBox="0 0 120 22" aria-hidden="true" focusable="false"><use href="#sprig"/></svg>
+    <p class="sec-sub" data-ta="தாய்க்கும் வரவிருக்கும் குழந்தைக்கும் ஓர் ஆசீர்வாதம் எழுதுங்கள். ஒவ்வொரு சொல்லையும் பொக்கிஷமாகப் போற்றுவோம்.">Leave a blessing for the mother-to-be and the little one. We'll treasure every word.</p>
+  </div>
+
+  <form id="wishForm" class="wish-form reveal">
+    <svg class="wf-leaves" viewBox="0 0 240 220" aria-hidden="true" focusable="false"><use href="#corner"/></svg>
+    <label class="field"><span data-ta="உங்கள் பெயர்">Your name</span><input id="wishName" maxlength="60" placeholder="e.g. Meena Chithi" data-ta-ph="எ.கா. மீனா சித்தி" required></label>
+    <label class="field"><span data-ta="உங்கள் வாழ்த்து">Your wish</span><textarea id="wishMessage" maxlength="500" rows="4" placeholder="A blessing for the little one…" data-ta-ph="குழந்தைக்கு ஓர் ஆசீர்வாதம்…" required></textarea></label>
+    <button class="btn" type="submit"><svg aria-hidden="true"><use href="#i-leaf"/></svg><span data-ta="வாழ்த்து அனுப்பு">Send your wish</span></button>
+  </form>
+
+  <div id="wishesWall" class="wall">
+    <template>
+    <figure class="wish reveal"><blockquote data-field="message">May your little one fill your home with laughter and light. So much love to the mother-to-be!</blockquote><figcaption data-field="name">Meena Chithi</figcaption></figure>
+    </template>
+  </div>
+  <p id="wishesEmpty" class="wishes-empty" hidden data-ta="முதல் வாழ்த்தை நீங்களே எழுதுங்கள் 🌱">Be the first to leave a blessing 🌱</p>
+  <div class="wishes-more"><button id="wishesMore" class="btn ghost" type="button" data-ta="மேலும் வாழ்த்துகள்">Show more wishes</button></div>
+</section>
+
+<!-- ============ HELP & CONTACTS ============ -->
+<section id="stay" class="section">
+  <div class="help reveal">
+    <svg class="help-art" viewBox="0 0 130 96" aria-hidden="true" focusable="false">
+      <ellipse cx="66" cy="90" rx="56" ry="5" fill="#5d7a5b" opacity=".12"/>
+      <path d="M38 34C38 16 64 16 64 34" fill="none" stroke="#5d7a5b" stroke-width="5" stroke-linecap="round"/>
+      <path d="M72 42c14 2 14 26 0 28" fill="none" stroke="#5d7a5b" stroke-width="5" stroke-linecap="round"/>
+      <path d="M28 76L6 50" stroke="#86a283" stroke-width="6" stroke-linecap="round"/>
+      <ellipse cx="4" cy="47" rx="4.4" ry="7.4" fill="#6f8d6c" transform="rotate(-40 4 47)"/>
+      <rect x="24" y="32" width="50" height="56" rx="9" fill="#9cb59a"/>
+      <rect x="24" y="44" width="50" height="6" fill="#86a283"/>
+      <path d="M32 56v20" stroke="#fff" stroke-opacity=".4" stroke-width="3" stroke-linecap="round"/>
+      <path d="M106 64C105 54 107 46 106 36" fill="none" stroke="#5d7a5b" stroke-width="2.6" stroke-linecap="round"/>
+      <use href="#lfv" fill="url(#gL1)" transform="translate(106 52) rotate(-152) scale(.85)"/>
+      <use href="#lfv" fill="url(#gL3)" transform="translate(106 44) rotate(-30) scale(.85)"/>
+      <path d="M90 70L94 90Q106 93 118 90L122 70Z" fill="url(#gPot)"/>
+      <rect x="87" y="62" width="38" height="10" rx="3" fill="url(#gRim)"/>
+      <ellipse cx="106" cy="63" rx="16" ry="2.6" fill="#6e4f3a"/>
+    </svg>
+    <h2 class="sec-title" data-ta="உதவி தேவையா?">Need a hand?</h2>
+    <p id="stayText" data-bind="help">Need help finding the venue? Call us any time.</p>
+    <div id="coordinators">
+      <template>
+      <div class="coord">
+        <span class="av" aria-hidden="true">🌿</span>
+        <div class="who"><p class="c-name" data-field="name">Divya's family</p><p class="c-phone" data-field="phone">+91 90000 00000</p></div>
+        <a class="btn" data-href="tel" href="tel:+919000000000"><svg aria-hidden="true"><use href="#i-phone"/></svg><span data-ta="அழைக்க">Call</span></a>
+      </div>
+      </template>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="foot">
+  <svg class="fringe" width="100%" height="52" aria-hidden="true" focusable="false">
+    <defs>
+      <pattern id="spFringe" width="260" height="52" patternUnits="userSpaceOnUse">
+        <use href="#lfv" fill="url(#gL3)" transform="translate(12 52) rotate(-58) scale(1.5)"/>
+        <use href="#lfv" fill="url(#gL1)" transform="translate(24 52) rotate(-96) scale(1.55)"/>
+        <use href="#lfv" fill="url(#gL2)" transform="translate(40 52) rotate(-128) scale(1.2)"/>
+        <use href="#lfv" fill="url(#gL3)" transform="translate(52 52) rotate(-74) scale(1.3)"/>
+        <use href="#lfv" fill="url(#gL1)" transform="translate(70 52) rotate(-104) scale(1.55)"/>
+        <use href="#lfv" fill="url(#gL2)" transform="translate(84 52) rotate(-50) scale(1.1)"/>
+        <use href="#lfv" fill="url(#gL3)" transform="translate(98 52) rotate(-88) scale(1.6)"/>
+        <use href="#lfv" fill="url(#gL1)" transform="translate(116 52) rotate(-122) scale(1.35)"/>
+        <use href="#lfv" fill="url(#gL2)" transform="translate(130 52) rotate(-66) scale(1.6)"/>
+        <use href="#lfv" fill="url(#gL3)" transform="translate(148 52) rotate(-100) scale(1.25)"/>
+        <use href="#lfv" fill="url(#gL1)" transform="translate(164 52) rotate(-80) scale(1.55)"/>
+        <use href="#lfv" fill="url(#gL3)" transform="translate(182 52) rotate(-130) scale(1.3)"/>
+        <use href="#lfv" fill="url(#gL2)" transform="translate(194 52) rotate(-56) scale(1.2)"/>
+        <use href="#lfv" fill="url(#gL1)" transform="translate(212 52) rotate(-92) scale(1.55)"/>
+        <use href="#lfv" fill="url(#gL3)" transform="translate(230 52) rotate(-116) scale(1.25)"/>
+        <use href="#lfv" fill="url(#gL2)" transform="translate(244 52) rotate(-70) scale(1.45)"/>
+      </pattern>
+    </defs>
+    <rect width="100%" height="52" fill="url(#spFringe)"/>
+  </svg>
+  <svg class="foot-sprout" viewBox="0 0 80 100" aria-hidden="true" focusable="false">
+    <path d="M40 64C39 50 42 40 40 24" fill="none" stroke="#dfe9d9" stroke-width="2.6" stroke-linecap="round"/>
+    <use href="#lfv" fill="url(#gL2)" transform="translate(40 48) rotate(-150) scale(1)"/>
+    <use href="#lfv" fill="url(#gL2)" transform="translate(40 38) rotate(-32) scale(1.05)"/>
+    <use href="#lfv" fill="url(#gL2)" transform="translate(40 25) rotate(-100) scale(.6)"/>
+    <path d="M18 70L24 96Q40 100 56 96L62 70Z" fill="url(#gPot)"/>
+    <rect x="14" y="60" width="52" height="12" rx="3" fill="url(#gRim)"/>
+    <ellipse cx="40" cy="61" rx="22" ry="3" fill="#6e4f3a"/>
+  </svg>
+  <p class="foot-eyebrow" data-ta="அன்புடனும் நன்றியுடனும்">With love and gratitude</p>
+  <p class="hashtag" data-bind="hashtag">#DivyasBabyShower</p>
+  <p class="thanks" data-ta="எங்கள் குட்டிச் செல்லம் வளர அன்பைப் பொழிந்ததற்கு நன்றி.">Thank you for helping our little one grow.</p>
+</footer>
+
+<button id="musicToggle" type="button" aria-label="Play or pause music"><svg aria-hidden="true"><use href="#i-note"/></svg></button>
+
+<audio id="bgMusic" loop preload="auto"></audio>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* Intro and bilingual labels. js/invite.js opens the intro on tap (adds .open, then .hidden after data-hide-after);
+   the CSS waters the seed and grows the sprout, and this unlocks scrolling and starts the hero's entrance. */
+(function(){
+  var html=document.documentElement, overlay=document.getElementById("curtain-overlay");
+  var reduce=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  if(overlay&&!html.classList.contains("intro-open")){
+    // Admin thumbnails and framed previews start on the page itself.
+    overlay.remove();
+  }else if(overlay){
+    var opened=false;
+    overlay.querySelectorAll("[data-open-invite]").forEach(function(b){
+      b.addEventListener("click",function(){
+        if(opened) return;
+        opened=true;
+        overlay.classList.add("open");
+        setTimeout(function(){ html.classList.remove("intro-open"); },reduce?0:2400);
+      });
+    });
+  }
+
+  // Labels with data-ta (and placeholders with data-ta-ph) switch to that Tamil text when the guest picks தமிழ்.
+  var lang="en";
+  function labels(root){
+    root.querySelectorAll("[data-ta]").forEach(function(n){
+      if(n.dataset.en===undefined) n.dataset.en=n.textContent;
+      n.textContent=lang==="ta"?n.dataset.ta:n.dataset.en;
+    });
+    root.querySelectorAll("[data-ta-ph]").forEach(function(n){
+      if(n.dataset.enPh===undefined) n.dataset.enPh=n.placeholder;
+      n.placeholder=lang==="ta"?n.dataset.taPh:n.dataset.enPh;
+    });
+  }
+  document.addEventListener("invite:render",function(e){
+    lang=e.detail&&e.detail.lang==="ta"?"ta":"en";
+    labels(document);
+  });
+  // New wishes arrive without a full render, so label them as they are added.
+  var wall=document.getElementById("wishesWall");
+  if(wall&&window.MutationObserver) new MutationObserver(function(){ labels(wall); }).observe(wall,{childList:true});
+})();
+</script>
+</body>
+</html>

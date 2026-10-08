@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<!--
+  Oh Baby — baby-shower template
+  A neutral boho baby shower: a bunch of matte and pearl balloons tied to a little gift weight (tap to let them fly),
+  an organic balloon garland with pampas grass and dried leaves over big pearl-foil "OH BABY" letters, the cover photo
+  in a tall arch with a muted boho rainbow, arch-topped event cards, a balloon countdown and cream "love notes".
+  Palette: sand #e9dccb · cream #fbf6ef · terracotta #c86b4a · blush #e7b6a6 · sage #a9b79b · mustard #d9a441 · cocoa ink #5a4033
+  Fonts:   DM Serif Display (headings) · Manrope (body) · Noto Sans Tamil (Tamil)
+  A baby-shower template for the invitation site; it follows TEMPLATES.md, and js/invite.js fills in the names, title,
+  date, photo, events, countdown, wishes and contacts. Labels with data-ta switch to Tamil with the தமிழ் button.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#e9dccb">
+<title>Baby Shower — Oh Baby</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  /* Runs before paint: mark JS, and decide whether the intro overlay is shown (not in admin previews or frames). */
+  (function(){
+    var d=document.documentElement, skip=/[?&]preview/.test(location.search);
+    try{ skip=skip||window.self!==window.top; }catch(e){ skip=true; }
+    d.className+=" js"+(skip?"":" intro-open");
+  })();
+</script>
+<style>
+:root{
+  --sand:#e9dccb; --sand-l:#f3ebe0; --cream:#fbf6ef; --paper:#fffcf7; --line:#e3d4c1;
+  --terra:#c86b4a; --terra-d:#a5533a; --blush:#e7b6a6; --blush-l:#f6e1d8; --sage:#a9b79b; --sage-d:#5f6e52; --sage-l:#e3e9dc;
+  --mustard:#d9a441; --mustard-l:#f6e7c6; --ink:#5a4033; --ink2:#7a5f50;
+  --serif:'DM Serif Display','Noto Sans Tamil',Georgia,serif;
+  --body:'Manrope','Noto Sans Tamil',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --tamil:'Noto Sans Tamil','Manrope',system-ui,sans-serif;
+  --soft:cubic-bezier(.22,1,.36,1);
+  --grain:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><g fill='%23c9a98a' opacity='.16'><circle cx='12' cy='20' r='1.1'/><circle cx='64' cy='9' r='.9'/><circle cx='118' cy='30' r='1.2'/><circle cx='36' cy='70' r='.9'/><circle cx='96' cy='84' r='1.1'/><circle cx='18' cy='118' r='1'/><circle cx='74' cy='128' r='.9'/><circle cx='128' cy='112' r='1'/><circle cx='52' cy='100' r='.7'/><circle cx='104' cy='52' r='.7'/></g></svg>");
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+html.intro-open,html.intro-open body{overflow:hidden}
+body{
+  margin:0;min-height:100vh;overflow-x:hidden;font-family:var(--body);font-size:1.0625rem;line-height:1.65;color:var(--ink);
+  background:var(--grain) 0 0/140px 140px,var(--cream);
+}
+h1,h2,h3,p{margin:0}
+a{color:inherit}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--terra);outline-offset:3px;border-radius:12px}
+.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- shared bits ---------- */
+.section{position:relative;padding:clamp(64px,10vw,104px) 16px;overflow-x:clip}
+.sec-head{text-align:center;max-width:620px;margin:0 auto clamp(32px,5vw,50px)}
+.eyebrow{font-weight:800;font-size:.8rem;letter-spacing:.24em;text-transform:uppercase;color:var(--terra-d)}
+.sec-title{font-family:var(--serif);font-weight:400;font-size:clamp(2.1rem,8vw,3.2rem);line-height:1.08;margin-top:8px;color:var(--ink)}
+.sec-title em{font-style:italic;color:var(--terra)}
+.mini-rb{display:block;width:58px;height:33px;margin:14px auto 0}
+.sec-sub{margin:12px auto 0;max-width:42ch;color:var(--ink2)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:0;cursor:pointer;text-decoration:none;
+  font-family:var(--body);font-weight:800;font-size:1rem;line-height:1.1;padding:12px 24px;border-radius:999px;
+  background:var(--terra);color:#fff;box-shadow:0 8px 18px rgba(165,83,58,.25);transition:transform .2s var(--soft),box-shadow .2s,background .2s;
+}
+.btn:hover{transform:translateY(-2px);background:var(--terra-d);box-shadow:0 12px 22px rgba(165,83,58,.3)}
+.btn:active{transform:translateY(1px)}
+.btn svg{width:18px;height:18px}
+.btn.ghost{background:transparent;color:var(--terra-d);box-shadow:inset 0 0 0 2px var(--terra)}
+.btn.ghost:hover{background:var(--blush-l)}
+.ic{width:20px;height:20px;flex:none;color:var(--terra)}
+
+/* reveal on scroll (the runtime adds .in) */
+.js .reveal{opacity:0;transform:translateY(26px)}
+.js .reveal.in{opacity:1;transform:none;transition:opacity .8s ease,transform 1s var(--soft)}
+
+/* ---------- intro: a bunch of balloons tied to a little gift ---------- */
+#curtain-overlay{
+  position:fixed;inset:0;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;padding:20px 16px;text-align:center;overflow:hidden;
+  background:radial-gradient(ellipse 70% 50% at 50% 46%,#f6e3d9 0,rgba(246,227,217,0) 70%),var(--grain) 0 0/140px 140px,var(--cream);
+}
+#curtain-overlay::before{
+  content:"";position:absolute;left:50%;bottom:-8vh;width:min(150vw,820px);aspect-ratio:2/1;transform:translateX(-50%);opacity:.22;pointer-events:none;
+  background:radial-gradient(circle calc(min(150vw,820px) / 2) at 50% 100%,transparent 0 45%,var(--sage) 45% 52%,transparent 52% 54%,var(--mustard) 54% 61%,transparent 61% 63%,var(--blush) 63% 70%,transparent 70% 72%,var(--terra) 72% 79%,transparent 79%);
+}
+.intro-open #curtain-overlay{display:flex}
+#curtain-overlay.open{opacity:0;transition:opacity .8s ease 1.35s;pointer-events:none}
+#curtain-overlay.hidden{display:none}
+.intro-eyebrow{position:relative;font-weight:800;font-size:.8rem;letter-spacing:.24em;text-transform:uppercase;color:var(--terra-d)}
+.intro-title{position:relative;font-family:var(--serif);font-size:clamp(2.2rem,9.5vw,3.6rem);line-height:1.05;color:var(--ink);max-width:14ch}
+.bunch-btn{position:relative;background:none;border:0;padding:0;margin:4px 0 0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:24px}
+.bunch{display:block;height:min(54vh,430px);width:auto;aspect-ratio:300/412;overflow:visible}
+.intro-hint{position:relative;display:inline-flex;align-items:center;gap:10px;font-weight:700;font-size:1rem;color:var(--ink2)}
+.intro-hint::before,.intro-hint::after{content:"";width:22px;height:1.5px;background:var(--blush)}
+.open .intro-hint,.open .intro-eyebrow{opacity:0;transition:opacity .35s}
+.bunch .fb path{fill:none;stroke:#b39c87;stroke-width:1.2}
+.bunch .sway{transform-box:view-box;transform-origin:150px 318px;animation:sway 5.5s ease-in-out infinite}
+.bunch .fb{transform-box:fill-box;transform-origin:50% 100%}
+.bunch .tap-ring{transform-box:fill-box;transform-origin:center;animation:ring 2s ease-out infinite}
+@keyframes sway{0%,100%{transform:rotate(-2.2deg)}50%{transform:rotate(2.2deg)}}
+@keyframes ring{0%{transform:scale(.6);opacity:.8}100%{transform:scale(1.7);opacity:0}}
+/* the ribbon lets go and every balloon drifts up and away on its own path */
+.open .bunch .fb{animation:fly var(--t,2.3s) var(--d,0s) both}
+.open .bunch .bow{animation:untie .6s ease-in forwards}
+.open .bunch .tap-ring{animation:none;opacity:0}
+.open .bunch .gift{animation:settle .7s var(--soft) .1s}
+.bunch .bow,.bunch .gift{transform-box:fill-box;transform-origin:50% 100%}
+@keyframes fly{
+  0%{transform:translate(0,0) rotate(0);animation-timing-function:cubic-bezier(.4,0,.6,1)}
+  18%{transform:translate(calc(var(--x)*.06),-34px) rotate(var(--r));animation-timing-function:cubic-bezier(.4,0,.6,1)}
+  42%{transform:translate(calc(var(--x)*.3),-230px) rotate(calc(var(--r)*-.8));animation-timing-function:cubic-bezier(.4,0,.6,1)}
+  68%{transform:translate(calc(var(--x)*.66),-580px) rotate(calc(var(--r)*.7))}
+  100%{transform:translate(var(--x),-1180px) rotate(calc(var(--r)*-.4))}
+}
+@keyframes untie{30%{transform:scale(1.15)}100%{transform:translateY(10px) scale(.5) rotate(-24deg);opacity:0}}
+@keyframes settle{0%,100%{transform:none}40%{transform:translateY(-6px)}70%{transform:translateY(1px) scaleY(.97)}}
+
+/* ---------- hero ---------- */
+#hero{
+  --gw:min(108vw,720px); --fs:clamp(3.4rem,15.5vw,6.6rem);
+  position:relative;overflow-x:clip;text-align:center;padding:0 16px clamp(60px,9vw,96px);
+  background:radial-gradient(ellipse 90% 40% at 50% 0,var(--sand-l),rgba(243,235,224,0) 100%);
+}
+.lang{position:absolute;top:12px;right:12px;z-index:5;display:flex;gap:2px;padding:4px;border-radius:999px;background:rgba(255,252,247,.92);box-shadow:0 0 0 1.5px var(--line),0 6px 16px rgba(90,64,51,.1)}
+.lang-btn{border:0;background:none;cursor:pointer;font-weight:800;font-size:.82rem;min-width:44px;min-height:36px;padding:6px 12px;border-radius:999px;color:var(--ink2)}
+.lang-btn.active{background:var(--terra);color:#fff}
+.garland{position:relative;width:var(--gw);margin-left:calc(50% - var(--gw) / 2);pointer-events:none}
+.garland svg{display:block;width:100%;height:auto;overflow:visible;animation:drop 1.5s var(--soft) both}
+.garland .g-small{animation:twinkle 5s ease-in-out infinite}
+@keyframes drop{from{opacity:0;transform:translateY(-46px) scale(.97)}}
+@keyframes twinkle{50%{transform:translateY(-2px)}}
+.hero-inner{position:relative;max-width:660px;margin:0 auto}
+.ohbaby{
+  position:relative;z-index:1;margin:calc(var(--gw) * -.165 - var(--fs) * .5) 0 0;
+  font-family:'Manrope',system-ui,sans-serif;font-weight:800;font-size:var(--fs);line-height:1;letter-spacing:.01em;white-space:nowrap;
+}
+.ohbaby .w{display:inline-block}
+.ohbaby .w + .w{margin-left:.12em}
+.ohbaby i{
+  display:inline-block;font-style:normal;color:transparent;padding:0 .01em;
+  background:linear-gradient(160deg,#ffffff 0%,#f3e3d9 24%,#fffaf6 40%,#e2c8b8 58%,#fbf3ee 74%,#d4b4a2 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-stroke:1.4px rgba(165,83,58,.5);
+  filter:drop-shadow(0 2px 0 #dcc2b1) drop-shadow(0 10px 12px rgba(90,64,51,.2));
+  animation:lift 1.2s var(--soft) calc(var(--n) * .09s + .2s) both,bob 4.4s ease-in-out calc(var(--n) * -.7s) infinite;
+}
+@keyframes lift{from{opacity:0;transform:translateY(60px) rotate(-6deg)}}
+@keyframes bob{0%,100%{translate:0 0;rotate:-2deg}50%{translate:0 -5px;rotate:2deg}}
+.hero-eyebrow{margin-top:20px;font-weight:800;font-size:.8rem;letter-spacing:.24em;text-transform:uppercase;color:var(--terra-d)}
+.title{font-family:var(--serif);font-weight:400;font-size:clamp(2.5rem,10.5vw,4.4rem);line-height:1.04;margin-top:8px;color:var(--ink)}
+.arch-wrap{position:relative;width:min(66vw,300px);margin:34px auto 30px}
+.arch-wrap::before{
+  content:"";position:absolute;inset:14px -14px -14px 14px;border:1.5px solid var(--terra);opacity:.45;
+  border-radius:50% 50% 20px 20px/37.5% 37.5% 20px 20px;
+}
+.arch{
+  position:relative;z-index:1;aspect-ratio:3/4;overflow:hidden;border:7px solid var(--paper);
+  border-radius:50% 50% 20px 20px/37.5% 37.5% 20px 20px;background:var(--sand);
+  box-shadow:0 0 0 1.5px var(--line),0 22px 44px rgba(90,64,51,.18);
+}
+.arch > svg{display:block;width:100%;height:100%}
+.arch-rb{position:absolute;z-index:2;width:50%;left:-20%;bottom:-7%;filter:drop-shadow(0 6px 8px rgba(90,64,51,.12))}
+.arch-sprig{position:absolute;z-index:0;width:28%;right:-15%;top:32%;transform:rotate(16deg);transform-origin:20% 100%;animation:rustle 6s ease-in-out infinite}
+.arch-bl{position:absolute;z-index:2;width:38%;right:-16%;top:-7%;animation:bob2 5s ease-in-out infinite}
+.arch-rb svg,.arch-sprig svg,.arch-bl svg{display:block;width:100%;height:auto;overflow:visible}
+@keyframes rustle{50%{transform:rotate(10deg)}}
+@keyframes bob2{50%{transform:translateY(-7px) rotate(3deg)}}
+.parents{font-weight:800;font-size:.78rem;letter-spacing:.24em;text-transform:uppercase;color:var(--sage-d)}
+.names{font-family:var(--serif);font-size:clamp(2rem,8vw,3rem);line-height:1.1;margin-top:4px;color:var(--terra-d)}
+.names .hero-amp{font-style:italic;color:var(--ink2);font-size:.8em;margin:0 .1em}
+#heroTagline{max-width:34ch;margin:14px auto 0;font-size:1.08rem;color:var(--ink)}
+#heroDatePill{
+  display:inline-block;margin-top:24px;padding:12px 24px;border-radius:999px;background:var(--paper);
+  font-weight:800;font-size:1.02rem;color:var(--ink);box-shadow:0 0 0 1.5px var(--terra),0 0 0 6px var(--paper),0 0 0 7.5px var(--blush);
+}
+.scroll-cue{display:inline-flex;flex-direction:column;align-items:center;gap:4px;min-height:44px;margin-top:32px;font-weight:800;font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--terra-d);text-decoration:none}
+.scroll-cue i{width:11px;height:11px;border-right:2.5px solid currentColor;border-bottom:2.5px solid currentColor;transform:rotate(45deg);animation:nudge 1.8s ease-in-out infinite}
+@keyframes nudge{50%{transform:translate(0,6px) rotate(45deg)}}
+.rise{animation:rise 1s var(--soft) both}
+.r1{animation-delay:.35s}.r2{animation-delay:.5s}.r3{animation-delay:.65s}.r4{animation-delay:.8s}
+html.intro-open .rise,html.intro-open .garland svg,html.intro-open .ohbaby i{animation-play-state:paused}
+@keyframes rise{from{opacity:0;transform:translateY(26px)}}
+@media (min-width:760px){.hero-eyebrow{margin-top:48px}}
+
+/* ---------- events: arch-topped cards ---------- */
+.events{display:grid;gap:34px;max-width:900px;margin:0 auto;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
+.event{
+  --c:var(--terra-d);--t:var(--paper);--b:var(--blush-l);
+  position:relative;display:flex;flex-direction:column;text-align:center;padding:28px 22px 32px;background:var(--t);
+  border-radius:50% 50% 26px 26px/150px 150px 26px 26px;box-shadow:0 0 0 1.5px var(--line),0 22px 44px rgba(90,64,51,.1);
+}
+.event:nth-of-type(even){--c:var(--sage-d);--t:#f5f3ea;--b:var(--sage-l)}
+.event::before{
+  content:"";position:absolute;inset:9px;pointer-events:none;border:1.5px solid var(--c);opacity:.3;
+  border-radius:50% 50% 18px 18px/142px 142px 18px 18px;
+}
+.ev-crown{display:block;width:150px;margin:4px auto 0}
+.ev-rb{display:block;width:100%;height:auto}
+.ev-icon{
+  position:relative;display:grid;place-items:center;width:58px;height:58px;margin:-64px auto 0;border-radius:50%;
+  font-size:1.7rem;line-height:1;background:var(--b);box-shadow:0 0 0 1.5px var(--line);
+}
+.ev-icon img{width:60%;height:60%;object-fit:contain}
+.ev-num{margin-top:16px;font-weight:800;font-size:.76rem;letter-spacing:.22em;text-transform:uppercase;color:var(--c)}
+.event h3{font-family:var(--serif);font-weight:400;font-size:clamp(1.75rem,6.6vw,2.1rem);line-height:1.12;margin:6px 0 18px;color:var(--ink)}
+.ev-meta{list-style:none;margin:0 auto 16px;padding:0;display:grid;gap:12px;text-align:left;max-width:300px}
+.ev-meta li{display:flex;gap:12px;align-items:flex-start}
+.ev-meta .ic{margin-top:3px;color:var(--c)}
+.ev-meta strong{font-weight:800}
+.ev-meta small{display:block;font-size:.95rem;color:var(--ink2)}
+.ev-desc{font-family:var(--serif);font-style:italic;font-size:1.12rem;color:var(--ink2);margin:0 auto 22px;max-width:28ch}
+.event .btn{align-self:center;margin-top:auto}
+.event:nth-of-type(even) .btn{background:var(--sage-d);box-shadow:0 8px 18px rgba(95,110,82,.25)}
+.event:nth-of-type(even) .btn:hover{background:#4f5d44}
+
+/* ---------- countdown: four balloons on curly strings ---------- */
+#countdown{width:calc(100% - 24px);max-width:980px;margin:12px auto;padding-top:clamp(84px,11vw,110px);background:var(--sand-l);border-radius:50% 50% 40px 40px/150px 150px 40px 40px;box-shadow:inset 0 0 0 1.5px var(--line)}
+.cd{display:flex;justify-content:center;align-items:flex-start;gap:clamp(8px,3vw,32px)}
+.cd-b{--l:#dd9273;--c:var(--terra);--d:var(--terra-d);--tx:#fffaf4;width:clamp(72px,20vw,124px);text-align:center}
+.cd-b:nth-child(2){--l:#c8d3bb;--c:var(--sage);--d:#8a997b;--tx:var(--ink);--dl:-1.2s}
+.cd-b:nth-child(3){--l:#f3d18a;--c:var(--mustard);--d:#b07f25;--tx:var(--ink);--dl:-2.6s}
+.cd-b:nth-child(4){--l:#f5d8cc;--c:var(--blush);--d:#cf9a88;--tx:var(--ink);--dl:-3.7s}
+.cd-ball,.cd-str{animation:bob3 4.8s ease-in-out var(--dl,0s) infinite}
+@keyframes bob3{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.cd-ball{
+  position:relative;aspect-ratio:.86;display:grid;place-items:center;border-radius:50% 50% 50% 50%/45% 45% 55% 55%;
+  background:radial-gradient(circle at 30% 24%,rgba(255,255,255,.6) 0 5%,rgba(255,255,255,0) 22%),radial-gradient(ellipse at 40% 34%,var(--l),var(--c) 52%,var(--d) 100%);
+  box-shadow:0 14px 22px rgba(90,64,51,.12);
+}
+.cd-ball::after{content:"";position:absolute;left:50%;bottom:-8px;width:14px;height:11px;transform:translateX(-50%);background:var(--d);clip-path:polygon(50% 0,100% 100%,0 100%);border-radius:3px}
+.cd-ball span{font-weight:800;font-size:clamp(1.55rem,6.6vw,2.7rem);line-height:1;color:var(--tx);font-variant-numeric:tabular-nums lining-nums;letter-spacing:-.02em;margin-top:-6%}
+.cd-str{display:block;width:16px;height:48px;margin:6px auto 2px;overflow:visible}
+.cd-str path{fill:none;stroke:#b39c87;stroke-width:1.4;stroke-linecap:round}
+.cd-lbl{font-weight:800;font-size:.76rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink2)}
+.cd-when{text-align:center;margin-top:30px;font-family:var(--serif);font-size:clamp(1.2rem,4.8vw,1.5rem);line-height:1.35}
+.cd-when span:first-child{color:var(--terra-d)}
+
+/* ---------- wishes: love notes ---------- */
+.wish-form{
+  position:relative;max-width:560px;margin:58px auto 48px;padding:30px 22px 26px;border-radius:28px;background:var(--paper);
+  box-shadow:0 0 0 1.5px var(--line),0 22px 44px rgba(90,64,51,.08);display:grid;gap:16px;
+}
+.form-sprig{position:absolute;top:-56px;right:16px;width:50px;height:auto;transform:rotate(14deg);transform-origin:50% 100%;pointer-events:none}
+.field{display:grid;gap:6px;font-weight:800;font-size:.88rem;color:var(--ink2)}
+.field input,.field textarea{
+  width:100%;border:1.5px solid var(--line);background:var(--cream);border-radius:14px;padding:12px 14px;font-weight:500;font-size:1rem;color:var(--ink);
+  resize:vertical;transition:border-color .2s,box-shadow .2s;
+}
+.field input::placeholder,.field textarea::placeholder{color:#a08877}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--terra);box-shadow:0 0 0 4px var(--blush-l)}
+.wish-form .btn{justify-self:center;margin-top:4px}
+.wall{display:grid;gap:30px 22px;max-width:980px;margin:0 auto;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr))}
+.wish{
+  --a:var(--terra);margin:0;position:relative;padding:30px 22px 22px;border-radius:22px;background:var(--paper);
+  box-shadow:0 0 0 1.5px var(--line),0 14px 30px rgba(90,64,51,.07);transform:rotate(-.8deg);
+}
+.wish:nth-of-type(3n+2){--a:var(--sage-d);transform:rotate(.7deg)}
+.wish:nth-of-type(3n+3){--a:#b07f25;transform:rotate(-.4deg)}
+.wish::before{content:"\201C";position:absolute;top:2px;left:18px;font-family:var(--serif);font-size:3.6rem;line-height:1;color:var(--a);opacity:.85}
+.w-sprig{position:absolute;top:-34px;right:16px;width:28px;height:84px;transform:rotate(14deg);pointer-events:none}
+.wish:nth-of-type(even) .w-sprig{right:auto;left:auto;right:30px;transform:rotate(-10deg)}
+.wish blockquote{margin:14px 0 14px;font-size:1.02rem;color:var(--ink)}
+.wish figcaption{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:1.15rem;color:var(--a)}
+.wish figcaption::before{content:"";width:22px;height:1.5px;background:currentColor;flex:none}
+.wishes-more{display:flex;justify-content:center;margin-top:38px}
+
+/* ---------- help & contacts ---------- */
+#stay{padding-top:clamp(90px,12vw,120px)}
+.help{
+  max-width:620px;margin:0 auto;text-align:center;padding:34px 22px 26px;border-radius:32px;background:var(--paper);
+  box-shadow:0 0 0 1.5px var(--line),0 22px 44px rgba(90,64,51,.08);
+}
+.help-art{display:block;width:120px;margin:-92px auto 4px}
+.help .sec-title{font-size:clamp(1.9rem,6.5vw,2.5rem)}
+#stayText{margin:10px auto 22px;max-width:36ch;color:var(--ink2)}
+#coordinators{display:grid;gap:12px}
+.coord{display:flex;align-items:center;gap:12px;text-align:left;padding:12px 12px 12px 12px;border-radius:20px;background:var(--cream);box-shadow:inset 0 0 0 1.5px var(--line)}
+.coord .av{width:48px;height:48px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--blush-l)}
+.coord .av svg{width:30px;height:36px}
+.coord .who{flex:1;min-width:0}
+.coord .c-name{font-weight:800;font-size:1.05rem;line-height:1.25}
+.coord .c-phone{font-size:.95rem;color:var(--ink2)}
+.coord .btn{padding:10px 18px;font-size:.95rem}
+
+/* ---------- footer ---------- */
+.foot{position:relative;overflow-x:clip;text-align:center;margin-top:24px;padding:20px 16px 100px;background:var(--sand-l);border-radius:50% 50% 0 0/60px 60px 0 0}
+.foot-garland{width:min(90vw,440px);margin:-6px auto 8px}
+.foot-garland svg{display:block;width:100%;height:auto;overflow:visible}
+.hashtag{font-family:var(--serif);font-size:clamp(2rem,8.4vw,3.2rem);line-height:1.1;color:var(--terra-d);word-break:break-word}
+.thanks{margin-top:10px;font-weight:600;color:var(--ink2)}
+.foot-rb{display:block;width:52px;height:30px;margin:18px auto 0}
+
+/* ---------- music + toast ---------- */
+#musicToggle{
+  position:fixed;right:16px;bottom:18px;z-index:40;width:56px;height:62px;padding:0 0 6px;border:0;cursor:pointer;display:grid;place-items:center;color:#fff;
+  border-radius:50% 50% 50% 50%/45% 45% 55% 55%;
+  background:radial-gradient(circle at 30% 24%,rgba(255,255,255,.5) 0 6%,rgba(255,255,255,0) 24%),radial-gradient(ellipse at 40% 34%,#dd9273,var(--terra) 52%,var(--terra-d));
+  box-shadow:0 12px 22px rgba(165,83,58,.32);transform-origin:50% 100%;
+}
+#musicToggle::after{content:"";position:absolute;left:50%;bottom:-7px;width:12px;height:9px;transform:translateX(-50%);background:var(--terra-d);clip-path:polygon(50% 0,100% 100%,0 100%)}
+#musicToggle svg{width:24px;height:24px}
+#musicToggle.spinning{animation:sway2 2.6s ease-in-out infinite}
+#musicToggle.spinning svg{animation:beat 1.3s ease-in-out infinite}
+@keyframes sway2{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+@keyframes beat{50%{transform:scale(1.18)}}
+#toast{
+  position:fixed;left:50%;bottom:92px;z-index:60;transform:translate(-50%,20px);opacity:0;pointer-events:none;max-width:calc(100% - 32px);
+  padding:12px 20px;border-radius:999px;background:var(--ink);color:#fff;font-weight:700;font-size:.95rem;text-align:center;transition:.3s;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;animation-delay:0s!important}
+  html{scroll-behavior:auto}
+  #curtain-overlay.open{transition:opacity .01ms}
+}
+/* Tamil labels: a Tamil font, and no English-style letter-spacing or capitals. */
+html[lang="ta"] [data-ta]{font-family:var(--tamil);letter-spacing:0;text-transform:none}
+html[lang="ta"] .sec-title[data-ta]{font-weight:700;font-size:clamp(1.7rem,6.6vw,2.5rem);line-height:1.3}
+html[lang="ta"] .eyebrow[data-ta],html[lang="ta"] .hero-eyebrow[data-ta],html[lang="ta"] .parents[data-ta],html[lang="ta"] .intro-eyebrow[data-ta]{font-size:.92rem;font-weight:700}
+html[lang="ta"] .cd-lbl[data-ta],html[lang="ta"] .ev-num [data-ta]{font-size:.85rem}
+/* The uploaded photo covers the stand-in illustration (it starts as a transparent pixel). */
+:where(.cover-slot){position:relative}
+.cover-img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;display:block}
+.wishes-empty{text-align:center;margin:10px auto 22px;max-width:40ch;font-weight:600;color:var(--ink2)}
+
+</style>
+</head>
+<body>
+
+<!-- shared art: balloon finishes, balloons, dried sprigs, a boho rainbow and small line icons -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <radialGradient id="gT" cx=".42" cy=".38" r=".7" fx=".3" fy=".25"><stop offset="0" stop-color="#dd9273"/><stop offset=".55" stop-color="#c86b4a"/><stop offset="1" stop-color="#a5533a"/></radialGradient>
+    <radialGradient id="gB" cx=".42" cy=".38" r=".7" fx=".3" fy=".25"><stop offset="0" stop-color="#f5d8cc"/><stop offset=".55" stop-color="#e7b6a6"/><stop offset="1" stop-color="#cf9a88"/></radialGradient>
+    <radialGradient id="gS" cx=".42" cy=".38" r=".7" fx=".3" fy=".25"><stop offset="0" stop-color="#c8d3bb"/><stop offset=".55" stop-color="#a9b79b"/><stop offset="1" stop-color="#8a997b"/></radialGradient>
+    <radialGradient id="gN" cx=".42" cy=".38" r=".7" fx=".3" fy=".25"><stop offset="0" stop-color="#f7efe4"/><stop offset=".55" stop-color="#e9dccb"/><stop offset="1" stop-color="#d2bda3"/></radialGradient>
+    <radialGradient id="gC" cx=".42" cy=".38" r=".7" fx=".3" fy=".25"><stop offset="0" stop-color="#fffefb"/><stop offset=".6" stop-color="#f6eee3"/><stop offset="1" stop-color="#e2d2bf"/></radialGradient>
+    <radialGradient id="gM" cx=".4" cy=".36" r=".72" fx=".3" fy=".24"><stop offset="0" stop-color="#fff4d2"/><stop offset=".3" stop-color="#ecc266"/><stop offset=".68" stop-color="#cf952e"/><stop offset=".9" stop-color="#93661c"/><stop offset="1" stop-color="#c9973c"/></radialGradient>
+    <radialGradient id="gP" cx=".4" cy=".36" r=".72" fx=".3" fy=".24"><stop offset="0" stop-color="#ffffff"/><stop offset=".32" stop-color="#f9f1ec"/><stop offset=".62" stop-color="#ecdcd3"/><stop offset=".88" stop-color="#d5bfb3"/><stop offset="1" stop-color="#efe3dc"/></radialGradient>
+  </defs>
+  <!-- round garland balloons: matte (bm) and pearl or chrome (bp); fill comes from the <use> -->
+  <symbol id="bm" viewBox="-50 -50 100 100"><circle r="49"/><ellipse cx="-17" cy="-21" rx="11" ry="17" fill="#fff" opacity=".2" transform="rotate(38 -17 -21)"/></symbol>
+  <symbol id="bp" viewBox="-50 -50 100 100"><circle r="49"/><ellipse cx="-16" cy="-22" rx="7" ry="14" fill="#fff" opacity=".85" transform="rotate(40 -16 -22)"/><circle cx="-2" cy="-34" r="3.2" fill="#fff" opacity=".7"/><path d="M30 28a40 40 0 0 1-30 16" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".45"/></symbol>
+  <!-- balloons with a knot, for the bunch: matte (km) and pearl or chrome (kp) -->
+  <symbol id="km" viewBox="-50 -56 100 120"><ellipse rx="47" ry="54"/><path d="M-7 62h14l-7-10z"/><ellipse cx="-17" cy="-24" rx="10" ry="18" fill="#fff" opacity=".2" transform="rotate(32 -17 -24)"/></symbol>
+  <symbol id="kp" viewBox="-50 -56 100 120"><ellipse rx="47" ry="54"/><path d="M-7 62h14l-7-10z"/><ellipse cx="-17" cy="-26" rx="7" ry="15" fill="#fff" opacity=".85" transform="rotate(32 -17 -26)"/><circle cx="-1" cy="-38" r="3.4" fill="#fff" opacity=".7"/><path d="M30 30a42 42 0 0 1-28 20" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".45"/></symbol>
+  <!-- eucalyptus and bunny-tail grass -->
+  <symbol id="eu" viewBox="0 0 40 110"><path d="M20 110C18 80 24 40 20 4" fill="none" stroke="#7f8e70" stroke-width="1.6"/><g fill="#a9b79b"><ellipse cx="12" cy="92" rx="8" ry="7"/><ellipse cx="13" cy="64" rx="7" ry="6.4"/><ellipse cx="15" cy="38" rx="6" ry="5.4"/><ellipse cx="18" cy="16" rx="4.6" ry="4.2"/></g><g fill="#93a385"><ellipse cx="28" cy="78" rx="7.6" ry="6.8"/><ellipse cx="28" cy="51" rx="6.6" ry="6"/><ellipse cx="26" cy="27" rx="5.4" ry="5"/><ellipse cx="23" cy="8" rx="4" ry="3.6"/></g></symbol>
+  <symbol id="bt" viewBox="0 0 20 70"><path d="M10 70Q8 44 10 20" fill="none" stroke="#c8b59a" stroke-width="1.4"/><ellipse cx="10" cy="13" rx="6.5" ry="11" fill="#f7efe3"/><ellipse cx="8" cy="10" rx="2.5" ry="5" fill="#fff"/></symbol>
+  <symbol id="pp" viewBox="0 0 40 120"><path d="M20 120C19 90 21 50 22 6" fill="none" stroke="#c9b08c" stroke-width="1.4"/><ellipse cx="21" cy="52" rx="10" ry="44" fill="#efe1cb" opacity=".55"/><g fill="none" stroke-linecap="round"><path d="M20.1 101.9l3.2 -8.7M20.2 99.7l-4 -7.8M20.5 95.5l-3.5 -10.1M20.6 93.3l5.7 -8.4M20.8 89.1l5.4 -9.9M20.9 87l-5.1 -11.3M21.1 82.7l-3.5 -12.8M21.2 80.6l7.5 -11M21.4 76.3l5.1 -15.6M21.5 74.2l-3.4 -13.2M21.7 69.9l-4 -17.6M21.7 67.8l4.3 -17.3M21.9 63.5l7.1 -12.9M22 61.4l-9.9 -13M22.1 57.1l-7 -13.9M22.1 55l3.7 -15.5M22.2 50.7l6.8 -12.5M22.3 48.6l-7.1 -10.4M22.3 44.3l-4.3 -11M22.4 42.2l7.2 -9.6M22.4 38l3.3 -11M22.4 35.8l-2.7 -10.8M22.4 31.6l-2.4 -8.9M22.4 29.4l2.6 -8.9M22.4 25.2l2.8 -6.5M22.3 23l-3.5 -4.5M22.3 18.8l-2.2 -5M22.2 16.7l1.2 -5.4M22.1 12.4l1.8 -4.5M22.1 10.3l-2.2 -5" stroke="#dcc29c" stroke-width="2.2"/><path d="M20 104l-3.3 -4.5M20.3 97.6l5 -8M20.7 91.2l-5.5 -12.1M21 84.8l2.8 -12.7M21.3 78.4l-6.9 -11.7M21.6 72l6.3 -15.8M21.8 65.7l-11.6 -15.4M22 59.3l4.3 -13.2M22.2 52.9l-5.8 -15.9M22.3 46.5l8.1 -14.3M22.4 40.1l-3.1 -12.6M22.4 33.7l3.3 -7.4M22.4 27.3l-1.6 -7M22.3 20.9l2.5 -4.4M22.2 14.5l-1.5 -4.9M22 8.1l2.4 -3.9" stroke="#f6ecdc" stroke-width="2"/></g></symbol><symbol id="pa" viewBox="0 0 90 90"><path d="M45 88Q18.9 74.9 -9.5 68.2Q16.6 81.3 45 88Z" fill="#cf9f55"/><path d="M45 88Q19.5 66.7 -9.7 51.1Q15.7 72.4 45 88Z" fill="#d9b26e"/><path d="M45 88Q22.8 58.2 -4.5 33Q17.7 62.8 45 88Z" fill="#cf9f55"/><path d="M45 88Q34.4 60.8 17.8 36.8Q28.4 64 45 88Z" fill="#d9b26e"/><path d="M45 88Q39.1 50.3 26.6 14.3Q32.5 52 45 88Z" fill="#cf9f55"/><path d="M45 88Q48.4 46 45 4Q41.6 46 45 88Z" fill="#d9b26e"/><path d="M45 88Q56.5 55.8 61.5 22Q49.9 54.2 45 88Z" fill="#cf9f55"/><path d="M45 88Q65.8 56 80.7 20.9Q59.8 52.9 45 88Z" fill="#d9b26e"/><path d="M45 88Q72.3 62.8 94.5 33Q67.2 58.2 45 88Z" fill="#cf9f55"/><path d="M45 88Q70.9 74.6 93.1 55.6Q67.1 69 45 88Z" fill="#d9b26e"/><path d="M45 88Q77.2 79.9 107 65.4Q74.8 73.5 45 88Z" fill="#cf9f55"/><circle cx="45" cy="87" r="4" fill="#b98a46"/></symbol>
+  <symbol id="rb" viewBox="0 0 120 68"><g fill="none" stroke-width="10" stroke-linecap="round"><path d="M6 62a54 54 0 0 1 108 0" stroke="#c86b4a"/><path d="M18 62a42 42 0 0 1 84 0" stroke="#e7b6a6"/><path d="M30 62a30 30 0 0 1 60 0" stroke="#d9a441"/><path d="M42 62a18 18 0 0 1 36 0" stroke="#a9b79b"/></g></symbol>
+  <symbol id="rb2" viewBox="0 0 150 84"><g fill="none" stroke-width="8" stroke-linecap="round"><path d="M9 78a66 66 0 0 1 132 0" stroke="#c86b4a"/><path d="M19 78a56 56 0 0 1 112 0" stroke="#e7b6a6"/><path d="M29 78a46 46 0 0 1 92 0" stroke="#d9a441"/><path d="M39 78a36 36 0 0 1 72 0" stroke="#a9b79b"/></g></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10.5h17"/></g></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></g></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></g></symbol>
+  <symbol id="i-go" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></g></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path fill="currentColor" d="M9 17.5V6.2l10-2.2v11.3a3 3 0 1 1-2-2.83V7.5l-6 1.3v8.7a3 3 0 1 1-2-2.83z"/></symbol>
+</svg>
+
+<!-- ============ INTRO: let the balloons fly ============ -->
+<div id="curtain-overlay" data-hide-after="2300">
+  <p class="intro-eyebrow" data-ta="ஒரு குட்டி வரம் வரப்போகிறது">A little one is on the way</p>
+  <p class="intro-title" data-bind="title">Divya's Baby Shower</p>
+  <button type="button" class="bunch-btn" id="openCurtainBtn" data-open-invite aria-label="Let the balloons fly to open the invitation">
+    <svg class="bunch" viewBox="0 0 300 412" aria-hidden="true" focusable="false"><g class="sway"><g class="fb" style="--x:13.2px;--r:-9.6deg;--d:0s;--t:2.6s"><path d="M150 119.5c8 59.6 -8 109.2 0 198.5"/><use href="#km" x="107" y="18" width="86" height="103.2" fill="url(#gN)"/></g><g class="fb" style="--x:-90.7px;--r:-7.3deg;--d:0.1s;--t:2.4s"><path d="M86 146.4c14.4 51.5 30.4 94.4 64 171.6"/><use href="#km" x="46" y="52" width="80" height="96" fill="url(#gS)"/></g><g class="fb" style="--x:71.3px;--r:-11.7deg;--d:0.2s;--t:2.6s"><path d="M214 142.8c1.6 52.6 -46.4 96.4 -64 175.2"/><use href="#km" x="173" y="46" width="82" height="98.4" fill="url(#gB)"/></g><g class="fb" style="--x:-131.2px;--r:-11.5deg;--d:0.3s;--t:2.5s"><path d="M40 198.6c19 35.8 58 65.7 110 119.4"/><use href="#km" x="5" y="116" width="70" height="84" fill="url(#gC)"/></g><g class="fb" style="--x:158.4px;--r:10.3deg;--d:0.1s;--t:2.6s"><path d="M262 194.6c-3.2 37 -75.2 67.9 -112 123.4"/><use href="#kp" x="227" y="112" width="70" height="84" fill="url(#gM)"/></g><g class="fb" style="--x:-59px;--r:12.2deg;--d:0.2s;--t:2.5s"><path d="M116 207.8c11.4 33 12.4 60.6 34 110.2"/><use href="#km" x="72" y="104" width="88" height="105.6" fill="url(#gT)"/></g><g class="fb" style="--x:35.3px;--r:-11.8deg;--d:0.2s;--t:2.1s"><path d="M190 209.1c4 32.7 -32 59.9 -40 108.9"/><use href="#kp" x="148" y="110" width="84" height="100.8" fill="url(#gP)"/></g><g class="fb" style="--x:-124.5px;--r:10.8deg;--d:0.4s;--t:2.6s"><path d="M62 261.9c16.8 16.8 44.8 30.9 88 56.1"/><use href="#km" x="29" y="184" width="66" height="79.2" fill="url(#gB)"/></g><g class="fb" style="--x:128.3px;--r:6.6deg;--d:0.1s;--t:2.4s"><path d="M238 259.9c-0.8 17.4 -60.8 32 -88 58.1"/><use href="#km" x="205" y="182" width="66" height="79.2" fill="url(#gT)"/></g><g class="fb" style="--x:17.5px;--r:-9.7deg;--d:0.2s;--t:2.4s"><path d="M148 262.4c8.2 16.7 -6.8 30.6 2 55.6"/><use href="#km" x="108" y="168" width="80" height="96" fill="url(#gS)"/></g><g class="fb" style="--x:-47.8px;--r:11.3deg;--d:0.3s;--t:2.5s"><path d="M104 283.4c12.6 10.4 19.6 19.1 46 34.6"/><use href="#kp" x="78" y="222" width="52" height="62.4" fill="url(#gP)"/></g><g class="fb" style="--x:76.4px;--r:-13.8deg;--d:0.4s;--t:2.5s"><path d="M196 287.7c3.4 9.1 -35.6 16.7 -46 30.3"/><use href="#km" x="169" y="224" width="54" height="64.8" fill="url(#gN)"/></g></g><g class="gift"><ellipse cx="150" cy="404" rx="44" ry="6" fill="#5a4033" opacity=".12"/><rect x="120" y="352" width="60" height="50" rx="7" fill="url(#gN)"/><rect x="114" y="340" width="72" height="17" rx="5" fill="#dcc8ae"/><rect x="143" y="340" width="14" height="62" fill="#c86b4a"/><path d="M120 372h60" stroke="#fbf6ef" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/></g><g class="bow"><path d="M150 318v22" stroke="#c86b4a" stroke-width="3"/><path d="M150 340c-10-14-30-14-26-2s20 6 26 2zM150 340c10-14 30-14 26-2s-20 6-26 2z" fill="#c86b4a"/><path d="M147 342c-6 8-10 14-16 18M153 342c6 8 10 14 16 18" fill="none" stroke="#c86b4a" stroke-width="3" stroke-linecap="round"/><circle cx="150" cy="340" r="5" fill="#a5533a"/></g><circle class="tap-ring" cx="150" cy="334" r="26" fill="none" stroke="#c86b4a" stroke-width="2"/></svg>
+  </button>
+  <p class="intro-hint" data-ta="பலூன்களைப் பறக்கவிட, தொடுங்கள்">Tap to let the balloons fly</p>
+</div>
+
+<!-- ============ HERO ============ -->
+<header id="hero">
+  <nav class="lang" aria-label="Language">
+    <button type="button" class="lang-btn active" data-lang="en">EN</button>
+    <button type="button" class="lang-btn" data-lang="ta" lang="ta">தமிழ்</button>
+  </nav>
+  <div class="garland" aria-hidden="true"><svg viewBox="-14 -52 428 268" preserveAspectRatio="xMidYMin meet" focusable="false"><g class="g-back"><use href="#pa" x="-35" y="-70" width="70" height="70" transform="translate(1.9 152.2) rotate(-95.1)"/><use href="#pa" x="-33" y="-66" width="66" height="66" transform="translate(398.1 152.2) rotate(95.1)"/><use href="#pa" x="-30" y="-60" width="60" height="60" transform="translate(200 54) rotate(0)"/><use href="#pp" x="-17" y="-104" width="34" height="104" transform="translate(-9.1 182.4) rotate(-120.3)"/><use href="#pp" x="-15" y="-92" width="30" height="92" transform="translate(31 112.2) rotate(-62)"/><use href="#pp" x="-17" y="-100" width="34" height="100" transform="translate(160.7 54.6) rotate(-21.6)"/><use href="#pp" x="-15" y="-94" width="30" height="94" transform="translate(239.3 54.6) rotate(23.6)"/><use href="#pp" x="-15" y="-92" width="30" height="92" transform="translate(369 112.2) rotate(62)"/><use href="#pp" x="-17" y="-104" width="34" height="104" transform="translate(409.1 182.4) rotate(120.3)"/><use href="#eu" x="-17" y="-86" width="34" height="86" transform="translate(4.5 142.7) rotate(-36.5)"/><use href="#eu" x="-15" y="-76" width="30" height="76" transform="translate(98.3 68.3) rotate(-51.1)"/><use href="#eu" x="-15" y="-76" width="30" height="76" transform="translate(301.7 68.3) rotate(51.1)"/><use href="#eu" x="-17" y="-86" width="34" height="86" transform="translate(395.5 142.7) rotate(36.5)"/><use href="#bt" x="-8" y="-56" width="16" height="56" transform="translate(55.7 90) rotate(-23.4)"/><use href="#bt" x="-7" y="-50" width="14" height="50" transform="translate(200 52) rotate(-24)"/><use href="#bt" x="-8" y="-56" width="16" height="56" transform="translate(339.4 86.9) rotate(23.7)"/><use href="#eu" x="-15" y="-70" width="30" height="70" transform="translate(-9.4 173) rotate(62.7)"/><use href="#eu" x="-15" y="-70" width="30" height="70" transform="translate(409.4 173) rotate(-62.7)"/></g><g class="g-balls"><use href="#bm" x="-37.6" y="181.5" width="47.1" height="47.1" fill="url(#gS)"/><use href="#bm" x="-38.6" y="148.7" width="56.3" height="56.3" fill="url(#gS)"/><use href="#bm" x="-34.5" y="112.6" width="69.1" height="69.1" fill="url(#gN)"/><use href="#bm" x="-15.1" y="81.9" width="72.7" height="72.7" fill="url(#gN)"/><use href="#bm" x="12.4" y="56.5" width="72.3" height="72.3" fill="url(#gC)"/><use href="#bm" x="45.4" y="34.9" width="63.6" height="63.6" fill="url(#gS)"/><use href="#bm" x="84.7" y="32.2" width="54" height="54" fill="url(#gT)"/><use href="#bp" x="113.9" y="18.2" width="53.3" height="53.3" fill="url(#gP)"/><use href="#bm" x="140.4" y="17.7" width="64.3" height="64.3" fill="url(#gT)"/><use href="#bm" x="170.3" y="8.1" width="72.2" height="72.2" fill="url(#gT)"/><use href="#bm" x="204.9" y="3.7" width="77.1" height="77.1" fill="url(#gT)"/><use href="#bm" x="241.7" y="22.7" width="73.3" height="73.3" fill="url(#gN)"/><use href="#bm" x="280.1" y="43.1" width="61.4" height="61.4" fill="url(#gT)"/><use href="#bp" x="316" y="60.1" width="49.6" height="49.6" fill="url(#gP)"/><use href="#bp" x="338.2" y="73.2" width="53.7" height="53.7" fill="url(#gP)"/><use href="#bm" x="352.7" y="87" width="67.5" height="67.5" fill="url(#gB)"/><use href="#bp" x="366.5" y="113.5" width="73.3" height="73.3" fill="url(#gM)"/><use href="#bm" x="375.3" y="150.6" width="68.2" height="68.2" fill="url(#gN)"/><use href="#bm" x="-50.4" y="198.4" width="31.9" height="31.9" fill="url(#gN)"/><use href="#bm" x="-6.8" y="189.3" width="28.5" height="28.5" fill="url(#gC)"/><use href="#bm" x="-51.6" y="159.1" width="28.4" height="28.4" fill="url(#gC)"/><use href="#bm" x="-2.3" y="169" width="31.3" height="31.3" fill="url(#gS)"/><use href="#bm" x="-39.8" y="112.2" width="31.8" height="31.8" fill="url(#gC)"/><use href="#bm" x="6.2" y="152.5" width="25.4" height="25.4" fill="url(#gC)"/><use href="#bm" x="-21.2" y="90" width="21.2" height="21.2" fill="url(#gN)"/><use href="#bm" x="29.1" y="125.5" width="28.9" height="28.9" fill="url(#gN)"/><use href="#bm" x="19.7" y="52.8" width="21.7" height="21.7" fill="url(#gT)"/><use href="#bm" x="58.8" y="98.5" width="25.2" height="25.2" fill="url(#gC)"/><use href="#bm" x="47.6" y="38.4" width="24.3" height="24.3" fill="url(#gC)"/><use href="#bm" x="73.2" y="87.3" width="24.2" height="24.2" fill="url(#gT)"/><use href="#bm" x="97.3" y="17.4" width="28.7" height="28.7" fill="url(#gS)"/><use href="#bm" x="104.7" y="68.5" width="28.5" height="28.5" fill="url(#gT)"/><use href="#bm" x="134.5" y="14.8" width="21.9" height="21.9" fill="url(#gB)"/><use href="#bm" x="134.5" y="56.8" width="33" height="33" fill="url(#gS)"/><use href="#bm" x="163" y="8" width="25.3" height="25.3" fill="url(#gC)"/><use href="#bm" x="158.2" y="57.1" width="30.5" height="30.5" fill="url(#gC)"/><use href="#bm" x="199.1" y="3.6" width="26.9" height="26.9" fill="url(#gT)"/><use href="#bp" x="197.1" y="69.7" width="21.2" height="21.2" fill="url(#gP)"/><use href="#bm" x="231.4" y="2.5" width="28.3" height="28.3" fill="url(#gN)"/><use href="#bm" x="227.2" y="68.7" width="20.7" height="20.7" fill="url(#gB)"/><use href="#bm" x="273.6" y="12.8" width="29.6" height="29.6" fill="url(#gS)"/><use href="#bm" x="255.4" y="73.3" width="20" height="20" fill="url(#gC)"/><use href="#bm" x="308.8" y="33.4" width="23" height="23" fill="url(#gT)"/><use href="#bm" x="289.4" y="79.5" width="32.4" height="32.4" fill="url(#gS)"/><use href="#bm" x="342.8" y="56.1" width="22.9" height="22.9" fill="url(#gT)"/><use href="#bm" x="320.1" y="94.5" width="27.9" height="27.9" fill="url(#gN)"/><use href="#bm" x="367.2" y="71.2" width="33.8" height="33.8" fill="url(#gN)"/><use href="#bm" x="329.4" y="103.1" width="33" height="33" fill="url(#gN)"/><use href="#bm" x="396.8" y="87.9" width="21.1" height="21.1" fill="url(#gT)"/><use href="#bm" x="416.8" y="118.6" width="28" height="28" fill="url(#gN)"/><use href="#bm" x="359.2" y="145.6" width="33.2" height="33.2" fill="url(#gN)"/><use href="#bm" x="429.5" y="169.7" width="28.4" height="28.4" fill="url(#gN)"/></g><g class="g-small"><use href="#bp" x="10.8" y="203.5" width="11.4" height="11.4" fill="url(#gM)"/><use href="#bp" x="-50.6" y="154.6" width="12.4" height="12.4" fill="url(#gP)"/><use href="#bp" x="-22" y="80.7" width="16.1" height="16.1" fill="url(#gM)"/><use href="#bp" x="127.9" y="12.1" width="15" height="15" fill="url(#gP)"/><use href="#bp" x="225.9" y="83.8" width="14.7" height="14.7" fill="url(#gM)"/><use href="#bm" x="262.7" y="87.4" width="16.6" height="16.6" fill="url(#gB)"/><use href="#bm" x="372.6" y="66.9" width="10.7" height="10.7" fill="url(#gN)"/><use href="#bm" x="406.9" y="90.8" width="11.1" height="11.1" fill="url(#gN)"/><use href="#bm" x="432.8" y="118" width="10.7" height="10.7" fill="url(#gB)"/></g></svg></div>
+
+  <div class="hero-inner">
+    <p class="ohbaby" aria-hidden="true"><span class="w"><i style="--n:0">O</i><i style="--n:1">H</i></span> <span class="w"><i style="--n:2">B</i><i style="--n:3">A</i><i style="--n:4">B</i><i style="--n:5">Y</i></span></p>
+    <p class="hero-eyebrow rise r1" data-ta="வளைகாப்பு விழாவுக்கு அன்புடன் அழைக்கிறோம்">You're invited to a baby shower</p>
+    <h1 class="title rise r1" data-bind="title">Divya's Baby Shower</h1>
+
+    <div class="arch-wrap rise r2">
+      <div class="arch-sprig" aria-hidden="true"><svg viewBox="0 0 60 120" focusable="false"><use href="#pa" x="-4" y="40" width="60" height="60" transform="rotate(-20 26 100)"/><use href="#pp" x="10" y="0" width="40" height="120"/><use href="#eu" x="24" y="24" width="34" height="94" transform="rotate(18 40 118)"/></svg></div>
+      <!-- cover photo goes here (data-bind="cover"); a boho sunrise stands in for the preview -->
+      <div class="arch cover-slot" role="img" aria-label="Cover photo">
+        <svg viewBox="0 0 300 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+          <defs><linearGradient id="obSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3d9cc"/><stop offset=".7" stop-color="#fbefe5"/></linearGradient></defs>
+          <rect width="300" height="400" fill="url(#obSky)"/>
+          <circle cx="150" cy="268" r="104" fill="#f1d3a3" opacity=".45"/>
+          <circle cx="150" cy="268" r="74" fill="#e2ad55"/>
+          <g fill="#fffaf4" opacity=".9"><path d="M28 120a14 14 0 0 1 26-6 11 11 0 0 1 19 8H28z"/><path d="M206 74a12 12 0 0 1 22-5 9 9 0 0 1 16 7h-38z"/></g>
+          <g fill="none" stroke="#b39c87" stroke-width="1.2"><path d="M88 152c-4 18 6 30 0 50"/><path d="M118 132c4 16-4 30 2 46"/></g>
+          <use href="#km" x="66" y="88" width="44" height="52.8" fill="url(#gT)"/>
+          <use href="#kp" x="100" y="76" width="38" height="45.6" fill="url(#gP)"/>
+          <g fill="none" stroke="#7a5f50" stroke-width="2" stroke-linecap="round"><path d="M214 140q5-5 10 0q5-5 10 0"/><path d="M242 160q4-4 8 0q4-4 8 0"/></g>
+          <path d="M0 290C60 250 110 262 160 284S260 300 300 270V400H0Z" fill="#e3c4ae"/>
+          <path d="M0 318C70 290 130 300 190 322S270 330 300 312V400H0Z" fill="#cf8a6c"/>
+          <path d="M0 352C80 324 150 334 210 352S280 362 300 350V400H0Z" fill="#a9b79b"/>
+          <path d="M0 380C90 362 170 368 300 384V400H0Z" fill="#8f9f80"/>
+          <use href="#pp" x="226" y="270" width="40" height="120" transform="rotate(10 246 390)"/>
+          <use href="#pp" x="250" y="290" width="34" height="104" transform="rotate(22 267 394)"/>
+          <use href="#bt" x="24" y="324" width="16" height="56" transform="rotate(-10 32 380)"/>
+          <use href="#bt" x="40" y="334" width="14" height="48"/>
+        </svg>
+        <img class="cover-img" data-bind="cover" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+      </div>
+      <div class="arch-rb" aria-hidden="true"><svg viewBox="0 0 132 82" focusable="false"><use href="#rb" x="6" y="0" width="120" height="68"/><g fill="#fffcf7"><path d="M0 72a12 12 0 0 1 20-9 10 10 0 0 1 18 6 8 8 0 0 1-2 13H6a8 8 0 0 1-6-10z"/><path d="M92 72a12 12 0 0 1 20-9 10 10 0 0 1 18 6 8 8 0 0 1-2 13H98a8 8 0 0 1-6-10z"/></g></svg></div>
+      <div class="arch-bl" aria-hidden="true"><svg viewBox="0 0 100 96" focusable="false"><g fill="none" stroke="#b39c87" stroke-width="1"><path d="M30 64c4 10-2 18 6 30"/><path d="M62 56c-4 12 4 22-4 38"/><path d="M78 74c-2 8 2 12-2 20"/></g><use href="#km" x="4" y="6" width="50" height="60" fill="url(#gB)"/><use href="#kp" x="40" y="0" width="44" height="52.8" fill="url(#gM)"/><use href="#km" x="62" y="40" width="30" height="36" fill="url(#gS)"/></svg></div>
+    </div>
+
+    <p class="parents rise r3" data-ta="வருங்கால பெற்றோர்">Parents-to-be</p>
+    <p class="names rise r3" data-bind="names"><span class="name-part">Divya</span> <span class="hero-amp">&amp;</span> <span class="name-part">Arun</span></p>
+    <p id="heroTagline" class="rise r3" data-bind="tagline">A little one is on the way! Join us to shower Divya with love, blessings and bangles as our family gets ready to grow.</p>
+    <p id="heroDatePill" class="rise r4" data-bind="dateLine">🌸 21st March 2027 • Chennai</p>
+    <br>
+    <a class="scroll-cue rise r4" href="#events"><span data-ta="விழா நிகழ்ச்சிகள்">See the celebration</span><i aria-hidden="true"></i></a>
+  </div>
+</header>
+
+<main>
+<!-- ============ EVENTS ============ -->
+<section id="events" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="விழா நிகழ்ச்சிகள்">The celebration</p>
+    <h2 class="sec-title" data-ta="அன்புடன் கொண்டாடுவோம்">Come celebrate with us</h2>
+    <svg class="mini-rb" viewBox="0 0 120 68" aria-hidden="true" focusable="false"><use href="#rb"/></svg>
+  </div>
+
+  <div id="eventsGrid" class="events">
+    <template>
+    <article class="event reveal">
+      <div class="ev-crown" aria-hidden="true"><svg class="ev-rb" viewBox="0 0 150 84" focusable="false"><use href="#rb2"/></svg></div>
+      <span class="ev-icon" data-field="icon">🌸</span>
+      <p class="ev-num"><span data-ta="நிகழ்ச்சி">Moment</span> <span data-field="number">01</span></p>
+      <h3 data-field="name">Valaikappu Ceremony</h3>
+      <ul class="ev-meta">
+        <li><svg class="ic"><use href="#i-cal"/></svg><span data-field="date">21st March 2027</span></li>
+        <li><svg class="ic"><use href="#i-clock"/></svg><span data-field="time">10:00 AM to 12:30 PM</span></li>
+        <li><svg class="ic"><use href="#i-pin"/></svg><span><strong data-field="place">Sri Lakshmi Mahal</strong><small data-field="venue">Mylapore, Chennai - 600004</small></span></li>
+      </ul>
+      <p class="ev-desc" data-field="desc">Bangles, blessings and songs for the mother-to-be.</p>
+      <a class="btn" data-href="map" href="https://www.google.com/maps/dir/?api=1&destination=Mylapore+Chennai+600004" target="_blank" rel="noopener"><span data-ta="வழி காட்டு">Get directions</span> <svg><use href="#i-go"/></svg></a>
+    </article>
+    </template>
+  </div>
+</section>
+
+<!-- ============ COUNTDOWN: four balloons ============ -->
+<section id="countdown" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="நாட்களை எண்ணுகிறோம்">Counting the days</p>
+    <h2 class="sec-title" data-ta="கொண்டாட்டம் நெருங்குகிறது">Almost time to celebrate</h2>
+  </div>
+  <div class="cd reveal" role="timer" aria-label="Time left until the celebration">
+    <div class="cd-b"><div class="cd-ball"><span id="cdDays">000</span></div><svg class="cd-str" viewBox="0 0 20 60" aria-hidden="true"><path d="M10 0c-7 7 7 12 0 19s7 12 0 19 7 12 0 22"/></svg><p class="cd-lbl" data-ta="நாட்கள்">Days</p></div>
+    <div class="cd-b"><div class="cd-ball"><span id="cdHours">00</span></div><svg class="cd-str" viewBox="0 0 20 60" aria-hidden="true"><path d="M10 0c7 7-7 12 0 19s-7 12 0 19-7 12 0 22"/></svg><p class="cd-lbl" data-ta="மணி">Hours</p></div>
+    <div class="cd-b"><div class="cd-ball"><span id="cdMins">00</span></div><svg class="cd-str" viewBox="0 0 20 60" aria-hidden="true"><path d="M10 0c-7 7 7 12 0 19s7 12 0 19 7 12 0 22"/></svg><p class="cd-lbl" data-ta="நிமிடம்">Mins</p></div>
+    <div class="cd-b"><div class="cd-ball"><span id="cdSecs">00</span></div><svg class="cd-str" viewBox="0 0 20 60" aria-hidden="true"><path d="M10 0c7 7-7 12 0 19s-7 12 0 19-7 12 0 22"/></svg><p class="cd-lbl" data-ta="வினாடி">Secs</p></div>
+  </div>
+  <p class="cd-when reveal"><span data-bind="dateLong">Sunday, 21 March 2027</span> · <span data-bind="time">10:00 AM</span></p>
+</section>
+
+<!-- ============ WISHES: love notes ============ -->
+<section id="wishes" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="வாழ்த்துப் புத்தகம்">Guest book</p>
+    <h2 class="sec-title" data-ta="அன்புக் குறிப்புகள்">Love notes</h2>
+    <svg class="mini-rb" viewBox="0 0 120 68" aria-hidden="true" focusable="false"><use href="#rb"/></svg>
+    <p class="sec-sub" data-ta="அம்மாவாகப் போகிறவருக்கும் குட்டிப் பாப்பாவுக்கும் ஒரு வாழ்த்து எழுதுங்கள். ஒவ்வொன்றையும் பொக்கிஷமாக வைத்துக்கொள்வோம்.">Leave a few kind words for the mother-to-be and the little one. We'll treasure every note.</p>
+  </div>
+
+  <form id="wishForm" class="wish-form reveal">
+    <svg class="form-sprig" viewBox="0 0 60 120" aria-hidden="true" focusable="false"><use href="#pp" x="10" y="0" width="40" height="120"/><use href="#eu" x="0" y="44" width="26" height="72" transform="rotate(-22 13 116)"/></svg>
+    <label class="field"><span data-ta="உங்கள் பெயர்">Your name</span><input id="wishName" maxlength="60" placeholder="e.g. Priya Aunty" data-ta-ph="எ.கா. பிரியா அத்தை" required></label>
+    <label class="field"><span data-ta="உங்கள் வாழ்த்து">Your note</span><textarea id="wishMessage" maxlength="500" rows="3" placeholder="Write a little love note…" data-ta-ph="அன்பான வாழ்த்தை எழுதுங்கள்…" required></textarea></label>
+    <button class="btn" type="submit" data-ta="வாழ்த்தை அனுப்பு">Send your love note</button>
+  </form>
+
+  <div id="wishesWall" class="wall">
+    <template>
+    <figure class="wish reveal"><svg class="w-sprig" viewBox="0 0 40 120" aria-hidden="true" focusable="false"><use href="#pp"/></svg><blockquote data-field="message">So happy for you both! Wishing the mother-to-be a calm, joyful wait and the little one all the love in the world.</blockquote><figcaption data-field="name">Priya Aunty</figcaption></figure>
+    </template>
+  </div>
+  <p id="wishesEmpty" class="wishes-empty" hidden data-ta="முதல் வாழ்த்தை நீங்களே எழுதுங்கள் 🤍">Be the first to leave a love note 🤍</p>
+  <div class="wishes-more"><button id="wishesMore" class="btn ghost" type="button" data-ta="மேலும் வாழ்த்துகள்">Show more notes</button></div>
+</section>
+
+<!-- ============ HELP & CONTACTS ============ -->
+<section id="stay" class="section">
+  <div class="help reveal">
+    <svg class="help-art" viewBox="0 0 120 96" aria-hidden="true" focusable="false">
+      <use href="#pp" x="4" y="8" width="30" height="90" transform="rotate(-24 19 98)"/><use href="#eu" x="86" y="20" width="28" height="76" transform="rotate(26 100 96)"/>
+      <g fill="none" stroke="#b39c87" stroke-width="1"><path d="M44 66c4 10-2 16 14 30"/><path d="M76 60c-4 12 2 20-18 36"/></g>
+      <use href="#km" x="22" y="8" width="44" height="52.8" fill="url(#gS)"/><use href="#kp" x="56" y="2" width="42" height="50.4" fill="url(#gP)"/><use href="#km" x="42" y="26" width="38" height="45.6" fill="url(#gT)"/>
+    </svg>
+    <h2 class="sec-title" data-ta="உதவி தேவையா?">Need a hand?</h2>
+    <p id="stayText" data-bind="help">Need help finding the venue? Call us any time.</p>
+    <div id="coordinators">
+    <template>
+      <div class="coord">
+        <span class="av" aria-hidden="true"><svg viewBox="0 0 40 48" focusable="false"><use href="#kp" x="4" y="2" width="32" height="38.4" fill="url(#gB)"/><path d="M20 40c-3 3 3 5 0 8" fill="none" stroke="#b39c87"/></svg></span>
+        <div class="who"><p class="c-name" data-field="name">Divya's family</p><p class="c-phone" data-field="phone">+91 90000 00000</p></div>
+        <a class="btn" data-href="tel" href="tel:+919000000000"><svg><use href="#i-phone"/></svg><span data-ta="அழைக்க">Call</span></a>
+      </div>
+    </template>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="foot">
+  <div class="foot-garland" aria-hidden="true"><svg viewBox="0 -36 280 136" focusable="false"><use href="#pp" x="-13" y="-80" width="26" height="80" transform="translate(21 28.3) rotate(-25.5)"/><use href="#pp" x="-12" y="-70" width="24" height="70" transform="translate(39.2 40.8) rotate(3.4)"/><use href="#eu" x="-12" y="-60" width="24" height="60" transform="translate(64.9 49) rotate(50.3)"/><use href="#pp" x="-13" y="-80" width="26" height="80" transform="translate(259 28.3) rotate(25.5)"/><use href="#pp" x="-12" y="-70" width="24" height="70" transform="translate(240.8 40.8) rotate(-3.4)"/><use href="#eu" x="-12" y="-60" width="24" height="60" transform="translate(215.1 49) rotate(-50.3)"/><use href="#eu" x="-11" y="-54" width="22" height="54" transform="translate(40.8 37.1) rotate(-46.6)"/><use href="#eu" x="-11" y="-54" width="22" height="54" transform="translate(239.2 37.1) rotate(46.6)"/><use href="#bt" x="-6" y="-40" width="12" height="40" transform="translate(109.9 61.4) rotate(-4.5)"/><use href="#bt" x="-6" y="-40" width="12" height="40" transform="translate(170.1 61.4) rotate(4.5)"/><use href="#eu" x="-11" y="-56" width="22" height="56" transform="translate(21 28.3) rotate(224.5)"/><use href="#eu" x="-11" y="-56" width="22" height="56" transform="translate(259 28.3) rotate(135.5)"/><use href="#bm" x="8.6" y="16.4" width="24.5" height="24.5" fill="url(#gB)"/><use href="#bm" x="25.3" y="24.4" width="26.1" height="26.1" fill="url(#gS)"/><use href="#bm" x="38.1" y="29.8" width="34.5" height="34.5" fill="url(#gN)"/><use href="#bm" x="56.9" y="28.7" width="37.2" height="37.2" fill="url(#gS)"/><use href="#bm" x="75.1" y="34.2" width="36.3" height="36.3" fill="url(#gS)"/><use href="#bm" x="89.7" y="42.4" width="40" height="40" fill="url(#gN)"/><use href="#bm" x="108.9" y="44.8" width="38.1" height="38.1" fill="url(#gS)"/><use href="#bm" x="126.8" y="39.1" width="38.1" height="38.1" fill="url(#gB)"/><use href="#bm" x="142.6" y="37.7" width="41.8" height="41.8" fill="url(#gN)"/><use href="#bm" x="162.7" y="38.8" width="38.3" height="38.3" fill="url(#gT)"/><use href="#bp" x="183.1" y="37.4" width="34.4" height="34.4" fill="url(#gP)"/><use href="#bp" x="201.5" y="32.4" width="34.3" height="34.3" fill="url(#gP)"/><use href="#bm" x="220.1" y="23.2" width="29.4" height="29.4" fill="url(#gC)"/><use href="#bm" x="238.5" y="16" width="28.7" height="28.7" fill="url(#gS)"/><use href="#bm" x="20.7" y="13.1" width="15.8" height="15.8" fill="url(#gC)"/><use href="#bm" x="40.4" y="22" width="12.8" height="12.8" fill="url(#gB)"/><use href="#bm" x="53.2" y="22.6" width="16.4" height="16.4" fill="url(#gT)"/><use href="#bm" x="61.5" y="57.2" width="13.5" height="13.5" fill="url(#gN)"/><use href="#bm" x="85" y="63.4" width="14.5" height="14.5" fill="url(#gC)"/><use href="#bm" x="108.7" y="37.7" width="12.8" height="12.8" fill="url(#gN)"/><use href="#bm" x="116.2" y="70.3" width="12.3" height="12.3" fill="url(#gT)"/><use href="#bm" x="134.1" y="67.3" width="19.8" height="19.8" fill="url(#gB)"/><use href="#bp" x="154.4" y="36.9" width="13.8" height="13.8" fill="url(#gP)"/><use href="#bm" x="174.1" y="62.7" width="19.3" height="19.3" fill="url(#gN)"/><use href="#bm" x="199.5" y="55.8" width="16.6" height="16.6" fill="url(#gN)"/><use href="#bm" x="215.3" y="51.8" width="14.1" height="14.1" fill="url(#gC)"/><use href="#bp" x="220.8" y="19.4" width="17.9" height="17.9" fill="url(#gP)"/><use href="#bm" x="253.1" y="32.1" width="15.8" height="15.8" fill="url(#gN)"/><use href="#bm" x="16.8" y="38.7" width="8.2" height="8.2" fill="url(#gS)"/><use href="#bm" x="81.9" y="29" width="9.2" height="9.2" fill="url(#gC)"/><use href="#bm" x="130.9" y="37.5" width="9" height="9" fill="url(#gS)"/><use href="#bm" x="148" y="38.4" width="6.4" height="6.4" fill="url(#gS)"/><use href="#bp" x="168.7" y="77.3" width="7.9" height="7.9" fill="url(#gP)"/><use href="#bp" x="195.1" y="28.4" width="9.4" height="9.4" fill="url(#gP)"/><use href="#bm" x="212.1" y="22.4" width="9" height="9" fill="url(#gC)"/><use href="#bp" x="248.8" y="11" width="7" height="7" fill="url(#gP)"/></svg></div>
+  <p class="hashtag" data-bind="hashtag">#DivyasBabyShower</p>
+  <p class="thanks" data-ta="எங்களுடன் கொண்டாடியதற்கு நன்றி">Thank you for celebrating with us</p>
+  <svg class="foot-rb" viewBox="0 0 120 68" aria-hidden="true" focusable="false"><use href="#rb"/></svg>
+</footer>
+
+<button id="musicToggle" type="button" aria-label="Play or pause music"><svg><use href="#i-note"/></svg></button>
+<audio id="bgMusic" loop preload="auto"></audio>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* Intro and bilingual labels. js/invite.js opens the intro on tap (adds .open, then .hidden after data-hide-after);
+   the balloons fly off on the same tap (CSS), then this unlocks scrolling and starts the hero's entrance. */
+(function(){
+  var html=document.documentElement, overlay=document.getElementById("curtain-overlay");
+  var reduce=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  if(overlay&&!html.classList.contains("intro-open")){
+    // Admin thumbnails and framed previews start on the page itself.
+    overlay.remove();
+  }else if(overlay){
+    var opened=false;
+    overlay.querySelectorAll("[data-open-invite]").forEach(function(b){
+      b.addEventListener("click",function(){
+        if(opened) return;
+        opened=true;
+        overlay.classList.add("open");
+        setTimeout(function(){ html.classList.remove("intro-open"); },reduce?0:1250);
+      });
+    });
+  }
+
+  // Labels with data-ta (and placeholders with data-ta-ph) switch to that Tamil text when the guest picks தமிழ்.
+  var lang="en";
+  function labels(root){
+    root.querySelectorAll("[data-ta]").forEach(function(n){
+      if(n.dataset.en===undefined) n.dataset.en=n.textContent;
+      n.textContent=lang==="ta"?n.dataset.ta:n.dataset.en;
+    });
+    root.querySelectorAll("[data-ta-ph]").forEach(function(n){
+      if(n.dataset.enPh===undefined) n.dataset.enPh=n.placeholder;
+      n.placeholder=lang==="ta"?n.dataset.taPh:n.dataset.enPh;
+    });
+  }
+  document.addEventListener("invite:render",function(e){
+    lang=e.detail&&e.detail.lang==="ta"?"ta":"en";
+    labels(document);
+  });
+  // New wishes arrive without a full render, so label them as they are added.
+  var wall=document.getElementById("wishesWall");
+  if(wall&&window.MutationObserver) new MutationObserver(function(){ labels(wall); }).observe(wall,{childList:true});
+})();
+</script>
+</body>
+</html>

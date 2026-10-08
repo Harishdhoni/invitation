@@ -1,6 +1,6 @@
 # Product: Invitations
 
-An invitation website, in Tamil and English, for each family event: weddings, housewarmings, birthdays, or any other
+An invitation website, in Tamil and English, for each family event: weddings, housewarmings, birthdays, baby showers, or any other
 category the admin adds. Guests get one link, usually over WhatsApp. It opens a designed page on their phone with
 music, every event's time and directions, a countdown, a guest book and tap-to-call contacts. One admin runs any
 number of these invitations from a single admin page. They can give a family member a PIN so that person can edit
@@ -98,7 +98,7 @@ Every event's page has these parts. Each template decides which parts to show an
 - **Template editor**: name, category, description, and the HTML (paste, type, or upload a `.html` file; download is
   also available). A live preview with sample details shows it at phone or desktop size. A size meter warns when
   no hooks are found. Hook help is built in.
-- **Categories**: add (e.g. Baby Shower), rename, and delete once a category has no templates or events. Weddings
+- **Categories**: add (e.g. Engagement), rename, and delete once a category has no templates or events. Weddings
   can't be deleted.
 
 ### 3.3 The editor page (`/editor`)
@@ -122,7 +122,7 @@ Every event's page has these parts. Each template decides which parts to show an
    the reception → write a wish → it appears on the wall.
 4. **Moderate** (admin or editor): Wishes tab → **Hide** an inappropriate wish. It disappears from every guest's wall
    immediately.
-5. **New kind of event** (admin): Templates → ＋ New category "Baby Shower" → ＋ New template (it starts from the blank
+5. **New kind of event** (admin): Templates → ＋ New category "Engagement" → ＋ New template (it starts from the blank
    starter) → restyle it, check the phone preview → Save → create an event in that category.
 6. **Revoke access** (admin): **Revoke** on the event card. The PIN stops working immediately, even for someone
    editing at that moment.
@@ -173,9 +173,15 @@ All templates fill in the same event details (see TEMPLATES.md).
 | Rainbow Unicorn | Birthday | Tap the golden horn for a rainbow; gold-foil title, an original unicorn, cloud countdown |
 | Monster Trainer | Birthday | A mystery egg hatches; holo trainer card, events as trading cards, badge countdown |
 | Vel Muruga | Birthday | Lord Murugan's blessings: a peacock-feather fan, a golden Vel (or the family's Murugan picture), Tamil-first |
+| Valaikappu | Baby shower | The traditional Tamil bangle ceremony: glass bangles that jingle open, jasmine garland, a wreath of bangles round the photo, Tamil-first |
+| Little Sprout | Baby shower | Water the seed and it sprouts; watercolour leaves, an arched photo window, seed-packet events |
+| Special Delivery | Baby shower | A stork brings the bundle; shipping-label events, a tracking-timeline countdown, gift-tag wishes |
+| Oh Baby | Baby shower | Boho balloon garland with pearl OH BABY letters; let the balloons fly; earthy arch frames |
+| Sweet Dreams | Baby shower | A felt nursery mobile that turns when you wind the music box; stitched felt cards |
 
-The themed birthday designs use original artwork only (no copyrighted characters, logos or franchise names). Their fixed
-labels carry `data-ta` attributes, so they switch to Tamil with the தமிழ் button.
+The themed birthday and baby-shower designs use original artwork only (no copyrighted characters, logos or franchise
+names). Their fixed labels carry `data-ta` attributes, so they switch to Tamil with the தமிழ் button. The baby-shower
+designs are gender-neutral: no "boy or girl" or gender reveal, which is not allowed in India.
 
 New templates start from `public/templates/blank.html`, which uses every hook with plain styling.
 
@@ -224,7 +230,7 @@ These are things the product doesn't do today.
 | Event | One invitation (a wedding, housewarming, birthday…). Stored as `weddings/<slug>` for historical reasons |
 | Link name / slug | The part after the site address that identifies an event, e.g. `arjun-meera` |
 | Main link | The bare site address `/`, which shows one chosen event |
-| Category | A kind of event (Weddings, Housewarmings, Birthdays, or one the admin adds). Each has its own templates and sample details |
+| Category | A kind of event (Weddings, Housewarmings, Birthdays, Baby Showers, or one the admin adds). Each has its own templates and sample details |
 | Template | A whole HTML page design that any event in its category can use |
 | Classic | The built-in Maroon & Gold wedding design in `index.html` |
 | Starter template | A design shipped in `public/templates/`, copied into Firestore on request |

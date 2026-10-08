@@ -4,7 +4,7 @@ trigger: always_on
 
 # Cascade rules: Invitations (wedding-invite)
 
-Tamil / English invitation websites (weddings, housewarmings, birthdays, custom categories). There are many events,
+Tamil / English invitation websites (weddings, housewarmings, birthdays, baby showers, custom categories). There are many events,
 each at `/<slug>` with its own details, photos, music, guest book and template. One admin manages everything, and
 an editor can edit one event with a PIN. More detail: `CLAUDE.md` (code), `PRODUCT.md` (product), `SETUP.md`
 (setup/deploy), `TEMPLATES.md` (template hooks). Read TEMPLATES.md before you touch `public/templates/` or the hooks
@@ -30,6 +30,8 @@ in `invite.js`.
 - Local: start Apache in XAMPP, then open `http://localhost/wedding-invite/public/`, `…/admin.html`, `…/editor.html`.
   Open an event with `?w=<slug>` (`/<slug>` paths only work on Vercel). Templates: `?template=<id>`
   (`classic` = built-in), `?template=<id>&w=<slug>`, `?template-file=templates/<file>.html&category=<id>`.
+- `public/.htaccess` gives local Apache the same `Cache-Control: no-cache` as `vercel.json`, so a normal reload shows
+  edits. If a page still mixes old and new files, hard-refresh (Ctrl+Shift+R).
 - Syntax check: `for f in public/js/*.js api/*.js; do node --check "$f"; done`
 - Site deploy: push to `main` (Vercel), or `firebase deploy --only hosting`.
 - No tests and no linter. Check changes by hand in the browser and watch the console.
@@ -39,8 +41,10 @@ in `invite.js`.
 - `public/index.html`: Classic design and the guest shell. `js/invite.js`: the guest runtime (load config, swap in
   the template, fill hooks, intro, countdown, music, language, wishes).
 - `public/admin.html` + `js/admin.js` (events list, new/delete event, main link, legacy import, routing by
-  `?w=` / `?view=templates` / `?template=`), `js/admin-templates.js` (categories, templates page, template editor,
-  picker, thumbnails, starters), `js/admin-access.js` (editor PINs).
+  `?w=` / `?view=templates` / `?template=`), `js/admin-templates.js` (categories, templates page with a category
+  dropdown kept in `sessionStorage` `wi:templatesCategory`, template editor, picker, thumbnails, starters),
+  `js/admin-access.js` (editor PINs). `admin.html` and `editor.html` share `css/admin.css` and end with the
+  `.site-credit` footer ("© 2026 · Powered by Harish S").
 - `public/editor.html` + `js/editor.js`: PIN entry. `js/editor-firebase.js` is a separate named app `"editor"` with
   anonymous auth, so it never replaces an admin session. Keep it separate.
 - `js/event-editor.js`: the event editor shared by admin and editor. It writes its markup into `#editorView` on
@@ -53,8 +57,8 @@ in `invite.js`.
 - `api/` (Vercel, CommonJS): `invite.js` serves `/<slug>` with per-event OG tags between `<!-- og:start -->` and
   `<!-- og:end -->` and adds `meta wedding-id` / `template-id` and the runtime script. `og-image.js` serves the
   preview image. `_firestore.js` is a credential-less REST reader.
-- `public/templates/*.html` + `starters.json`: starter designs. These are **seeds only**. Once added in the admin,
-  events use the Firestore copy, so editing the file changes nothing live.
+- `public/templates/*.html` + `starters.json`: 27 starter designs (10 wedding, 1 housewarming, 11 birthday, 5 baby shower). These are
+  **seeds only**. Once added in the admin, events use the Firestore copy, so editing the file changes nothing live.
 
 ## Data (Firestore)
 
@@ -101,6 +105,8 @@ exactly `{name 1–60, message 1–500, hidden:false, createdAt:request.time}`.
 - Template hooks: `invite.js` + `TEMPLATES.md` + the Hooks box in `admin.html` + `templates/blank.html`.
 - Wish limits (60/500): rules + `maxlength` in the HTML + `sendWish()`.
 - Size limits: images ~900K chars, music 900 KB chunks / 10 MB saved / 60 MB source, template HTML 900 KB.
+- No-cache headers: `vercel.json` `headers` + `public/.htaccess`.
+- Starters: `starters.json` + the starter count in `README.md` / `SETUP.md` + the catalog in `PRODUCT.md` §6.
 - `SETUP.md` when setup steps or admin buttons change.
 
 ## Gotchas
@@ -108,6 +114,17 @@ exactly `{name 1–60, message 1–500, hidden:false, createdAt:request.time}`.
 - Templates replace the whole document (`swapDocument`). Template scripts must not wait for
   `DOMContentLoaded`/`load`, must not include `js/invite.js`, and should skip the intro in iframes. Every hook is
   optional, and an empty value hides its element.
+- Writing a template: start from a recent starter such as `birthday-sprinkle-cake.html`. The runtime only adds `.open`
+  / `.hidden` to the intro overlay, so the template's tap handler removes `intro-open` itself. Fixed labels get Tamil
+  through `data-ta` / `data-ta-ph` and a small `invite:render` handler (the `data-i18n` strings are worded for
+  weddings). Photo slots are an `<img data-bind="cover">` with a transparent-GIF `src` over a stand-in illustration.
+  Don't write the sample child's name, age or date into fixed text. Themed designs use original artwork only: no
+  copyrighted characters, logos or franchise names.
+- Templates on phones: decorations wider than the screen widen the page even with `body{overflow-x:hidden}`; put
+  `overflow-x:clip` on their section. Pixel/monospace fonts need a Tamil font for `html[lang="ta"] [data-ta]`.
+  Old-style figures (Playfair Display, Cormorant Garamond) need `font-variant-numeric:lining-nums`.
+- `admin.css` makes `<body>` a full-height flex column so the `.site-credit` footer sits at the bottom; a new direct
+  child of `<body>` becomes a flex item.
 - Firestore has a 1 MiB document limit. Music chunks are written one at a time **before** the config batch, and old
   chunks are deleted **after** it commits. Keep that order.
 - Guests cache by version (`wi:config:<slug>` and `wi:img:<slug>:<id>` in localStorage, `wi-music` in the Cache
@@ -122,8 +139,10 @@ exactly `{name 1–60, message 1–500, hidden:false, createdAt:request.time}`.
 
 1. Run the `node --check` loop.
 2. Go through the flow in XAMPP and watch the console.
-3. Runtime or template changes: check `?template=classic` and a few starters, the intro, EN / தமிழ், and a preview
-   wish.
+3. Runtime or template changes: check `?template=classic` and a few starters (or a starter file with
+   `?template-file=`) at phone width (390px, no sideways scroll after the intro), the intro, EN / தமிழ், and a
+   preview wish. For headless screenshots use DevTools device emulation; `--window-size` can't go below ~500px on
+   Windows.
 4. Rules changes: after deploying (ask first), test as admin, as an editor (another browser profile) and as a guest
    (private window).
 5. `api/` changes can only be checked on a Vercel deployment.

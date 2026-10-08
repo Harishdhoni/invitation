@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<!--
+  Sweet Dreams — baby shower template
+  A gentle, cosy hand-made nursery for any family: a wooden-hoop baby mobile with felt clouds, a sleepy moon, stars and
+  a little elephant hangs over the intro (tap to wind the music box and it turns while music notes float up), a felt
+  cloud photo frame with stitched edges, felt cards hanging on strings, a countdown mobile of felt shapes and stitched
+  "lullaby wishes". Daytime and soft: no night sky, no star field.
+  Palette: dusty blue #93a9c4 · powder #dbe5ef · oat #efe6d8 · blush #e9c3b9 · mustard #dcae5a · sage #b7c4a8 ·
+           warm grey ink #4b4a55 · felt white #fffdf9
+  Fonts:   Comfortaa (rounded display) · Figtree (body) · Noto Sans Tamil (Tamil)
+  A baby-shower template for the invitation site; it follows TEMPLATES.md, and js/invite.js fills in the names, title,
+  date, photo, events, countdown, wishes and contacts. Labels with data-ta switch to Tamil with the தமிழ் button.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#dbe5ef">
+<title>Baby Shower — Sweet Dreams</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;600;700&family=Figtree:wght@400;500;600;700;800&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  /* Runs before paint: mark JS, and decide whether the intro overlay is shown (not in admin previews or frames). */
+  (function(){
+    var d=document.documentElement, skip=/[?&]preview/.test(location.search);
+    try{ skip=skip||window.self!==window.top; }catch(e){ skip=true; }
+    d.className+=" js"+(skip?"":" intro-open");
+  })();
+</script>
+<style>
+:root{
+  --dusty:#93a9c4; --dusty-d:#5c7596; --dusty-dd:#475f7f; --powder:#dbe5ef; --powder-l:#ebf1f7;
+  --oat:#efe6d8; --oat-d:#e2d5c0; --blush:#e9c3b9; --blush-l:#f7e4de; --blush-d:#a5645a;
+  --mustard:#dcae5a; --mustard-l:#f3dfae; --mustard-d:#94691f; --sage:#b7c4a8; --sage-l:#e5ebdc; --sage-d:#677a58;
+  --ink:#4b4a55; --ink2:#5d5b67; --felt:#fffdf9; --wood:#c99f72; --wood-d:#a27650; --wood-l:#e3c59e;
+  --display:'Comfortaa','Noto Sans Tamil',system-ui,sans-serif;
+  --body:'Figtree','Noto Sans Tamil',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --tamil:'Noto Sans Tamil','Figtree',system-ui,sans-serif;
+  --soft:cubic-bezier(.33,1.3,.6,1);
+  /* felt fibres: dark and light speckles from fractal noise, drawn once as a tile */
+  --noise:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='a'><feTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='3' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .29 0 0 0 0 .28 0 0 0 0 .33 0 0 0 .7 -.3'/></filter><filter id='b'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='2' seed='9' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .9 -.38'/></filter><rect width='160' height='160' filter='url(%23a)'/><rect width='160' height='160' filter='url(%23b)'/></svg>");
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+html.intro-open,html.intro-open body{overflow:hidden}
+body{
+  margin:0;min-height:100vh;overflow-x:hidden;font-family:var(--body);font-size:1.0625rem;line-height:1.65;color:var(--ink);
+  background:var(--noise) 0 0/160px 160px,var(--oat);
+}
+h1,h2,h3,p{margin:0}
+a{color:inherit}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--dusty-d);outline-offset:3px;border-radius:12px}
+[lang="ta"]{font-family:var(--tamil)}
+.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- shared bits ---------- */
+.section{position:relative;padding:clamp(64px,10vw,104px) 16px;overflow-x:clip}
+.sec-head{text-align:center;max-width:620px;margin:0 auto clamp(30px,5vw,48px)}
+.eyebrow{font-weight:700;font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;color:var(--dusty-dd)}
+.sec-title{font-family:var(--display);font-weight:700;font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:8px;color:var(--ink)}
+.thread{display:block;width:150px;height:18px;margin:14px auto 0;overflow:visible}
+.sec-sub{margin-top:12px;color:var(--ink2)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:0;cursor:pointer;text-decoration:none;
+  font-family:var(--display);font-weight:700;font-size:1rem;line-height:1.1;padding:13px 24px;border-radius:999px;
+  background:var(--noise) 0 0/160px,var(--dusty-d);color:var(--felt);
+  outline:2px dashed rgba(255,253,249,.75);outline-offset:-6px;box-shadow:0 4px 0 var(--dusty-dd),0 10px 22px rgba(71,95,127,.18);
+  transition:transform .15s,box-shadow .15s;
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 0 var(--dusty-dd),0 12px 24px rgba(71,95,127,.2)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--dusty-dd)}
+.btn:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.btn svg{width:18px;height:18px;flex:none}
+.btn.ghost{background:var(--noise) 0 0/160px,var(--felt);color:var(--dusty-dd);outline-color:var(--dusty);box-shadow:0 4px 0 var(--powder),0 10px 22px rgba(71,95,127,.12)}
+.ic{width:20px;height:20px;flex:none;color:var(--dusty-d)}
+
+/* reveal on scroll (the runtime adds .in) */
+.js .reveal{opacity:0;transform:translateY(26px)}
+.js .reveal.in{opacity:1;transform:none;transition:opacity .7s ease,transform .9s var(--soft)}
+
+/* ---------- intro: the nursery mobile and the music box ---------- */
+#curtain-overlay{
+  position:fixed;inset:0;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:space-between;
+  padding:0 16px;text-align:center;overflow:hidden;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  background:
+    radial-gradient(ellipse 70% 45% at 80% 8%,rgba(255,253,249,.85),rgba(255,253,249,0) 70%),
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><g opacity='.4'><circle cx='16' cy='16' r='2.6' fill='%23b7c4a8'/><circle cx='48' cy='48' r='2.6' fill='%23e9c3b9'/><path d='M48 12.5v7M44.5 16h7' stroke='%23fffdf9' stroke-width='1.6' stroke-linecap='round'/><path d='M16 44.5v7M12.5 48h7' stroke='%23fffdf9' stroke-width='1.6' stroke-linecap='round'/></g></svg>") 0 0/64px 64px,
+    var(--noise) 0 0/160px 160px,
+    linear-gradient(180deg,var(--powder) 0,#e4e9ee 52%,var(--oat) 100%);
+}
+.intro-open #curtain-overlay{display:flex}
+#curtain-overlay.open{opacity:0;transition:opacity .9s ease 1.7s;pointer-events:none}
+#curtain-overlay.hidden{display:none}
+.dr-mobile{display:block;flex:none;width:min(100%,440px);height:auto;max-height:50vh;overflow:visible}
+.dr-mobile .str{stroke:#a99683;stroke-width:1.3}
+.dr-idle{animation:dr-idle 6s ease-in-out infinite alternate}
+.dr-p:nth-child(2) .dr-idle{animation-duration:7.4s;animation-delay:-2s}
+.dr-p:nth-child(3) .dr-idle{animation-duration:5.6s;animation-delay:-4s}
+.dr-p:nth-child(4) .dr-idle{animation-duration:8s;animation-delay:-1s}
+@keyframes dr-idle{from{transform:rotate(-1.4deg)}to{transform:rotate(1.4deg)}}
+.dr-intro-text{display:grid;gap:6px;max-width:30ch;margin:6px auto 0}
+.intro-eyebrow{font-weight:700;font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;color:var(--dusty-dd)}
+.intro-title{font-family:var(--display);font-weight:700;font-size:clamp(1.9rem,8.4vw,3.1rem);line-height:1.12;color:var(--ink)}
+.dr-intro-foot{display:flex;flex-direction:column;align-items:center;width:calc(100% + 32px);margin:0 -16px}
+.dr-box-btn{position:relative;z-index:1;background:none;border:0;padding:0;margin:0 0 -6px;cursor:pointer;width:min(64vw,270px);-webkit-tap-highlight-color:transparent}
+.dr-box-btn svg{display:block;width:100%;height:auto;overflow:visible}
+.dr-shelf{
+  width:100%;height:16px;border-radius:3px 3px 0 0;
+  background:linear-gradient(180deg,var(--wood-l) 0 3px,var(--wood) 3px 11px,var(--wood-d) 11px);
+  box-shadow:0 10px 18px rgba(75,74,85,.16);
+}
+.intro-hint{
+  display:inline-flex;align-items:center;gap:8px;margin:18px 16px max(24px,env(safe-area-inset-bottom));
+  font-weight:700;font-size:1rem;color:var(--ink);padding:10px 18px;border-radius:999px;
+  background:var(--noise) 0 0/160px,var(--felt);outline:2px dashed var(--blush);outline-offset:-5px;box-shadow:0 4px 0 var(--oat-d);
+}
+.intro-hint svg{width:18px;height:18px;color:var(--blush-d)}
+.dr-key{transform-box:fill-box;transform-origin:center;animation:dr-nudge 2.6s ease-in-out infinite}
+.dr-ring{transform-box:fill-box;transform-origin:center;animation:dr-ring 2s ease-out infinite}
+@keyframes dr-nudge{0%,70%,100%{transform:none}80%{transform:rotate(-14deg)}90%{transform:rotate(10deg)}}
+@keyframes dr-ring{0%{transform:scale(.7);opacity:.9}100%{transform:scale(1.5);opacity:0}}
+.open .dr-key{animation:dr-wind .34s linear 7}
+.open .dr-ring{animation:dr-fade .3s forwards}
+.open .dr-box-svg{animation:dr-hop 1.1s var(--soft) .1s}
+@keyframes dr-wind{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.12)}}
+@keyframes dr-fade{to{opacity:0}}
+@keyframes dr-hop{0%,100%{transform:none}30%{transform:translateY(-6px) rotate(-1.5deg)}60%{transform:translateY(-2px) rotate(1deg)}}
+@media (max-height:720px){.dr-mobile{max-height:42vh}.dr-box-btn{width:min(52vw,210px)}.intro-hint{margin-top:12px}.intro-title{font-size:clamp(1.7rem,7.4vw,2.6rem)}}
+@media (max-height:520px){.dr-mobile{max-height:46vh}.dr-box-btn{width:150px}.intro-hint{margin:8px 16px 12px;padding:8px 16px}}
+.dr-notes{position:fixed;inset:0;z-index:60;pointer-events:none;overflow:hidden}
+.dr-notes svg{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px}
+
+/* ---------- hero ---------- */
+#hero{
+  position:relative;overflow:hidden;text-align:center;padding:84px 16px clamp(40px,8vw,96px);
+  background:var(--noise) 0 0/160px 160px,linear-gradient(180deg,var(--powder) 0,#e6eaee 55%,var(--oat) 100%);
+}
+.dr-garland{
+  position:absolute;top:0;left:0;right:0;height:56px;pointer-events:none;
+  background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='132' height='56'><path d='M0 8Q66 26 132 8' fill='none' stroke='%23a99683' stroke-width='1.4'/><g stroke-linejoin='round'><path d='M8 12.4L36 13.6L22 44Z' fill='%23e9c3b9' stroke='%23e9c3b9' stroke-width='3'/><path d='M52 16.6L80 16.6L66 48Z' fill='%23b7c4a8' stroke='%23b7c4a8' stroke-width='3'/><path d='M96 13.6L124 12.4L110 44Z' fill='%23dcae5a' stroke='%23dcae5a' stroke-width='3'/></g><g fill='none' stroke='%23fffdf9' stroke-width='1.3' stroke-dasharray='2.6 2.4' stroke-linecap='round'><path d='M13.5 17L30.5 17.8L22 36Z'/><path d='M57.5 21L74.5 21L66 40Z'/><path d='M101.5 17.8L118.5 17L110 36Z'/></g><circle cx='44' cy='15.4' r='3.4' fill='%23fffdf9'/><circle cx='88' cy='15.4' r='3.4' fill='%2393a9c4'/></svg>") repeat-x 50% 0/132px 56px;
+}
+.lang{position:absolute;top:12px;right:12px;z-index:3;display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--felt);box-shadow:0 3px 0 var(--oat-d),0 6px 14px rgba(75,74,85,.1)}
+.lang-btn{border:0;background:none;cursor:pointer;font-weight:700;font-size:.82rem;min-height:40px;min-width:46px;padding:4px 12px;border-radius:999px;color:var(--ink2)}
+.lang-btn.active{background:var(--dusty-d);color:var(--felt)}
+.dr-fc{position:absolute;height:auto;--face:0;color:var(--felt);opacity:.85;pointer-events:none;animation:dr-drift 18s ease-in-out infinite alternate}
+.dr-fc.f1{width:96px;left:-34px;top:96px}
+.dr-fc.f2{width:76px;right:-22px;top:330px;animation-duration:22s;animation-delay:-6s}
+.dr-fc.f3{display:none;width:84px;left:9%;bottom:150px;animation-duration:16s;animation-delay:-3s;opacity:.75}
+@media (min-width:760px){.dr-fc.f3{display:block}}
+@keyframes dr-drift{from{transform:translateX(-10px)}to{transform:translateX(14px)}}
+.hero-inner{position:relative;max-width:640px;margin:0 auto}
+.dr-eyebrow{display:inline-flex;align-items:center;gap:10px;font-weight:700;font-size:.82rem;letter-spacing:.2em;text-transform:uppercase;color:var(--dusty-dd)}
+.dr-eyebrow::before,.dr-eyebrow::after{content:"";width:26px;border-top:2px dashed var(--dusty)}
+.title{
+  font-family:var(--display);font-weight:700;font-size:clamp(2.4rem,10.5vw,4.4rem);line-height:1.08;margin-top:14px;color:var(--dusty-dd);
+  text-shadow:0 3px 0 var(--felt);letter-spacing:-.01em;
+}
+.dr-names{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px;font-family:var(--display);font-weight:700;font-size:1.3rem;color:var(--ink)}
+.dr-names svg{width:18px;height:16px;flex:none;color:var(--blush);--st:transparent}
+.dr-names .hero-amp{color:var(--blush-d)}
+.dr-frame{position:relative;width:min(86vw,370px);aspect-ratio:200/170;margin:26px auto 16px}
+.dr-frame-felt{position:absolute;inset:0;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 10px 16px rgba(71,95,127,.18))}
+.dr-photo{
+  position:absolute;inset:0;overflow:hidden;
+  -webkit-mask:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 170' preserveAspectRatio='none'><path transform='translate(100 88) scale(.8) translate(-100 -88)' d='M30 128A26 26 0 0 1 22 78A30 30 0 0 1 64 36A36 36 0 0 1 132 30A33 33 0 0 1 178 76A27 27 0 0 1 172 128A24 24 0 0 1 128 140A26 26 0 0 1 76 140A24 24 0 0 1 30 128Z'/></svg>") center/100% 100% no-repeat;
+          mask:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 170' preserveAspectRatio='none'><path transform='translate(100 88) scale(.8) translate(-100 -88)' d='M30 128A26 26 0 0 1 22 78A30 30 0 0 1 64 36A36 36 0 0 1 132 30A33 33 0 0 1 178 76A27 27 0 0 1 172 128A24 24 0 0 1 128 140A26 26 0 0 1 76 140A24 24 0 0 1 30 128Z'/></svg>") center/100% 100% no-repeat;
+}
+.dr-photo > svg{display:block;width:100%;height:100%}
+.dr-hmoon{position:absolute;width:27%;left:-5%;top:-9%;z-index:2;color:var(--mustard);transform-origin:60% 20%;animation:dr-rock 5s ease-in-out infinite alternate;filter:drop-shadow(0 5px 6px rgba(148,105,31,.22))}
+.dr-hstar{position:absolute;width:13%;right:-1%;bottom:4%;z-index:2;color:var(--sage);animation:dr-rock 4s ease-in-out -1s infinite alternate}
+@keyframes dr-rock{from{transform:rotate(-8deg)}to{transform:rotate(6deg)}}
+.dr-z{position:absolute;z-index:2;font-family:var(--display);font-weight:700;color:var(--dusty-d);opacity:0;animation:dr-z 4.5s ease-out infinite}
+.dr-z.z1{left:22%;top:3%;font-size:1.15rem}.dr-z.z2{left:26%;top:-3%;font-size:.95rem;animation-delay:1.5s}.dr-z.z3{left:20%;top:-7%;font-size:.8rem;animation-delay:3s}
+@keyframes dr-z{0%{opacity:0;transform:translate(0,8px)}25%{opacity:.85}100%{opacity:0;transform:translate(14px,-22px)}}
+#heroTagline{max-width:34ch;margin:14px auto 0;font-size:1.08rem;color:var(--ink)}
+.dr-banner{display:inline-block;margin-top:24px;filter:drop-shadow(0 5px 0 rgba(148,105,31,.22))}
+#heroDatePill{
+  display:inline-block;padding:14px 40px;font-family:var(--display);font-weight:700;font-size:1.05rem;line-height:1.3;color:var(--ink);
+  background:
+    linear-gradient(90deg,rgba(148,105,31,.6) 55%,transparent 0) 0 6px/9px 1.6px repeat-x,
+    linear-gradient(90deg,rgba(148,105,31,.6) 55%,transparent 0) 0 calc(100% - 6px)/9px 1.6px repeat-x,
+    var(--noise) 0 0/160px,var(--mustard-l);
+  clip-path:polygon(0 0,100% 0,calc(100% - 18px) 50%,100% 100%,0 100%,18px 50%);
+}
+.scroll-cue{display:inline-flex;flex-direction:column;align-items:center;gap:6px;margin-top:30px;min-height:44px;font-weight:700;font-size:.78rem;letter-spacing:.2em;text-transform:uppercase;color:var(--dusty-dd);text-decoration:none}
+.scroll-cue i{width:13px;height:13px;border-right:2px dashed currentColor;border-bottom:2px dashed currentColor;transform:rotate(45deg);animation:dr-nudge2 1.8s ease-in-out infinite}
+@keyframes dr-nudge2{50%{transform:translate(0,6px) rotate(45deg)}}
+.rise{animation:dr-rise 1s var(--soft) both}
+.r1{animation-delay:.12s}.r2{animation-delay:.26s}.r3{animation-delay:.4s}.r4{animation-delay:.52s}
+html.intro-open .rise{animation-play-state:paused}
+@keyframes dr-rise{from{opacity:0;transform:translateY(26px)}}
+
+/* ---------- events: felt cards hanging on strings ---------- */
+.events{display:grid;gap:30px 34px;max-width:880px;margin:0 auto;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));align-items:start}
+.event{
+  --c:var(--blush-l);--c2:#e6cbc2;--a:var(--blush-d);--a2:#84483f;--at:#8f5249;--st:rgba(165,100,90,.5);
+  position:relative;margin-top:58px;padding:30px 22px 30px;text-align:center;border-radius:28px;
+  background:var(--noise) 0 0/160px,var(--c);outline:2px dashed var(--st);outline-offset:-10px;
+  box-shadow:0 6px 0 var(--c2),0 20px 36px rgba(75,74,85,.1);transform-origin:50% -52px;
+}
+.event:nth-of-type(even){--c:var(--powder);--c2:#c3d1e1;--a:var(--dusty-d);--a2:var(--dusty-dd);--at:var(--dusty-dd);--st:rgba(92,117,150,.5)}
+.event::before{
+  content:"";position:absolute;left:16%;right:16%;top:-46px;height:46px;
+  background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 50' preserveAspectRatio='none'><path d='M1 50L50 2L99 50' fill='none' stroke='%23a99683' stroke-width='1.4' vector-effect='non-scaling-stroke'/></svg>") 0 0/100% 100% no-repeat;
+}
+.event::after{
+  content:"";position:absolute;left:50%;top:-58px;width:24px;height:24px;margin-left:-12px;border-radius:50%;
+  background:radial-gradient(circle at 38% 50%,var(--wood-d) 0 2px,transparent 2.6px),radial-gradient(circle at 62% 50%,var(--wood-d) 0 2px,transparent 2.6px),var(--mustard);
+  box-shadow:inset 0 0 0 2px rgba(255,253,249,.45),0 3px 0 rgba(148,105,31,.35);
+}
+.js .event.reveal{transform:rotate(-5deg)}
+.js .event.reveal.in{transform:none;animation:dr-swing 2.4s ease-out both}
+@keyframes dr-swing{0%{transform:rotate(-5deg)}28%{transform:rotate(3.4deg)}52%{transform:rotate(-1.8deg)}74%{transform:rotate(.8deg)}100%{transform:none}}
+.ev-icon{
+  width:68px;height:68px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;font-size:2rem;line-height:1;
+  background:var(--noise) 0 0/160px,var(--felt);outline:2px dashed var(--st);outline-offset:-6px;box-shadow:0 4px 0 var(--c2);
+}
+.ev-icon img{width:58%;height:58%;object-fit:contain}
+.ev-num{font-weight:700;font-size:.78rem;letter-spacing:.2em;text-transform:uppercase;color:var(--at)}
+.event h3{font-family:var(--display);font-weight:700;font-size:1.6rem;line-height:1.2;margin:6px 0 18px;color:var(--ink)}
+.ev-meta{list-style:none;margin:0 auto 16px;padding:0;display:grid;gap:10px;text-align:left;max-width:300px}
+.ev-meta li{display:flex;gap:12px;align-items:flex-start}
+.ev-meta .ic{margin-top:3px;color:var(--a)}
+.ev-meta strong{font-weight:700}
+.ev-meta small{display:block;font-size:.95rem;color:var(--ink2)}
+.ev-desc{font-style:italic;color:var(--ink2);margin:0 auto 22px;max-width:30ch}
+.event .btn{background:var(--noise) 0 0/160px,var(--a);box-shadow:0 4px 0 var(--a2),0 10px 20px rgba(75,74,85,.14)}
+
+/* ---------- countdown: a little mobile of felt shapes ---------- */
+.dr-band{background:var(--noise) 0 0/160px,var(--powder);margin:46px 0}
+.dr-band::before,.dr-band::after{
+  content:"";position:absolute;left:0;right:0;height:42px;pointer-events:none;
+  background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='42'><path d='M0 43A24 24 0 0 1 40 24A30 30 0 0 1 96 20A26 26 0 0 1 140 26A20 20 0 0 1 160 43Z' fill='%23dbe5ef'/></svg>") repeat-x 0 0/160px 42px;
+}
+.dr-band::before{top:-41px}
+.dr-band::after{bottom:-41px;transform:scaleY(-1)}
+
+.dr-cdm{position:relative;max-width:600px;margin:0 auto;padding-top:34px}
+.dr-cdm::before{content:"";position:absolute;left:50%;top:0;width:1.4px;height:36px;background:#a99683}
+.dr-dowel{
+  position:relative;height:10px;margin:0 6px;border-radius:6px;
+  background:linear-gradient(180deg,var(--wood-l) 0 3px,var(--wood) 3px 7px,var(--wood-d) 7px);box-shadow:0 4px 8px rgba(75,74,85,.12);
+}
+.dr-dowel::before,.dr-dowel::after{content:"";position:absolute;top:-4px;width:18px;height:18px;border-radius:50%;background:var(--blush);box-shadow:inset 0 0 0 3px rgba(255,253,249,.35)}
+.dr-dowel::before{left:-8px}.dr-dowel::after{right:-8px;background:var(--sage)}
+.dr-cds{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:clamp(6px,2.4vw,26px);padding:0 4px}
+.dr-cd{display:flex;flex-direction:column;align-items:center;transform-origin:50% 0;animation:dr-sway 4.6s ease-in-out infinite alternate}
+.dr-cd:nth-child(2){animation-duration:5.4s;animation-delay:-2s}
+.dr-cd:nth-child(3){animation-duration:4s;animation-delay:-1s}
+.dr-cd:nth-child(4){animation-duration:6s;animation-delay:-3s}
+@keyframes dr-sway{from{transform:rotate(-2.2deg)}to{transform:rotate(2.2deg)}}
+.dr-cd::before{content:"";width:1.4px;height:var(--len);background:#a99683}
+.dr-shape{position:relative;width:100%;max-width:130px;filter:drop-shadow(0 6px 8px rgba(71,95,127,.16))}
+.dr-shape svg{display:block;width:100%;height:auto;overflow:visible}
+.dr-shape span{
+  position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);
+  font-family:var(--display);font-weight:700;font-size:clamp(1.15rem,5.4vw,2.1rem);line-height:1;color:var(--ink);font-variant-numeric:tabular-nums;
+}
+.dr-shape.cloud{--x:50%;--y:62%;--face:0;color:var(--felt)}
+.dr-shape.cloud span{color:var(--dusty-dd)}
+.dr-shape.star{--x:50%;--y:56%;color:var(--sage);--st:rgba(255,253,249,.8)}
+.dr-shape.moon{--x:66%;--y:38%;color:var(--mustard)}
+.dr-shape.moon i{position:absolute;left:66%;top:38%;width:58%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:var(--noise) 0 0/160px,var(--felt);outline:1.6px dashed var(--mustard);outline-offset:-4px}
+.dr-shape.heart{--x:50%;--y:46%;color:var(--blush)}
+.dr-cd .lbl{margin-top:8px;font-weight:700;font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink2)}
+.cd-when{text-align:center;margin-top:30px;font-family:var(--display);font-weight:700;font-size:1.12rem}
+.cd-when span{color:var(--dusty-dd)}
+
+/* ---------- wishes: stitched felt cards ---------- */
+.wish-form{
+  position:relative;max-width:560px;margin:0 auto 52px;padding:42px 24px 28px;border-radius:30px;display:grid;gap:14px;
+  background:var(--noise) 0 0/160px,var(--felt);outline:2px dashed var(--blush);outline-offset:-11px;
+  box-shadow:0 6px 0 var(--oat-d),0 20px 40px rgba(75,74,85,.08);
+}
+.dr-badge{
+  position:absolute;left:50%;top:-26px;width:52px;height:52px;margin-left:-26px;border-radius:50%;display:grid;place-items:center;
+  background:var(--noise) 0 0/160px,var(--blush);outline:1.6px dashed rgba(255,253,249,.9);outline-offset:-5px;box-shadow:0 4px 0 #d6aba0;color:var(--felt);
+}
+.dr-badge svg{width:24px;height:24px}
+.field{display:grid;gap:6px;font-weight:700;font-size:.92rem;color:var(--ink2)}
+.field input,.field textarea{
+  width:100%;border:2px solid var(--powder);background:var(--powder-l);border-radius:16px;padding:12px 14px;font-weight:500;font-size:1rem;color:var(--ink);
+  resize:vertical;transition:border-color .2s,box-shadow .2s;
+}
+.field input::placeholder,.field textarea::placeholder{color:#74727e}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--dusty);box-shadow:0 0 0 4px rgba(147,169,196,.3)}
+.wish-form .btn{justify-self:center;margin-top:6px}
+.wall{display:grid;gap:30px 24px;max-width:960px;margin:0 auto;grid-template-columns:repeat(auto-fill,minmax(min(100%,262px),1fr))}
+.wish{
+  --t:var(--blush-l);--t2:#e6cbc2;--a:var(--blush-d);--at:#8f5249;--st:rgba(165,100,90,.45);
+  position:relative;margin:0;padding:28px 24px 22px;border-radius:24px;background:var(--noise) 0 0/160px,var(--t);
+  outline:2px dashed var(--st);outline-offset:-9px;box-shadow:0 5px 0 var(--t2),0 14px 28px rgba(75,74,85,.07);transform:rotate(-1deg);
+}
+.wish:nth-of-type(5n+2){--t:var(--powder);--t2:#c3d1e1;--a:var(--dusty-d);--at:var(--dusty-dd);--st:rgba(92,117,150,.45);transform:rotate(.9deg)}
+.wish:nth-of-type(5n+3){--t:var(--sage-l);--t2:#cfd8c3;--a:var(--sage-d);--at:#53654a;--st:rgba(103,122,88,.45);transform:rotate(-.5deg)}
+.wish:nth-of-type(5n+4){--t:#f8ebcb;--t2:#ead6a6;--a:var(--mustard-d);--at:#7c5716;--st:rgba(148,105,31,.42);transform:rotate(1.2deg)}
+.wish:nth-of-type(5n+5){--t:#f6f0e6;--t2:var(--oat-d);--a:var(--wood-d);--at:#7d5a3a;--st:rgba(162,118,80,.42);transform:rotate(-.8deg)}
+.wish::before{
+  content:"";position:absolute;top:-14px;right:20px;width:36px;height:36px;border-radius:50%;
+  background:var(--noise) 0 0/160px,var(--felt);outline:1.5px dashed var(--st);outline-offset:-4px;box-shadow:0 3px 0 var(--t2);
+}
+.wish::after{
+  content:"";position:absolute;top:-6px;right:28px;width:20px;height:20px;background:var(--a);
+  -webkit-mask:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M13 3.5c0 2.6 4.5 3.4 4.5 7 0 1-.4 2-1 2.6.2-2.5-1.6-3.8-3.5-4.1V17a3.4 3.4 0 1 1-2-3.1V3.5z'/></svg>") center/100% no-repeat;
+          mask:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M13 3.5c0 2.6 4.5 3.4 4.5 7 0 1-.4 2-1 2.6.2-2.5-1.6-3.8-3.5-4.1V17a3.4 3.4 0 1 1-2-3.1V3.5z'/></svg>") center/100% no-repeat;
+}
+.wish blockquote{margin:0 0 12px;font-size:1.02rem;color:var(--ink)}
+.wish figcaption{font-family:var(--display);font-weight:700;color:var(--at)}
+.wish figcaption::before{content:"— "}
+.wishes-more{display:flex;justify-content:center;margin-top:40px}
+
+/* ---------- help & contacts ---------- */
+#stay{padding-top:clamp(56px,7vw,72px)}
+.help{
+  position:relative;max-width:620px;margin:24px auto 0;text-align:center;padding:30px 18px 26px;border-radius:32px;
+  background:var(--noise) 0 0/160px,var(--felt);outline:2px dashed var(--sage);outline-offset:-11px;
+  box-shadow:0 6px 0 var(--oat-d),0 20px 40px rgba(75,74,85,.08);
+}
+.help-art{display:block;width:116px;height:auto;margin:-82px auto 4px;color:var(--dusty);overflow:visible}
+.help .sec-title{font-size:clamp(1.8rem,6vw,2.4rem)}
+#stayText{margin:10px auto 22px;max-width:36ch;color:var(--ink2)}
+#coordinators{display:grid;gap:12px}
+.coord{
+  display:flex;align-items:center;gap:12px;text-align:left;padding:12px 12px 12px 14px;border-radius:22px;
+  background:var(--noise) 0 0/160px,var(--powder-l);outline:1.5px dashed rgba(92,117,150,.42);outline-offset:-6px;
+}
+.coord .av{width:48px;height:48px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--blush-l);font-size:1.4rem;box-shadow:0 3px 0 #e6cbc2}
+.coord .who{flex:1;min-width:0}
+.coord .c-name{font-family:var(--display);font-weight:700;font-size:1.06rem;line-height:1.25}
+.coord .c-phone{font-size:.95rem;color:var(--ink2);white-space:nowrap}
+.coord .btn{padding:10px 15px;font-size:.95rem;gap:6px}
+
+/* ---------- footer ---------- */
+footer.dr-band{position:relative;margin:80px 0 0;padding:44px 16px 100px;text-align:center}
+footer.dr-band::after{display:none}
+.dr-minimob{display:block;width:190px;height:auto;margin:0 auto 10px;overflow:visible}
+.dr-minimob .str{stroke:#a99683;stroke-width:1.2}
+.dr-minimob .fp{animation:dr-idle2 4.8s ease-in-out infinite alternate}
+.dr-minimob .fp:nth-of-type(2){animation-duration:5.6s;animation-delay:-2s}
+.dr-minimob .fp:nth-of-type(3){animation-duration:4.2s;animation-delay:-1s}
+.dr-minimob .fp:nth-of-type(4){animation-duration:6.2s;animation-delay:-3s}
+@keyframes dr-idle2{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
+.hashtag{font-family:var(--display);font-weight:700;font-size:clamp(1.8rem,8vw,3rem);line-height:1.15;color:var(--dusty-dd);word-break:break-word;margin-top:6px}
+.thanks{margin-top:10px;color:var(--ink);font-weight:600}
+
+/* ---------- music + toast ---------- */
+#musicToggle{
+  position:fixed;right:16px;bottom:16px;z-index:40;width:56px;height:56px;border:0;border-radius:50%;cursor:pointer;
+  display:grid;place-items:center;color:var(--felt);background:var(--noise) 0 0/160px,var(--dusty-d);
+  outline:2px dashed rgba(255,253,249,.75);outline-offset:-7px;box-shadow:0 4px 0 var(--dusty-dd),0 10px 20px rgba(71,95,127,.28);
+}
+#musicToggle svg{width:24px;height:24px}
+#musicToggle::after{content:"";position:absolute;inset:-7px;border-radius:50%;border:2px dashed var(--dusty);opacity:0;transition:opacity .3s}
+#musicToggle.spinning svg{animation:dr-bob .8s ease-in-out infinite alternate}
+#musicToggle.spinning::after{opacity:1;animation:dr-turn 9s linear infinite}
+@keyframes dr-bob{from{transform:translateY(1px) rotate(-9deg)}to{transform:translateY(-2px) rotate(9deg)}}
+@keyframes dr-turn{to{transform:rotate(360deg)}}
+#toast{
+  position:fixed;left:50%;bottom:90px;z-index:60;transform:translate(-50%,20px);opacity:0;pointer-events:none;max-width:calc(100% - 32px);
+  padding:12px 20px;border-radius:999px;background:var(--ink);color:var(--felt);font-weight:600;font-size:.95rem;text-align:center;transition:.3s;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  html{scroll-behavior:auto}
+  #curtain-overlay.open{transition-delay:0s}
+}
+/* Tamil labels: a Tamil font, no English-style letter-spacing or capitals. */
+html[lang="ta"] [data-ta]{font-family:var(--tamil);letter-spacing:0;text-transform:none}
+/* The uploaded photo covers the stand-in illustration (it starts as a transparent pixel). */
+:where(.cover-slot){position:relative}
+.cover-img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;display:block}
+.wishes-empty{text-align:center;margin:10px auto 22px;max-width:40ch;font-weight:600;color:var(--ink2)}
+</style>
+</head>
+<body>
+
+<!-- small line icons and the felt shapes used across the page -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <!-- felt fuzz: tiny light and dark fibres laid over each felt shape -->
+    <pattern id="dr-fuzz" width="7" height="7" patternUnits="userSpaceOnUse">
+      <circle cx="1.5" cy="1.6" r=".75" fill="#fff" opacity=".32"/><circle cx="5.2" cy="4.6" r=".65" fill="#4b4a55" opacity=".1"/>
+      <path d="M2.6 5.8l1.5-.9M5.4 1.2l.9 1.1" stroke="#fff" stroke-opacity=".3" stroke-width=".55" stroke-linecap="round"/>
+    </pattern>
+    <path id="dr-p-cloud" d="M24 70A14 14 0 0 1 20 44A21 21 0 0 1 56 26A23 23 0 0 1 96 40A16 16 0 0 1 98 70Z"/>
+    <path id="dr-p-moon" d="M50.4 12.1A40 40 0 1 0 85.8 65.2A32 32 0 1 1 50.4 12.1Z"/>
+    <path id="dr-p-star" d="M50 10L63.5 33.4L89.9 39L71.9 59.1L74.7 86L50 75L25.3 86L28.1 59.1L10.1 39L36.5 33.4Z"/>
+    <path id="dr-p-heart" d="M50 86C20 66 6 48 14 30C22 12 44 14 50 30C56 14 78 12 86 30C94 48 80 66 50 86Z"/>
+  </defs>
+  <symbol id="i-cal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="4"/><path d="M8 3v4M16 3v4M3.5 10.5h17"/></g></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></g></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></g></symbol>
+  <symbol id="i-go" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></g></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path fill="currentColor" d="M9 17.5V6.2l10-2.2v11.3a3 3 0 1 1-2-2.83V7.5l-6 1.3v8.7a3 3 0 1 1-2-2.83z"/></symbol>
+  <symbol id="i-note1" viewBox="0 0 24 24"><path fill="currentColor" d="M13 3.5c0 2.6 4.5 3.4 4.5 7 0 1-.4 2-1 2.6.2-2.5-1.6-3.8-3.5-4.1V17a3.4 3.4 0 1 1-2-3.1V3.5z"/></symbol>
+
+  <!-- felt shapes: main colour from currentColor, stitches from --st -->
+  <symbol id="dr-cloud" viewBox="-4 4 128 76">
+    <use href="#dr-p-cloud" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+    <use href="#dr-p-cloud" fill="url(#dr-fuzz)"/>
+    <use href="#dr-p-cloud" fill="none" stroke-width="1.8" stroke-dasharray="3.2 3" stroke-linecap="round" transform="translate(60 52) scale(.8) translate(-60 -52)" style="stroke:var(--st,#93a9c4)"/>
+    <g class="face" style="opacity:var(--face,1)"><path d="M45 52q4 4 8 0M67 52q4 4 8 0M57 60q3 2.4 6 0" fill="none" stroke="#4b4a55" stroke-width="2.2" stroke-linecap="round"/>
+    <circle cx="43" cy="60" r="4" fill="#e9c3b9"/><circle cx="77" cy="60" r="4" fill="#e9c3b9"/></g>
+  </symbol>
+  <symbol id="dr-moon" viewBox="4 6 90 90">
+    <use href="#dr-p-moon" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+    <use href="#dr-p-moon" fill="url(#dr-fuzz)"/>
+    <path d="M32.7 21.6A34 34 0 1 0 70.2 77.8A38 38 0 0 1 32.7 21.6Z" fill="none" stroke-width="1.8" stroke-dasharray="3.2 3" stroke-linecap="round" style="stroke:var(--st,#fffdf9)"/>
+    <path class="face" d="M24 55q5 5 10 0" fill="none" stroke="#4b4a55" stroke-width="2.4" stroke-linecap="round"/>
+    <circle class="face" cx="34" cy="67" r="4.5" fill="#e9a99a" opacity=".75"/>
+  </symbol>
+  <symbol id="dr-star" viewBox="2 2 96 92">
+    <use href="#dr-p-star" fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"/>
+    <use href="#dr-p-star" fill="url(#dr-fuzz)" stroke="url(#dr-fuzz)" stroke-width="10" stroke-linejoin="round"/>
+    <use href="#dr-p-star" fill="none" stroke-width="2.6" stroke-dasharray="4.4 3.6" stroke-linecap="round" stroke-linejoin="round" transform="translate(50 54) scale(.66) translate(-50 -54)" style="stroke:var(--st,#fffdf9)"/>
+  </symbol>
+  <symbol id="dr-heart" viewBox="4 8 92 84">
+    <use href="#dr-p-heart" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+    <use href="#dr-p-heart" fill="url(#dr-fuzz)"/>
+    <use href="#dr-p-heart" fill="none" stroke-width="2.2" stroke-dasharray="3.6 3.2" stroke-linecap="round" transform="translate(50 50) scale(.76) translate(-50 -50)" style="stroke:var(--st,#fffdf9)"/>
+  </symbol>
+  <symbol id="dr-ele" viewBox="0 10 130 86">
+    <path d="M19 50q-9 1-10 11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="9" cy="62" r="3.4" fill="#4b4a55" opacity=".55"/>
+    <g fill="currentColor"><rect x="23" y="62" width="16" height="28" rx="7"/><rect x="42" y="64" width="16" height="26" rx="7"/><rect x="66" y="64" width="16" height="26" rx="7"/></g>
+    <rect x="42" y="64" width="16" height="26" rx="7" fill="#4b4a55" opacity=".1"/>
+    <ellipse cx="52" cy="56" rx="36" ry="26" fill="currentColor"/>
+    <path d="M106 54C115 61 119 71 115 79C112 85 104 84 104 78" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="92" cy="42" r="24" fill="currentColor"/>
+    <g fill="url(#dr-fuzz)"><ellipse cx="52" cy="56" rx="36" ry="26"/><circle cx="92" cy="42" r="24"/></g>
+    <ellipse cx="52" cy="56" rx="29" ry="19" fill="none" stroke-width="1.8" stroke-dasharray="3.2 3" stroke-linecap="round" style="stroke:var(--st,#fffdf9)"/>
+    <ellipse cx="83" cy="45" rx="12" ry="16" fill="#e9c3b9"/><ellipse cx="83" cy="45" rx="12" ry="16" fill="url(#dr-fuzz)"/>
+    <ellipse cx="83" cy="45" rx="7.6" ry="11.4" fill="none" stroke="#fffdf9" stroke-width="1.6" stroke-dasharray="2.6 2.6"/>
+    <use href="#dr-p-heart" transform="translate(37 44) scale(.24)" fill="#dcae5a"/>
+    <path class="face" d="M95 38q4 4 8 0" fill="none" stroke="#4b4a55" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="103" cy="49" r="3.6" fill="#e9a99a" opacity=".8"/>
+  </symbol>
+</svg>
+
+<!-- ============ INTRO: wind the music box and the nursery mobile turns ============ -->
+<div id="curtain-overlay" data-hide-after="2700">
+  <svg class="dr-mobile" viewBox="0 0 360 346" aria-hidden="true" focusable="false">
+    <line class="str" x1="180" y1="-80" x2="180" y2="30"/>
+    <g class="str" id="dr-hub">
+      <line x1="180" y1="30" x2="273.3" y2="109"/><line x1="180" y1="30" x2="86.7" y2="109"/>
+      <line x1="180" y1="30" x2="86.7" y2="75"/><line x1="180" y1="30" x2="273.3" y2="75"/>
+    </g>
+    <path d="M48 92A132 24 0 0 1 312 92" fill="none" stroke="#a27650" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="180" cy="29" r="8" fill="#c99f72"/><circle cx="177.5" cy="26.5" r="2.5" fill="#e3c59e"/>
+    <g id="dr-layer">
+      <g class="dr-p" data-a="234" transform="translate(102.4 72.6) scale(.82)"><g class="dr-sw"><g class="dr-idle">
+        <line class="str" x1="0" y1="0" x2="0" y2="130"/>
+        <svg x="-52" y="114" width="112" height="74" style="color:#93a9c4"><use href="#dr-ele"/></svg>
+      </g></g></g>
+      <g class="dr-p" data-a="306" transform="translate(257.6 72.6) scale(.82)"><g class="dr-sw"><g class="dr-idle">
+        <line class="str" x1="0" y1="0" x2="0" y2="170"/>
+        <svg x="-32" y="168" width="64" height="62" style="color:#e9c3b9"><use href="#dr-star"/></svg>
+      </g></g></g>
+      <g class="dr-front">
+        <path d="M48 92A132 24 0 0 0 312 92" fill="none" stroke="#c99f72" stroke-width="8" stroke-linecap="round"/>
+        <path d="M48 92A132 24 0 0 0 312 92" fill="none" stroke="#e3c59e" stroke-width="1.6" stroke-dasharray="16 11" stroke-linecap="round" transform="translate(0 1.5)" opacity=".85"/>
+      </g>
+      <g class="dr-p" data-a="162" transform="translate(54.5 99.4) scale(.93)"><g class="dr-sw"><g class="dr-idle">
+        <line class="str" x1="0" y1="0" x2="0" y2="150"/>
+        <svg x="-40" y="145" width="78" height="78" style="color:#dcae5a"><use href="#dr-moon"/></svg>
+      </g></g></g>
+      <g class="dr-p" data-a="18" transform="translate(305.5 99.4) scale(.93)"><g class="dr-sw"><g class="dr-idle">
+        <line class="str" x1="0" y1="0" x2="0" y2="84"/>
+        <svg x="-26" y="82" width="52" height="50" style="color:#b7c4a8"><use href="#dr-star"/></svg>
+      </g></g></g>
+      <g class="dr-p" data-a="90" transform="translate(180 116)"><g class="dr-sw"><g class="dr-idle">
+        <line class="str" x1="0" y1="0" x2="0" y2="96"/>
+        <svg x="-56" y="91" width="112" height="66" style="color:#fffdf9"><use href="#dr-cloud"/></svg>
+      </g></g></g>
+    </g>
+    <g id="dr-beads">
+      <circle data-a="54" cx="257.6" cy="111.4" r="5" fill="#e9c3b9"/><circle data-a="126" cx="102.4" cy="111.4" r="5" fill="#b7c4a8"/>
+      <circle data-a="198" cx="54.5" cy="84.6" r="5" fill="#dcae5a"/><circle data-a="270" cx="180" cy="68" r="5" fill="#93a9c4"/>
+      <circle data-a="342" cx="305.5" cy="84.6" r="5" fill="#fffdf9"/>
+    </g>
+  </svg>
+
+  <div class="dr-intro-text">
+    <p class="intro-eyebrow" data-ta="ஒரு குட்டிச் செல்லம் வரப்போகிறது">A little one is on the way</p>
+    <p class="intro-title" data-bind="title">Divya's Baby Shower</p>
+  </div>
+
+  <div class="dr-intro-foot">
+    <button type="button" class="dr-box-btn" id="openCurtainBtn" data-open-invite aria-label="Wind the music box to open the invitation">
+      <svg class="dr-box-svg" viewBox="0 0 220 150" aria-hidden="true" focusable="false">
+        <ellipse cx="110" cy="146" rx="78" ry="5" fill="#4b4a55" opacity=".12"/>
+        <rect x="52" y="126" width="16" height="14" rx="4" fill="#a27650"/><rect x="152" y="126" width="16" height="14" rx="4" fill="#a27650"/>
+        <rect x="44" y="70" width="132" height="62" rx="10" fill="#c99f72"/>
+        <path d="M50 96h18M150 116h20M54 124h26" stroke="#e3c59e" stroke-width="1.6" stroke-linecap="round" opacity=".7"/>
+        <rect x="58" y="80" width="104" height="42" rx="9" fill="#e9c3b9"/><rect x="58" y="80" width="104" height="42" rx="9" fill="url(#dr-fuzz)"/>
+        <rect x="64" y="86" width="92" height="30" rx="6" fill="none" stroke="#fffdf9" stroke-width="1.8" stroke-dasharray="3.4 3"/>
+        <use href="#dr-p-heart" transform="translate(98 88) scale(.24)" fill="#fffdf9"/>
+        <rect x="38" y="52" width="144" height="22" rx="10" fill="#a27650"/>
+        <rect x="48" y="55.5" width="124" height="4" rx="2" fill="#e3c59e" opacity=".55"/>
+        <svg x="80" y="14" width="60" height="38" style="color:#fffdf9;--st:#93a9c4"><use href="#dr-cloud"/></svg>
+        <rect x="176" y="96" width="13" height="7" rx="2" fill="#94691f"/>
+        <circle class="dr-ring" cx="196" cy="99.5" r="19" fill="none" stroke="#5c7596" stroke-width="2" stroke-dasharray="4 4"/>
+        <g class="dr-key">
+          <ellipse cx="196" cy="88" rx="6.5" ry="10.5" fill="#dcae5a" stroke="#94691f" stroke-width="1.6"/>
+          <ellipse cx="196" cy="111" rx="6.5" ry="10.5" fill="#dcae5a" stroke="#94691f" stroke-width="1.6"/>
+          <circle cx="196" cy="99.5" r="5" fill="#dcae5a" stroke="#94691f" stroke-width="1.6"/>
+        </g>
+      </svg>
+    </button>
+    <div class="dr-shelf" aria-hidden="true"></div>
+    <p class="intro-hint"><svg aria-hidden="true"><use href="#i-note"/></svg><span data-ta="இசைப் பெட்டியைச் சுழற்றத் தொடுங்கள்">Tap to wind the music box</span></p>
+  </div>
+</div>
+
+<!-- ============ HERO ============ -->
+<header id="hero">
+  <div class="dr-garland" aria-hidden="true"></div>
+  <nav class="lang" aria-label="Language">
+    <button type="button" class="lang-btn active" data-lang="en">EN</button>
+    <button type="button" class="lang-btn" data-lang="ta" lang="ta">தமிழ்</button>
+  </nav>
+  <svg class="dr-fc f1" viewBox="-4 4 128 76" aria-hidden="true" focusable="false"><use href="#dr-cloud"/></svg>
+  <svg class="dr-fc f2" viewBox="-4 4 128 76" aria-hidden="true" focusable="false"><use href="#dr-cloud"/></svg>
+  <svg class="dr-fc f3" viewBox="-4 4 128 76" aria-hidden="true" focusable="false"><use href="#dr-cloud"/></svg>
+
+  <div class="hero-inner">
+    <p class="dr-eyebrow rise"><span data-ta="இனிய கனவுகள், குட்டிச் செல்லமே">Sweet dreams, little one</span></p>
+    <h1 class="title rise r1" data-bind="title">Divya's Baby Shower</h1>
+    <p class="dr-names rise r1">
+      <svg viewBox="4 8 92 84" aria-hidden="true" focusable="false"><use href="#dr-heart"/></svg>
+      <span data-bind="names"><span class="name-part">Divya</span> <span class="hero-amp">&amp;</span> <span class="name-part">Arun</span></span>
+      <svg viewBox="4 8 92 84" aria-hidden="true" focusable="false"><use href="#dr-heart"/></svg>
+    </p>
+
+    <div class="dr-frame rise r2">
+      <svg class="dr-frame-felt" viewBox="0 0 200 170" aria-hidden="true" focusable="false">
+        <path id="dr-p-frame" d="M30 128A26 26 0 0 1 22 78A30 30 0 0 1 64 36A36 36 0 0 1 132 30A33 33 0 0 1 178 76A27 27 0 0 1 172 128A24 24 0 0 1 128 140A26 26 0 0 1 76 140A24 24 0 0 1 30 128Z" fill="#fffdf9" stroke="#fffdf9" stroke-width="2" stroke-linejoin="round"/>
+        <use href="#dr-p-frame" fill="url(#dr-fuzz)" stroke="none"/>
+        <use href="#dr-p-frame" fill="none" stroke="#93a9c4" stroke-width="1.5" stroke-dasharray="3.4 3" stroke-linecap="round" transform="translate(100 88) scale(.9) translate(-100 -88)"/>
+      </svg>
+      <!-- cover photo goes here (data-bind="cover"); a felt rainbow stands in for the preview -->
+      <div class="cover-slot dr-photo" role="img" aria-label="Baby shower photo">
+        <svg viewBox="0 0 200 170" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+          <defs><linearGradient id="dr-sky" x1="0" y1="0" x2="0" y2="1"><stop offset=".15" stop-color="#cfdbe8"/><stop offset=".8" stop-color="#f5e1da"/></linearGradient></defs>
+          <rect width="200" height="170" fill="url(#dr-sky)"/>
+          <g fill="none">
+            <path d="M34 150A66 66 0 0 1 166 150" stroke="#e9c3b9" stroke-width="13"/>
+            <path d="M47 150A53 53 0 0 1 153 150" stroke="#dcae5a" stroke-width="13"/>
+            <path d="M60 150A40 40 0 0 1 140 150" stroke="#b7c4a8" stroke-width="13"/>
+            <path d="M73 150A27 27 0 0 1 127 150" stroke="#93a9c4" stroke-width="13"/>
+            <g stroke="url(#dr-fuzz)" stroke-width="13"><path d="M34 150A66 66 0 0 1 166 150"/><path d="M47 150A53 53 0 0 1 153 150"/><path d="M60 150A40 40 0 0 1 140 150"/><path d="M73 150A27 27 0 0 1 127 150"/></g>
+            <g stroke="#fffdf9" stroke-width="1.2" stroke-dasharray="3 3" stroke-linecap="round" opacity=".9"><path d="M34 150A66 66 0 0 1 166 150"/><path d="M47 150A53 53 0 0 1 153 150"/><path d="M60 150A40 40 0 0 1 140 150"/><path d="M73 150A27 27 0 0 1 127 150"/></g>
+          </g>
+          <path d="M-10 146Q100 130 210 146V180H-10Z" fill="#efe6d8"/>
+          <path d="M-10 151Q100 135 210 151" fill="none" stroke="#c99f72" stroke-width="1.2" stroke-dasharray="3 3"/>
+          <svg x="72" y="110" width="58" height="38" style="color:#93a9c4"><use href="#dr-ele"/></svg>
+          <svg x="20" y="106" width="60" height="36" style="color:#fffdf9"><use href="#dr-cloud"/></svg>
+          <svg x="120" y="106" width="60" height="36" style="color:#fffdf9"><use href="#dr-cloud"/></svg>
+          <svg x="44" y="46" width="14" height="14" style="color:#dcae5a;--st:transparent"><use href="#dr-star"/></svg>
+          <svg x="146" y="40" width="12" height="12" style="color:#b7c4a8;--st:transparent"><use href="#dr-star"/></svg>
+          <svg x="122" y="22" width="9" height="9" style="color:#e9c3b9;--st:transparent"><use href="#dr-star"/></svg>
+        </svg>
+        <img class="cover-img" data-bind="cover" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+      </div>
+      <svg class="dr-hmoon" viewBox="4 6 90 90" aria-hidden="true" focusable="false"><use href="#dr-moon"/></svg>
+      <span class="dr-z z1" aria-hidden="true">z</span><span class="dr-z z2" aria-hidden="true">z</span><span class="dr-z z3" aria-hidden="true">z</span>
+      <svg class="dr-hstar" viewBox="2 2 96 92" aria-hidden="true" focusable="false"><use href="#dr-star"/></svg>
+    </div>
+
+    <p id="heroTagline" class="rise r3" data-bind="tagline">A little one is on the way! Join us to shower Divya with love, blessings and bangles as our family gets ready to grow.</p>
+    <span class="dr-banner rise r4"><span id="heroDatePill" data-bind="dateLine">🌸 21st March 2027 • Chennai</span></span>
+    <br>
+    <a class="scroll-cue rise r4" href="#events"><span data-ta="நிகழ்ச்சிகளைப் பாருங்கள்">See the plan</span><i aria-hidden="true"></i></a>
+  </div>
+</header>
+
+<main>
+<!-- ============ EVENTS ============ -->
+<section id="events" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="விழா நிகழ்ச்சிகள்">The celebrations</p>
+    <h2 class="sec-title" data-ta="அன்பைப் பொழிய வாருங்கள்">Come, shower some love</h2>
+    <svg class="thread" viewBox="0 0 150 18" aria-hidden="true" focusable="false"><path d="M4 9C24 1 40 17 60 9M90 9c20-8 36 8 56 0" fill="none" stroke="#93a9c4" stroke-width="2" stroke-dasharray="4 4" stroke-linecap="round"/><use href="#dr-p-heart" transform="translate(66 0) scale(.18)" fill="#e9c3b9"/></svg>
+  </div>
+
+  <div id="eventsGrid" class="events">
+    <template>
+    <article class="event reveal">
+      <span class="ev-icon" data-field="icon">🌸</span>
+      <p class="ev-num"><span data-ta="நிகழ்வு">Moment</span> <span data-field="number">01</span></p>
+      <h3 data-field="name">Valaikappu Ceremony</h3>
+      <ul class="ev-meta">
+        <li><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg><span data-field="date">21st March 2027</span></li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg><span data-field="time">10:00 AM to 12:30 PM</span></li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg><span><strong data-field="place">Sri Lakshmi Mahal</strong><small data-field="venue">Mylapore, Chennai - 600004</small></span></li>
+      </ul>
+      <p class="ev-desc" data-field="desc">Bangles, blessings and songs for the mother-to-be.</p>
+      <a class="btn" data-href="map" href="https://www.google.com/maps/dir/?api=1&amp;destination=Mylapore+Chennai+600004" target="_blank" rel="noopener"><span data-ta="வழி காட்டு">Get directions</span> <svg aria-hidden="true"><use href="#i-go"/></svg></a>
+    </article>
+    </template>
+  </div>
+</section>
+
+<!-- ============ COUNTDOWN ============ -->
+<section id="countdown" class="section dr-band">
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="இன்னும் சில உறக்கங்களே">Counting the sleeps</p>
+    <h2 class="sec-title" data-ta="கொண்டாட்டம் நெருங்குகிறது">Almost time to celebrate</h2>
+  </div>
+  <div class="dr-cdm reveal" role="timer" aria-label="Time left until the baby shower">
+    <div class="dr-dowel" aria-hidden="true"></div>
+    <div class="dr-cds">
+      <div class="dr-cd" style="--len:40px">
+        <div class="dr-shape cloud"><svg viewBox="-4 4 128 76" aria-hidden="true" focusable="false"><use href="#dr-cloud"/></svg><span id="cdDays">000</span></div>
+        <p class="lbl" data-ta="நாட்கள்">Days</p>
+      </div>
+      <div class="dr-cd" style="--len:20px">
+        <div class="dr-shape star"><svg viewBox="2 2 96 92" aria-hidden="true" focusable="false"><use href="#dr-star"/></svg><span id="cdHours">00</span></div>
+        <p class="lbl" data-ta="மணி">Hours</p>
+      </div>
+      <div class="dr-cd" style="--len:50px">
+        <div class="dr-shape moon"><svg viewBox="4 6 90 90" aria-hidden="true" focusable="false"><use href="#dr-moon"/></svg><i aria-hidden="true"></i><span id="cdMins">00</span></div>
+        <p class="lbl" data-ta="நிமிடம்">Mins</p>
+      </div>
+      <div class="dr-cd" style="--len:28px">
+        <div class="dr-shape heart"><svg viewBox="4 8 92 84" aria-hidden="true" focusable="false"><use href="#dr-heart"/></svg><span id="cdSecs">00</span></div>
+        <p class="lbl" data-ta="வினாடி">Secs</p>
+      </div>
+    </div>
+  </div>
+  <p class="cd-when reveal"><span data-bind="dateLong">Sunday, 21 March 2027</span> · <span data-bind="time">10:00 AM</span></p>
+</section>
+
+<!-- ============ WISHES ============ -->
+<section id="wishes" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="வாழ்த்துப் புத்தகம்">Guest book</p>
+    <h2 class="sec-title" data-ta="தாலாட்டு வாழ்த்துகள்">Lullaby wishes</h2>
+    <svg class="thread" viewBox="0 0 150 18" aria-hidden="true" focusable="false"><path d="M4 9C24 1 40 17 60 9M90 9c20-8 36 8 56 0" fill="none" stroke="#93a9c4" stroke-width="2" stroke-dasharray="4 4" stroke-linecap="round"/><use href="#dr-p-heart" transform="translate(66 0) scale(.18)" fill="#e9c3b9"/></svg>
+    <p class="sec-sub" data-ta="அம்மாவாகப் போகிறவருக்கும் குட்டிச் செல்லத்துக்கும் ஒரு வாழ்த்து எழுதுங்கள். ஒவ்வொன்றையும் பொக்கிஷமாய் வைத்திருப்போம்.">Write a blessing for the mother-to-be and the little one. We'll keep every note.</p>
+  </div>
+
+  <form id="wishForm" class="wish-form reveal">
+    <span class="dr-badge" aria-hidden="true"><svg><use href="#i-note"/></svg></span>
+    <label class="field"><span data-ta="உங்கள் பெயர்">Your name</span><input id="wishName" maxlength="60" placeholder="e.g. Meena Aunty" data-ta-ph="எ.கா. மீனா அத்தை" autocomplete="name" required></label>
+    <label class="field"><span data-ta="உங்கள் வாழ்த்து">Your wish</span><textarea id="wishMessage" maxlength="500" rows="3" placeholder="Write a gentle wish…" data-ta-ph="அன்பான வாழ்த்தை எழுதுங்கள்…" required></textarea></label>
+    <button class="btn" type="submit" data-ta="வாழ்த்து அனுப்பு ♪">Send your wish ♪</button>
+  </form>
+
+  <div id="wishesWall" class="wall">
+    <template>
+    <figure class="wish reveal"><blockquote data-field="message">Wishing the mother-to-be a gentle, happy journey and the little one a lifetime of sweet dreams.</blockquote><figcaption data-field="name">Meena Aunty</figcaption></figure>
+    </template>
+  </div>
+  <p id="wishesEmpty" class="wishes-empty" hidden data-ta="முதல் வாழ்த்தை நீங்களே அனுப்புங்கள் ♪">Be the first to send a lullaby wish ♪</p>
+  <div class="wishes-more"><button id="wishesMore" class="btn ghost" type="button" data-ta="மேலும் வாழ்த்துகள்">Show more wishes</button></div>
+</section>
+
+<!-- ============ HELP & CONTACTS ============ -->
+<section id="stay" class="section">
+  <div class="help reveal">
+    <svg class="help-art" viewBox="0 10 130 86" aria-hidden="true" focusable="false"><use href="#dr-ele"/></svg>
+    <h2 class="sec-title" data-ta="உதவி தேவையா?">Need a hand?</h2>
+    <p id="stayText" data-bind="help">Need help finding the venue? Call us any time.</p>
+    <div id="coordinators">
+      <template>
+      <div class="coord">
+        <span class="av" aria-hidden="true">👪</span>
+        <div class="who"><p class="c-name" data-field="name">Divya's family</p><p class="c-phone" data-field="phone">+91 90000 00000</p></div>
+        <a class="btn" data-href="tel" href="tel:+919000000000"><svg aria-hidden="true"><use href="#i-phone"/></svg><span data-ta="அழைக்க">Call</span></a>
+      </div>
+      </template>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="dr-band">
+  <svg class="dr-minimob" viewBox="0 0 200 150" aria-hidden="true" focusable="false">
+    <path class="str" d="M100 0V22M100 22L30 46M100 22L170 46M100 22L72 56M100 22L128 56" fill="none"/>
+    <ellipse cx="100" cy="46" rx="72" ry="11" fill="none" stroke="#a27650" stroke-width="4"/>
+    <path d="M28 46A72 11 0 0 0 172 46" fill="none" stroke="#c99f72" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="100" cy="22" r="4.5" fill="#c99f72"/>
+    <g class="fp" style="transform-origin:40px 54px"><line class="str" x1="40" y1="54" x2="40" y2="84"/><svg x="17" y="82" width="46" height="27" style="color:#fffdf9"><use href="#dr-cloud"/></svg></g>
+    <g class="fp" style="transform-origin:80px 57px"><line class="str" x1="80" y1="57" x2="80" y2="106"/><svg x="63" y="104" width="34" height="34" style="color:#dcae5a"><use href="#dr-moon"/></svg></g>
+    <g class="fp" style="transform-origin:120px 57px"><line class="str" x1="120" y1="57" x2="120" y2="80"/><svg x="105" y="79" width="30" height="29" style="color:#e9c3b9"><use href="#dr-star"/></svg></g>
+    <g class="fp" style="transform-origin:160px 54px"><line class="str" x1="160" y1="54" x2="160" y2="96"/><svg x="145" y="94" width="30" height="27" style="color:#b7c4a8"><use href="#dr-heart"/></svg></g>
+  </svg>
+  <p class="eyebrow" data-ta="அன்புடன்">With love</p>
+  <p class="hashtag" data-bind="hashtag">#DivyasBabyShower</p>
+  <p class="thanks" data-ta="உங்கள் அன்புக்கும் தாலாட்டுகளுக்கும் நன்றி">Thank you for the love and the lullabies</p>
+</footer>
+
+<button id="musicToggle" type="button" aria-label="Play or pause music"><svg aria-hidden="true"><use href="#i-note"/></svg></button>
+<audio id="bgMusic" loop preload="auto"></audio>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* Intro and bilingual labels. js/invite.js opens the intro on tap (adds .open, then .hidden after data-hide-after);
+   this winds the music box, turns the mobile and floats notes up, then unlocks scrolling and starts the hero. */
+(function(){
+  var html=document.documentElement, overlay=document.getElementById("curtain-overlay"), SVGNS="http://www.w3.org/2000/svg";
+  var reduce=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  // The mobile: each felt piece hangs from a point on the wooden hoop (an ellipse seen from the side).
+  function makeMobile(svg){
+    var CX=180, CY=92, RX=132, RY=24, RAD=Math.PI/180;
+    var layer=svg.querySelector("#dr-layer"), front=layer.querySelector(".dr-front");
+    var pend=[].map.call(layer.querySelectorAll(".dr-p"),function(g){ return {el:g,sw:g.querySelector(".dr-sw"),a:g.getAttribute("data-a")*RAD}; });
+    var beads=[].map.call(svg.querySelectorAll("#dr-beads circle"),function(c){ return {el:c,a:c.getAttribute("data-a")*RAD}; });
+    var hub=[].slice.call(svg.querySelectorAll("#dr-hub line"));
+    function place(th,u){
+      var order=[{el:front,d:0}], env=Math.sin(Math.PI*u);
+      pend.forEach(function(p,i){
+        var a=p.a+th, s=Math.sin(a), k=1.12*(.9+.1*s);
+        var rot=-14*s*env+4*Math.sin(u*Math.PI*6+i*1.3)*env;
+        p.el.setAttribute("transform","translate("+(CX+RX*Math.cos(a)).toFixed(1)+" "+(CY+RY*s).toFixed(1)+") scale("+k.toFixed(3)+")");
+        p.sw.setAttribute("transform","rotate("+rot.toFixed(2)+")");
+        order.push({el:p.el,d:s});
+      });
+      order.sort(function(m,n){ return m.d-n.d; });
+      var kids=layer.children;
+      if(order.some(function(o,i){ return kids[i]!==o.el; })) order.forEach(function(o){ layer.appendChild(o.el); });
+      beads.forEach(function(b){ var a=b.a+th; b.el.setAttribute("cx",(CX+RX*Math.cos(a)).toFixed(1)); b.el.setAttribute("cy",(CY+RY*Math.sin(a)).toFixed(1)); });
+      hub.forEach(function(l,i){ var a=(45+90*i)*RAD+th; l.setAttribute("x2",(CX+RX*Math.cos(a)).toFixed(1)); l.setAttribute("y2",(CY+RY*Math.sin(a)).toFixed(1)); });
+    }
+    place(0,0);
+    return function turn(ms){
+      var t0=performance.now();
+      (function step(now){
+        var u=Math.min(1,(now-t0)/ms);
+        place(Math.PI*1.25*(1-Math.cos(Math.PI*u))/2,u);
+        if(u<1) requestAnimationFrame(step);
+      })(t0);
+    };
+  }
+
+  // Music notes float up out of the music box.
+  function notes(from){
+    if(reduce||!from.animate) return;
+    var r=from.getBoundingClientRect(), box=document.createElement("div"), cols=["#5c7596","#a5645a","#c4932f","#677a58","#93a9c4"];
+    box.className="dr-notes";
+    for(var i=0;i<11;i++){
+      var n=document.createElementNS(SVGNS,"svg"), u=document.createElementNS(SVGNS,"use");
+      n.setAttribute("viewBox","0 0 24 24"); u.setAttribute("href",i%2?"#i-note":"#i-note1"); n.appendChild(u);
+      n.style.color=cols[i%cols.length];
+      n.style.left=(r.left+r.width*(.25+Math.random()*.6))+"px"; n.style.top=(r.top+r.height*.3)+"px";
+      box.appendChild(n);
+      var dx=(Math.random()-.5)*180, up=240+Math.random()*260, tilt=dx>0?14:-14;
+      n.animate([
+        {transform:"translate(0,0) scale(.5)",opacity:0},
+        {opacity:1,offset:.15},
+        {transform:"translate("+(dx*.4)+"px,"+(-up*.5)+"px) scale(1) rotate("+tilt+"deg)",opacity:1,offset:.55},
+        {transform:"translate("+dx+"px,"+(-up)+"px) scale(1.1) rotate("+(-tilt)+"deg)",opacity:0}
+      ],{duration:2000+Math.random()*800,delay:i*150,easing:"ease-out",fill:"both"});
+    }
+    document.body.appendChild(box);
+    setTimeout(function(){ box.remove(); },4600);
+  }
+
+  if(overlay&&!html.classList.contains("intro-open")){
+    // Admin thumbnails and framed previews start on the page itself.
+    overlay.remove();
+  }else if(overlay){
+    var opened=false, btn=overlay.querySelector("[data-open-invite]"), mob=overlay.querySelector(".dr-mobile");
+    var turn=mob?makeMobile(mob):null;
+    // A tap anywhere on the nursery winds the music box.
+    overlay.addEventListener("click",function(e){ if(!opened&&btn&&!e.target.closest("[data-open-invite]")) btn.click(); });
+    overlay.querySelectorAll("[data-open-invite]").forEach(function(b){
+      b.addEventListener("click",function(){
+        if(opened) return;
+        opened=true;
+        overlay.classList.add("open");
+        if(!reduce){ if(turn) turn(2700); notes(b); }
+        setTimeout(function(){ html.classList.remove("intro-open"); },reduce?0:1600);
+      });
+    });
+  }
+
+  // Labels with data-ta (and placeholders with data-ta-ph) switch to that Tamil text when the guest picks தமிழ்.
+  var lang="en";
+  function labels(root){
+    root.querySelectorAll("[data-ta]").forEach(function(n){
+      if(n.dataset.en===undefined) n.dataset.en=n.textContent;
+      n.textContent=lang==="ta"?n.dataset.ta:n.dataset.en;
+    });
+    root.querySelectorAll("[data-ta-ph]").forEach(function(n){
+      if(n.dataset.enPh===undefined) n.dataset.enPh=n.placeholder;
+      n.placeholder=lang==="ta"?n.dataset.taPh:n.dataset.enPh;
+    });
+  }
+  document.addEventListener("invite:render",function(e){
+    lang=e.detail&&e.detail.lang==="ta"?"ta":"en";
+    labels(document);
+  });
+  // New wishes arrive without a full render, so label them as they are added.
+  var wall=document.getElementById("wishesWall");
+  if(wall&&window.MutationObserver) new MutationObserver(function(){ labels(wall); }).observe(wall,{childList:true});
+})();
+</script>
+</body>
+</html>

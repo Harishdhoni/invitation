@@ -42,5 +42,15 @@
   { "id": "monster-trainer", "file": "birthday-monster-trainer.html", "name": "Monster Trainer", "category": "birthday",
     "description": "A mystery egg hatches into a trainer adventure: a holo trainer card, events as trading cards, badges and dialogue-box wishes." },
   { "id": "vel-muruga", "file": "birthday-vel-muruga.html", "name": "Vel Muruga", "category": "birthday",
-    "description": "With Lord Murugan's blessings: a peacock feather fans into a tail, a golden Vel (or your Murugan picture) and Tamil-first headings." }
+    "description": "With Lord Murugan's blessings: a peacock feather fans into a tail, a golden Vel (or your Murugan picture) and Tamil-first headings." },
+  { "id": "valaikappu", "file": "baby-shower-valaikappu.html", "name": "Valaikappu", "category": "baby-shower",
+    "description": "The traditional Tamil bangle ceremony: tap the glass bangles, a jasmine garland and the mother-to-be's photo in a wreath of bangles. Tamil-first." },
+  { "id": "little-sprout", "file": "baby-shower-little-sprout.html", "name": "Little Sprout", "category": "baby-shower",
+    "description": "A little one is growing: water the seed and it sprouts. Watercolour leaves, an arched photo window and seed-packet events." },
+  { "id": "special-delivery", "file": "baby-shower-special-delivery.html", "name": "Special Delivery", "category": "baby-shower",
+    "description": "A stork brings the bundle and guests tap to unwrap it. Shipping-label events, a tracking-timeline countdown and gift-tag wishes." },
+  { "id": "oh-baby", "file": "baby-shower-oh-baby.html", "name": "Oh Baby", "category": "baby-shower",
+    "description": "A boho balloon garland with pearl OH BABY letters: let the balloons fly. Earthy tones, arch frames and a balloon countdown." },
+  { "id": "sweet-dreams", "file": "baby-shower-sweet-dreams.html", "name": "Sweet Dreams", "category": "baby-shower",
+    "description": "A felt nursery mobile that turns when guests wind the music box. Stitched felt cards, a cloud photo frame and a lullaby feel." }
 ]

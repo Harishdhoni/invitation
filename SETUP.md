@@ -1,6 +1,6 @@
 # Invitations — Setup Guide
 
-Invitation websites for weddings, housewarmings, birthdays and other events, with an admin page.
+Invitation websites for weddings, housewarmings, birthdays, baby showers and other events, with an admin page.
 Plain HTML/CSS/JS + Firebase (Firestore for data, Auth for the admin login, Hosting for the public link).
 
 ```
@@ -82,11 +82,12 @@ those are saved to Firestore and appear instantly).
 
 ## 5. Templates and categories
 
-Open the admin page, log in, and click **Templates** at the top. The first visit creates three categories:
-Weddings, Housewarmings and Birthdays.
+Open the admin page, log in, and click **Templates** at the top. The first visit creates four categories:
+Weddings, Housewarmings, Birthdays and Baby Showers.
 
-- **Add 22 starter templates** (shown while some are missing) copies the designs in `public/templates/` into Firestore:
-  ten wedding designs, a housewarming and eleven birthday ones. The built-in **Classic Maroon & Gold** design is always
+- **Add 27 starter templates** (shown while some are missing) copies the designs in `public/templates/` into Firestore:
+  ten wedding designs, a housewarming, eleven birthday and five baby-shower ones. Adding them also creates any category
+  they need that is missing (for example Baby Showers on a site set up before it existed). The built-in **Classic Maroon & Gold** design is always
   there for weddings.
 - Templates are listed by category. Each card has a live preview, the events using it, and **Edit**, **Preview ↗**,
   **Copy link** (`/?template=<id>`, the template with sample details), **Duplicate** and **Delete**.
@@ -96,7 +97,7 @@ Weddings, Housewarmings and Birthdays.
   **Save template** (or Ctrl+S). Changes reach every event using it — within ~5 minutes on event links, because
   the pages are cached briefly. How to make a template show event details is in `TEMPLATES.md` and under **Hooks**
   in the editor.
-- **＋ New category** adds a kind of event (e.g. Baby Shower). Categories can be renamed, and deleted once they have no
+- **＋ New category** adds a kind of event (e.g. Engagement). Categories can be renamed, and deleted once they have no
   templates or events. Add at least one template to a new category so events can use it.
 
 ## 6. Add events

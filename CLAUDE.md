@@ -5,7 +5,7 @@ Human setup and deploy steps are in [SETUP.md](SETUP.md). The template contract 
 
 ## What this is
 
-Tamil / English invitation websites for weddings, housewarmings, birthdays and any other category the admin adds.
+Tamil / English invitation websites for weddings, housewarmings, birthdays, baby showers and any other category the admin adds.
 Many events run at once. Each one lives at `/<slug>` (e.g. `/arjun-meera`) with its own details, photos, music,
 guest book and template. One admin (email + password) manages everything. An event's editor gets in with a PIN.
 
@@ -50,6 +50,9 @@ Important:
 - **`api/` functions run only on Vercel.** XAMPP serves `public/` as static files. To check an `api/` change, use a
   Vercel deployment (with the GitHub integration, a pushed branch gets a preview URL).
 - On an office network that inspects HTTPS, set `NODE_OPTIONS=--use-system-ca` before running the firebase or vercel CLI.
+- **Local caching**: `public/.htaccess` makes Apache send `Cache-Control: no-cache` for html/js/css/json, as
+  `vercel.json` does on Vercel, so a normal reload shows your edits. If a page still mixes old and new files (new
+  markup, old script), hard-refresh with Ctrl+Shift+R.
 
 ## Architecture
 
@@ -60,7 +63,10 @@ Important:
 | `public/index.html`: the built-in **Classic** design, and the shell for every event | `js/invite.js` | Guests |
 | `public/admin.html` (`/admin`) | `js/admin.js` | The one admin |
 | `public/editor.html` (`/editor`) | `js/editor.js` | Someone holding an event's PIN |
-| `public/templates/*.html`: starter designs, copied into Firestore on request | none (the runtime is injected) | n/a |
+| `public/templates/*.html`: 27 starter designs (10 wedding, 1 housewarming, 11 birthday, 5 baby shower) listed in `starters.json`, copied into Firestore on request | none (the runtime is injected) | n/a |
+
+`admin.html` and `editor.html` share `css/admin.css` and end with the same `.site-credit` footer
+("© 2026 · Powered by Harish S").
 
 ### Modules in `public/js/`
 
@@ -76,8 +82,10 @@ Important:
   admin session in the same browser from replacing each other. Keep the two apps separate.
 - `admin.js`: admin boot, login and routing by URL params, the events list (category filter chips, upcoming before
   past), new event, delete, the Main link setting and the one-time legacy import.
-- `admin-templates.js`: categories, the Templates page, the template editor (HTML textarea, upload/download, live
-  iframe preview), `templatePicker`, lazy iframe `thumbnail`s and the starter import. Exports `CLASSIC` (id `""`).
+- `admin-templates.js`: categories, the Templates page (grouped by category, with a category dropdown that is
+  remembered for the tab in `sessionStorage` `wi:templatesCategory`), the template editor (HTML textarea,
+  upload/download, live iframe preview), `templatePicker`, lazy iframe `thumbnail`s and the starter import. Exports
+  `CLASSIC` (id `""`).
 - `admin-access.js`: the editor PIN panel on each event card (create, change, revoke, copy details).
 - `event-editor.js`: the **event editor**, shared by the admin and editor pages. Tabs: details, photos & music,
   events, contacts, design, wishes. Builds its markup into `#editorView` **when the module is imported**, so the host
@@ -193,6 +201,24 @@ Event fields (`weddings/<slug>`):
 - **Commits**: imperative subject describing the outcome for the user ("Let editors pick a design from their event's
   category"). The body says what changed and why.
 
+### Templates (beyond the hooks in TEMPLATES.md)
+
+Start a new design from a recent starter such as `templates/birthday-sprinkle-cake.html`, which already does all of this:
+
+- **Intro**: the head script adds `js` to `<html>`, plus `intro-open` unless the URL has `?preview` or the page is in a
+  frame. The runtime only adds `.open` and then `.hidden` to `#curtain-overlay`, so the template's own tap handler must
+  remove `intro-open` (that unlocks scrolling and starts the hero's entrance). In frames it removes the overlay.
+- **Tamil for fixed labels**: the `data-i18n` strings in `TRANSLATIONS` are worded for weddings. The ten newer birthday
+  starters put Tamil on their own labels with `data-ta="…"` (text) and `data-ta-ph="…"` (placeholder), swapped by a small
+  `invite:render` handler. A `MutationObserver` on `#wishesWall` labels wishes that arrive later. Only put `data-ta` on
+  elements whose whole content is plain text; wrap the text in a `<span>` when it sits next to an icon or a `<b>`.
+- **Photo slots**: an `<img data-bind="cover">` (or `emblem`) whose `src` is a transparent GIF, laid over a stand-in
+  illustration. The runtime keeps the template's `src` until a photo is uploaded, so the illustration shows until then.
+- **No sample details in fixed text**: never write the sample child's name, age or date into the page; use
+  `data-bind` (`name1`, `year`, `day`, `monthNum`, …) or generic wording.
+- **Original artwork only**: themed designs (superheroes, cartoons, princesses, games) evoke the theme with colours and
+  generic motifs. No copyrighted characters, logos or franchise names in the art or the text.
+
 ## Values that must stay in sync
 
 Without a build step there is no shared config, so these are duplicated on purpose:
@@ -207,6 +233,8 @@ Without a build step there is no shared config, so these are duplicated on purpo
 | Firebase SDK version | `firebase.js` · `editor-firebase.js` · `translate.js` |
 | Template hooks | `invite.js` (the implementation) · `TEMPLATES.md` · the Hooks `<details>` in `admin.html` · `templates/blank.html` |
 | No-cache headers for html/js/css | `vercel.json` `headers` (Vercel) · `public/.htaccess` (local Apache, so edits show on a normal reload) |
+| Starter templates | `public/templates/starters.json` · the starter count in `README.md` and `SETUP.md` ("Add 27 starter templates") · the catalog in `PRODUCT.md` §6 |
+| Site credit | the `.site-credit` footer in `admin.html` and `editor.html` |
 | Wish limits (60 / 500) | `firestore.rules` (both wish blocks) · `maxlength` in templates and `index.html` · `sendWish()` in `invite.js` |
 | Size limits | Images: `image-utils.js` (900K-char data URL). Music: `MUSIC_*` in `event-editor.js` (900 KB chunks, 10 MB saved, 60 MB source). Template: `MAX_HTML` in `admin-templates.js` (900 KB) |
 | Setup steps | `SETUP.md`, whenever rules, Firebase console steps or admin buttons change |
@@ -216,11 +244,21 @@ Without a build step there is no shared config, so these are duplicated on purpo
 - **Starter files are only seeds.** "Add starter templates" copies `public/templates/<file>.html` into
   `templates/<id>` in Firestore. After that, events use the Firestore copy, and editing the file changes nothing live.
   To update a live template, save it through the admin template editor. To add a starter, add the file and an entry
-  in `public/templates/starters.json` (`id`, `file`, `name`, `category`, `description`). Reserved template ids:
-  `classic`, `new`, `blank`.
+  in `public/templates/starters.json` (`id`, `file`, `name`, `category`, `description`). Importing a starter whose
+  category is missing creates the category, named from `DEFAULT_CATEGORIES` in `defaults.js` (or its id). Give a new
+  category a sample in `SAMPLES` there too, so previews and new events start with fitting details. Reserved template
+  ids: `classic`, `new`, `blank`.
 - **Template pages replace the whole document.** Template scripts must not wait for `DOMContentLoaded` or `load`, must
   not include `js/invite.js`, and should skip the intro inside iframes (`window.self !== window.top`). See
   TEMPLATES.md.
+- **Templates on phones**: decorations wider than the screen (spinning square SVGs, `120vw` glows) widen the whole
+  page on mobile, even with `body{overflow-x:hidden}`. Put `overflow-x:clip` on the section that holds them.
+  Pixel and monospace fonts have no Tamil and very wide spaces, so give `html[lang="ta"] [data-ta]` a Tamil font (the
+  runtime sets `<html lang>`). Fonts with old-style figures (Playfair Display, Cormorant Garamond) turn "1" into "ı";
+  use `font-variant-numeric:lining-nums`.
+- **Admin and editor layout**: `admin.css` makes `<body>` a full-height flex column (`#appView` and `.center-view`
+  grow) so the `.site-credit` footer sits at the bottom. A new direct child of `<body>` becomes a flex item. While an
+  editor's fixed `.savebar` is showing, the footer gets a bottom margin (`body:has(…)`) so the bar doesn't cover it.
 - **The 1 MiB Firestore document limit shapes the storage.** Photos are compressed data URLs. Music is split into
   ~900 KB `Bytes` chunks, each written with its own `setDoc` before the config batch, because a batch can't carry
   several MB. Old chunks are deleted only after the new config commits. Keep that order.
@@ -252,8 +290,12 @@ There are no automated tests. Check changes by hand:
 1. Run the `node --check` loop above.
 2. Open the affected page through XAMPP, go through the flow, and watch the browser console.
 3. Runtime or template changes: open `?template=classic` and two or three starters (`?template=temple-gold`,
-   `?template=twinkle-birthday`). Open the intro, switch EN / தமிழ், and send a preview wish. Then open a real event
-   with `?w=<slug>`.
+   `?template=twinkle-birthday`), or a starter file not yet in Firestore with
+   `?template-file=templates/<file>.html&category=<id>`. Check at phone width (390px, and no sideways scroll after the
+   intro), open the intro, switch EN / தமிழ், and send a preview wish. Then open a real event with `?w=<slug>`.
+   For headless screenshots use Chrome DevTools device emulation (`Emulation.setDeviceMetricsOverride`):
+   `--window-size` can't go below about 500px on Windows, and `--virtual-time-budget` can freeze animations that start
+   after load.
 4. Editor or rules changes: test as the admin, as an editor (PIN entered in a different browser profile), and as a
    guest (private window). Rules changes need a deploy first, so ask before deploying.
 5. `api/` changes: check on a Vercel deployment. Confirm the preview tags with
