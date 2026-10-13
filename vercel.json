@@ -6,7 +6,7 @@
   "outputDirectory": "public",
   "cleanUrls": true,
   "trailingSlash": false,
-  "rewrites": [
+  "redirects": [
     {
       "source": "/",
       "missing": [
@@ -15,8 +15,11 @@
         { "type": "query", "key": "template-file" },
         { "type": "query", "key": "editor-preview" }
       ],
-      "destination": "/home.html"
-    },
+      "destination": "/home",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
     { "source": "/:slug([a-z0-9-]+)", "destination": "/api/invite?slug=:slug" }
   ],
   "functions": {

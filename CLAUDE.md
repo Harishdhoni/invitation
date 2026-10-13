@@ -41,7 +41,7 @@ Local URLs (all under `http://localhost/wedding-invite/public/`):
 | `admin.html` | Admin: events list. `?w=<slug>` edits an event, `?view=templates` lists templates, `?template=<id>` / `?template=new&category=<id>` edits one |
 | `editor.html` | PIN editor |
 | `?w=<slug>` | An event (locally, `/<slug>` paths don't work; use `?w=`) |
-| `/` (no params) | Redirects to `home.html`, the sales page (on Vercel `/` serves it directly) |
+| `/` (no params) | Goes to `home.html`, the sales page (on Vercel a server redirect to `/home`; elsewhere `invite.js` redirects) |
 | `home.html`, `help.html`, `terms.html`, `privacy.html`, `refund.html`, `contact.html` | The sales page and the information pages |
 | `?w=<slug>&editor-preview=1` | The customer's own preview of their invitation, read with their editor session (works while it is unpaid or closed) |
 | `?template=<id>` | A saved template with sample details. Use `classic` for the built-in design |
@@ -292,7 +292,7 @@ Without a build step there is no shared config, so these are duplicated on purpo
 | Starter templates | `public/templates/starters.json` · the starter count in `README.md` and `SETUP.md` ("Add 27 starter templates") · the catalog in `PRODUCT.md` §6 |
 | Site credit | the `.site-credit` footer in `admin.html` and `editor.html` |
 | Sales settings (businessName, price, upiId, whatsapp, email, address) | `SALES_DEFAULTS` in `defaults.js` · `FIELDS` in `admin-sales.js` and the Settings form in `admin.html` · `data-site` hooks in `site.js` and the sales/info pages |
-| Bare address → sales page | `vercel.json` rewrite of `/` (its `missing` list must name every query the invite page takes: `w`, `template`, `template-file`, `editor-preview`) · the `home.html` redirect in `invite.js` `boot()` |
+| Bare address → sales page | `vercel.json` redirect of `/` to `/home` (a redirect, because Vercel serves `index.html` before any rewrite; its `missing` list must name every query the invite page takes: `w`, `template`, `template-file`, `editor-preview`) · the `home.html` redirect in `invite.js` `boot()` |
 | Design screenshots | `public/assets/templates/<id>.webp`, one per entry in `starters.json` plus `classic` |
 | Wish limits (60 / 500) | `firestore.rules` (both wish blocks) · `maxlength` in templates and `index.html` · `sendWish()` in `invite.js` |
 | Size limits | Images: `image-utils.js` (900K-char data URL). Music: `MUSIC_*` in `event-editor.js` (900 KB chunks, 10 MB saved, 60 MB source). Template: `MAX_HTML` in `admin-templates.js` (900 KB) |
@@ -344,7 +344,7 @@ Without a build step there is no shared config, so these are duplicated on purpo
 - **The 15-day rule applies to old events too.** An event without an `endDate` closes 15 days after its main date
   as soon as the rules are deployed. To keep one open, set an end date in its Links tab.
 - **`/` is the sales page.** `useTemplate("")` fetches Classic as `./index.html`, never `./`. A new query parameter for
-  the invite page must also go in the `missing` list of the `/` rewrite in `vercel.json`, or `/?that=…` shows the sales page.
+  the invite page must also go in the `missing` list of the `/` redirect in `vercel.json`, or `/?that=…` goes to the sales page.
 - **Selling data**: customer names, phones and payment references go in `orders/<slug>` only. `weddings/<slug>` and
   `site/settings` are readable by anyone. A new starter design needs a screenshot in `public/assets/templates/`
   (390×780 WebP of the opened intro with sample details, as in the existing ones) for the sales page.
