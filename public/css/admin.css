@@ -58,7 +58,7 @@ h1{font-family:'Cinzel Decorative',serif;color:var(--maroon-dark);font-size:1.45
 .field{display:block;margin-bottom:1.1rem;}
 .field > span,.field > .label{display:block;font-weight:600;font-size:.86rem;margin-bottom:.35rem;color:var(--maroon-dark);}
 .field .hint{display:block;color:var(--muted);font-size:.78rem;margin-top:.3rem;}
-input[type=text],input[type=email],input[type=password],input[type=datetime-local],input[type=tel],textarea{
+input[type=text],input[type=email],input[type=password],input[type=datetime-local],input[type=date],input[type=tel],textarea{
   width:100%;border:1px solid var(--line);border-radius:8px;padding:.55rem .7rem;
   font:400 .95rem/1.5 var(--sans);color:var(--ink);background:#fffdfa;
 }
@@ -185,6 +185,7 @@ main{max-width:980px;margin:0 auto;padding:1.2rem 1rem 7rem;}
 .badge{display:inline-block;font-size:.72rem;border-radius:10px;padding:.05rem .5rem;font-weight:600;}
 .badge.ok{background:#e4f3ea;color:var(--ok);}
 .badge.off{background:#f1e9e9;color:#8a4a44;}
+.badge.wait{background:#fff1d6;color:#8a5a00;}
 
 /* ---------- save bar + toast ---------- */
 .savebar{
@@ -267,6 +268,28 @@ main.wide,.list-main.wide,.editor-head.wide{max-width:1240px;}
 .pick-info{display:flex;flex-direction:column;align-items:flex-start;gap:.35rem;padding:.6rem;font-size:.85rem;}
 .picker-empty{grid-column:1/-1;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;padding:1rem;border:1px dashed var(--line);border-radius:10px;}
 .design-current{margin-bottom:.6rem;}
+.pick-card.taken{cursor:default;opacity:.55;}
+
+/* ---------- links (event editor) and extra links (events list) ---------- */
+.links-intro{margin-bottom:1rem;max-width:720px;}
+.link-card .item-head h3{font-weight:600;overflow-wrap:anywhere;white-space:normal;}
+.link-card .item-tools{flex-wrap:wrap;justify-content:flex-end;}
+.link-kind{margin:-.5rem 0 .3rem;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;}
+.link-status{font-size:.88rem;margin-bottom:1rem;}
+.link-status .badge{margin-right:.2rem;}
+.link-window{padding:.9rem 1rem .1rem;margin-bottom:1.1rem;background:#fffaf0;border:1px solid var(--line);border-radius:10px;}
+.link-window > .check{display:inline-flex;margin-bottom:.9rem;font-weight:600;}
+.check{display:flex;align-items:center;gap:.45rem;font-size:.9rem;cursor:pointer;}
+.check input{width:1.05rem;height:1.05rem;accent-color:var(--maroon);flex-shrink:0;}
+.part-checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(190px,100%),1fr));gap:.5rem 1rem;}
+.link-design{align-items:center;}
+.link-design select{flex:1;min-width:min(220px,100%);width:auto;}
+.linkish{background:none;border:0;padding:0;color:var(--maroon);font:inherit;text-decoration:underline;cursor:pointer;}
+.links-add{align-items:center;margin-top:1rem;}
+.wedding-card .link-status{margin:0;font-size:.84rem;color:var(--muted);}
+.extra-links{list-style:none;display:grid;gap:.35rem;padding:.5rem .7rem;margin:.1rem 0;border:1px dashed var(--line);border-radius:10px;font-size:.84rem;}
+.extra-links li{display:flex;align-items:center;gap:.3rem .6rem;flex-wrap:wrap;}
+.extra-links .wedding-link{margin:0;}
 
 /* ---------- template editor ---------- */
 .tpl-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1rem;align-items:start;}

@@ -25,6 +25,23 @@ Start **Apache** in the XAMPP Control Panel, then open:
 
 Until Firebase is connected the invite shows sample data and the admin page shows "Connect Firebase first".
 
+Local pages save to the **live** Firestore database. To try changes without touching it — and to try new
+`firestore.rules` before deploying them — use the Firebase emulator instead:
+
+1. Install Java 21 (for example `winget install EclipseAdoptium.Temurin.21.JRE`), then in this folder run
+   `firebase emulators:start --only firestore,auth --export-on-exit .emulator-data`
+   (add `--import .emulator-data` from the second time on, to keep your test data). It uses the local `firestore.rules`.
+2. Create a test admin with the admin UID from `firestore.rules` (the rules only accept that UID):
+   ```bash
+   curl -X POST "http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/projects/wedding-invitation-769fc/accounts" \
+     -H "Authorization: Bearer owner" -H "Content-Type: application/json" \
+     -d '{"localId":"<admin UID>","email":"admin@test.local","password":"test1234"}'
+   ```
+3. Open `admin.html?emulator=1` and log in with that test account. The browser stays on the emulator — for the
+   admin, the editor and invites — until you open any page with `?emulator=0`. A "Running in emulator mode" bar shows
+   at the bottom. The emulator starts empty: click **Add 27 starter templates**, then create an event.
+   See the data at http://127.0.0.1:4000. Auto-translate doesn't work against the emulator.
+
 ## 2. Firebase console (one time, ~10 minutes)
 
 Go to https://console.firebase.google.com
@@ -112,8 +129,10 @@ Weddings, Housewarmings, Birthdays and Baby Showers.
   details, photos, music and wishes into a wedding with its own link name, and makes it the main link so links you already
   sent keep working. The old data is left as it was (you can delete the `site/config`, `images`, `music` and `wishes`
   collections in the Firebase console once you're happy).
-- Each wedding card has **Edit**, **Copy link** (the link to send guests), **Show at main link** (what `/` shows),
-  and **Delete** (removes its details, photos, music and wishes; you type the link name to confirm).
+- Each event card shows whether guests can open its link now (**Open**, **Off**, **Not open yet** or **Ended**) and
+  until when, and lists its extra links. It has **Edit**, **Copy link** (the link to send guests), **Switch off** /
+  **Switch on**, **Show at main link** (what `/` shows), and **Delete** (removes its details, photos, music, wishes and
+  extra links; you type the link name to confirm).
 
 ## 7. Fill in an event's details
 
@@ -130,13 +149,22 @@ Click **Edit** on an event and go through the tabs:
 - **Help & Contacts** — message for outstation guests + coordinators with tap-to-call numbers.
 - **Design** — the event's category and template. **Preview this event in the selected template ↗** shows the saved
   details in the chosen template before you switch.
+- **Links** — the event link and its extra links. Every link shows the same details, photos, music and guest
+  book; each has its own design and its own **Show on this link** boxes (cover photo, events, countdown, guest book,
+  help message, contact numbers, music). For each link you also set:
+  - **Open to guests** — untick it to switch the link off. Guests then see "This invitation isn't open right now".
+  - **Start date** / **End date** (optional, India time) — the first and last day guests can open it. With no end date
+    a link closes **15 days after the event's main date**. An extra link also closes whenever the event link is closed.
+  - **＋ Add another link** — pick a link name (e.g. `arjun-meera-friends`) and a design no other link of the event uses.
+    The link works as soon as it is created; **Delete** on its card removes it.
 - **Wishes** — hide or delete any guest wish; changes are instant.
 
 Type in the **EN** boxes and the **தமிழ்** box fills in automatically about a second after you stop typing
 (Gemini via Firebase AI Logic). Typing in a Tamil box yourself keeps your version — click **↻ Translate again**
 to go back to automatic. **அ Fill missing Tamil** (bottom bar) translates every empty Tamil box at once.
 
-Click **Save changes** (or Ctrl+S) after editing the first four tabs.
+Click **Save changes** (or Ctrl+S) after editing the first four tabs, the design or the links. (Creating or deleting
+a link, and the wishes, take effect at once.)
 
 ## 8. Sharing the link
 
@@ -152,8 +180,11 @@ On **Events**, every event card has an **Editor PIN** row:
 1. **Create editor PIN** makes a PIN like `K7QM-X2PD` for that event.
 2. **Copy details** copies a message with the invitation link, the editor page (`/editor`) and the PIN. Send it to the editor.
 3. The editor opens `/editor`, types the PIN in the one field, and sees the editor for **that invitation only**:
-   details, photos, music, events, contacts and the wishes (hide / unhide / delete). There is no Design tab, no other
-   events, no admin page and no settings. Their browser remembers the PIN until you change it or they click **Leave editor**.
+   details, photos, music, events, contacts, the design (templates of the event's own category), the links and the
+   wishes (hide / unhide / delete). In **Links** they can add extra links — up to **3 links in all**, each with a
+   different design — choose what each link shows, and delete the extra links. They can't switch links on or off or
+   change their dates (only you can), change the category, see other events, or reach the admin page.
+   Their browser remembers the PIN until you change it or they click **Leave editor**.
 4. **Change** gives the event a new PIN; **Revoke** removes access. Either takes effect immediately — the editor's next
    save is refused and they are asked for the PIN again.
 
@@ -170,9 +201,16 @@ An event has one PIN at a time. Deleting an event removes its PIN.
   photos only on the first visit (cached after), and up to 30 for the wishes wall — fine for several weddings at once.
   If you expect very heavy traffic, upgrade to Blaze (pay-as-you-go; still ~free at wedding scale).
 - **Security:** only the account whose UID is in `firestore.rules` can create or delete events, change categories or
-  templates, create PINs, or list all events. A person with an event's PIN can additionally change that event's details,
-  photos, music and wishes — but not its category or design, and nothing belonging to another event. Guests can open a wedding only by its link, can only add wishes (max 60-char name,
-  500-char message) to a wedding that exists, and never see hidden ones.
+  templates, create PINs, switch links on or off, set their dates, or list all events. A person with an event's PIN can
+  additionally change that event's details, photos, music, design, links and wishes — but not its category, when it is
+  open, or anything belonging to another event. Guests can open an event only by its link and only while that link is
+  open; they can only add wishes (max 60-char name, 500-char message) to an open event, and never see hidden ones.
+- **After updating to links with dates**, deploy the new rules: `firebase deploy --only firestore:rules`. Until then
+  links never close, and editors can't add links. Deploying applies the 15-day rule to existing events at once: any
+  event whose main date was more than 15 days ago (and has no end date) closes to guests. Set an end date in its
+  **Links** tab first if it should stay open.
+- **Hidden parts are a display choice.** A link that hides the contact numbers doesn't show them, but the details are
+  saved once for the whole event and the page downloads them, so someone technical could still find them.
 - **After updating to templates**, deploy the new rules (they add `categories` and `templates`):
   `firebase deploy --only firestore:rules` — until then the Templates page shows "Permission denied" and events
   with a template show the Classic design.

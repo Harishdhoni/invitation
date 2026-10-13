@@ -1,14 +1,15 @@
-import { tr, slugify, isValidSlug, sampleFor } from "./defaults.js";
+import { tr, slugify, isValidSlug, sampleFor, clone } from "./defaults.js";
 import { isFirebaseConfigured, ADMIN_UID, SITE_URL } from "./firebase-config.js";
 import { compressPreviewImage } from "./image-utils.js";
-import { $, show, el, toast, actionBtn, copyText } from "./admin-ui.js";
+import { $, show, el, toast, actionBtn, copyText, permissionHint } from "./admin-ui.js";
 import {
   useFirebase, loadCategories, loadTemplates, templatesIn, templateName, categoryName, templatePicker,
   enterTemplates, enterTemplateEditor
 } from "./admin-templates.js";
 import { useFirebase as useAccessFirebase, loadPins, revokePin, accessPanel } from "./admin-access.js";
 import {
-  openEditor, normalize, coupleNames, shareLink, previewLink, musicChunkId, hasUnsavedChanges, discardChanges
+  openEditor, normalize, coupleNames, shareLink, previewLink, musicChunkId, hasUnsavedChanges, discardChanges,
+  linkStatus, stateBadge
 } from "./event-editor.js";
 
 let fb = null;
@@ -24,7 +25,8 @@ let templates = [];          // [{ id, name, categoryId, html, … }]
 
 /* ------------------------------ weddings list ------------------------------ */
 let settings = {};           // site/settings: { defaultWedding, legacyImported }
-let weddings = [];           // [{ id, cfg }]
+let weddings = [];           // [{ id, cfg }]: events, without their extra links
+let extraLinks = new Map();  // event id -> [{ id, cfg }]: its extra links ({ parent } docs in weddings/)
 let legacyConfig = null;     // site/config from before multi-wedding, until it's imported
 
 const SLUG_RULES = "Use 3–40 lowercase letters, numbers and dashes, like arjun-meera. " +
@@ -65,7 +67,13 @@ async function loadWeddings(){
       fb.getDoc(settingsDoc())
     ]);
     settings = settingsSnap.exists() ? settingsSnap.data() : {};
-    weddings = list.docs.map(d => ({ id: d.id, cfg: d.data() }));
+    const all = list.docs.map(d => ({ id: d.id, cfg: d.data() }));
+    const ids = new Set(all.filter(w => !w.cfg.parent).map(w => w.id));
+    // An extra link whose event is gone is listed on its own, so it can be deleted.
+    weddings = all.filter(w => !w.cfg.parent || !ids.has(w.cfg.parent));
+    extraLinks = new Map();
+    all.filter(w => w.cfg.parent && ids.has(w.cfg.parent))
+      .forEach(l => extraLinks.set(l.cfg.parent, [...(extraLinks.get(l.cfg.parent) || []), l]));
     legacyConfig = null;
     if(!settings.legacyImported){
       const legacy = await fb.getDoc(fb.doc(fb.db, "site", "config"));
@@ -137,14 +145,22 @@ function renderWeddings(){
   show("weddingsStatus", !weddings.length);
 }
 
+const linkAnchor = id => {
+  const a = el("a", "wedding-link", `${siteHost()}/${id}`);
+  Object.assign(a, { href: previewLink(id), target: "_blank", rel: "noopener" });
+  return a;
+};
+
 function weddingCard(w, isPast){
+  if(w.cfg.parent) return orphanLinkCard(w);
   const card = el("div", "card wedding-card" + (isPast ? " past" : ""));
   const head = el("div", "item-head");
   const tags = el("div", "item-tools");
   const isMain = settings.defaultWedding === w.id;
+  const status = linkStatus(w.cfg);
   if(isMain) tags.append(el("span", "badge main", "Main link"));
   if(isPast) tags.append(el("span", "badge off", "Past"));
-  tags.append(el("span", "badge cat", categoryName(categories, eventCategory(w.cfg))));
+  tags.append(stateBadge(status.state), el("span", "badge cat", categoryName(categories, eventCategory(w.cfg))));
   head.append(el("h3", "", coupleNames(w.cfg, w.id)), tags);
 
   const t = weddingTime(w.cfg);
@@ -153,22 +169,63 @@ function weddingCard(w, isPast){
     : "No date set");
   const design = el("p", "design", "Template: " + templateName(templates, w.cfg.templateId || ""));
 
-  const link = el("a", "wedding-link", `${siteHost()}/${w.id}`);
-  link.href = previewLink(w.id);
-  link.target = "_blank";
-  link.rel = "noopener";
+  // The event's extra links: the same details in other designs, each open or closed on its own.
+  const extras = extraLinks.get(w.id) || [];
+  const more = el("ul", "extra-links");
+  extras.forEach(l => {
+    const s = linkStatus(l.cfg, w.cfg);
+    const li = el("li");
+    li.append(linkAnchor(l.id), el("span", "muted", templateName(templates, l.cfg.templateId || "")), stateBadge(s.state));
+    more.append(li);
+  });
 
   const edit = el("a", "btn primary small", "Edit");
   edit.href = "?w=" + w.id;
   const acts = el("div", "row");
   acts.append(edit, actionBtn("Copy link", "ghost", () => copyText(shareLink(w.id))));
+  acts.append(w.cfg.active === false
+    ? actionBtn("Switch on", "ghost", () => setActive(w, true))
+    : actionBtn("Switch off", "ghost", () => setActive(w, false)));
   if(!isMain) acts.append(actionBtn("Show at main link", "ghost", () => setMainWedding(w)));
   acts.append(actionBtn("Delete", "danger", () => deleteWedding(w)));
 
-  card.append(head, when, design, link);
+  card.append(head, when, design, linkAnchor(w.id), el("p", "link-status", status.text));
+  if(extras.length) card.append(more);
   if(pinsReady) card.append(accessPanel({ slug: w.id, name: coupleNames(w.cfg, w.id), pins }));
   card.append(acts);
   return card;
+}
+
+// An extra link whose event was deleted: it shows nothing, so it can only be deleted.
+function orphanLinkCard(w){
+  const card = el("div", "card wedding-card past");
+  const head = el("div", "item-head");
+  head.append(el("h3", "", w.id), el("span", "badge off", "Extra link"));
+  const acts = el("div", "row");
+  acts.append(actionBtn("Delete", "danger", async () => {
+    if(!confirm(`Delete the link ${siteHost()}/${w.id}? Its event “${w.cfg.parent}” no longer exists, so it shows nothing.`)) return;
+    try { await fb.deleteDoc(fb.doc(fb.db, "weddings", w.id)); toast(`Deleted ${siteHost()}/${w.id}.`); }
+    catch(e){ toast("Delete failed: " + permissionHint(e)); }
+    loadWeddings();
+  }));
+  card.append(head, el("p", "muted", `An extra link of “${w.cfg.parent}”, which no longer exists.`), acts);
+  return card;
+}
+
+// The event link's on/off switch. Its extra links show its details, so they close with it.
+async function setActive(w, on){
+  const name = coupleNames(w.cfg, w.id);
+  try {
+    await fb.updateDoc(fb.doc(fb.db, "weddings", w.id), { active: on });
+    w.cfg.active = on;
+    renderWeddings();
+    const after = linkStatus(w.cfg);
+    toast(on
+      ? `${name} is switched on.` + (after.state === "live" ? " Guests can open it." : " " + after.text + " Change its dates in the Links tab.")
+      : `${name} is switched off. Guests opening its link${(extraLinks.get(w.id) || []).length ? "s" : ""} see that it isn't open.`);
+  } catch(e){
+    toast("Failed: " + permissionHint(e));
+  }
 }
 
 async function setMainWedding(w){
@@ -184,7 +241,10 @@ async function setMainWedding(w){
 
 async function deleteWedding(w){
   const name = coupleNames(w.cfg, w.id);
-  const typed = prompt(`Delete "${name}" permanently? Its details, photos, music and all wishes are removed, and its link stops working.\n\nType the link name "${w.id}" to confirm:`);
+  const extras = (extraLinks.get(w.id) || []).length;
+  const typed = prompt(`Delete "${name}" permanently? Its details, photos, music and all wishes are removed, and its link` +
+    (extras ? ` and its ${extras} extra link${extras === 1 ? "" : "s"} stop` : " stops") +
+    ` working.\n\nType the link name "${w.id}" to confirm:`);
   if(typed === null) return;
   if(typed.trim() !== w.id) return toast("The link name didn't match, so nothing was deleted.");
 
@@ -198,6 +258,8 @@ async function deleteWedding(w){
     if(m) for(let i = 0; i < m.chunks; i++) refs.push(ref("music", musicChunkId(m.v, i)));
     const wishes = await fb.getDocs(fb.collection(ref(), "wishes"));
     refs.push(...wishes.docs.map(d => d.ref));
+    // Its extra links show its details, so they go too.
+    refs.push(...(extraLinks.get(w.id) || []).map(l => fb.doc(fb.db, "weddings", l.id)));
     await inBatches(refs, (batch, r) => batch.delete(r));
     if(pinsReady) await revokePin(w.id);   // the editor's access goes with the event
     await fb.deleteDoc(ref());   // last, so a failed delete can simply be retried

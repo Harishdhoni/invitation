@@ -87,7 +87,8 @@ export function thumbnail(t, { width = 390, height = 600 } = {}){
 
 /* ----------------------------- template picker ----------------------------- */
 // Cards for choosing one of a category's templates. Calls onChange(id) ("" = Classic).
-export function templatePicker({ templates, category, selected, onChange, name = "template", canCreate = true }){
+// `taken` holds ids another link of the same event uses; each link needs its own design.
+export function templatePicker({ templates, category, selected, onChange, name = "template", canCreate = true, taken = [] }){
   const list = templatesIn(templates, category);
   const wrap = el("div", "picker");
   if(!list.length){
@@ -98,11 +99,14 @@ export function templatePicker({ templates, category, selected, onChange, name =
     return wrap;
   }
   list.forEach(t => {
-    const card = el("label", "pick-card");
-    const radio = Object.assign(el("input"), { type: "radio", name, value: t.id, checked: t.id === selected });
+    const used = t.id !== selected && taken.includes(t.id);
+    const card = el("label", "pick-card" + (used ? " taken" : ""));
+    const radio = Object.assign(el("input"), { type: "radio", name, value: t.id, checked: t.id === selected, disabled: used });
     radio.addEventListener("change", () => { if(radio.checked) onChange(t.id); });
     const info = el("div", "pick-info");
-    info.append(el("b", "", t.name), linkBtn("Preview ↗", "ghost", templatePreviewLink(t.id), true));
+    info.append(el("b", "", t.name));
+    if(used) info.append(el("small", "muted", "Used by another link"));
+    info.append(linkBtn("Preview ↗", "ghost", templatePreviewLink(t.id), true));
     card.append(radio, thumbnail(t), info);
     wrap.append(card);
   });

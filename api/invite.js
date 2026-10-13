@@ -44,14 +44,25 @@ function templatePage(html, block, templateId){
   return end < 0 ? page + script : page.slice(0, end) + script + page.slice(end);
 }
 
+const FIELDS = ["groomName", "brideName", "heroDateLine", "images", "title", "category", "templateId", "parent"];
+
 module.exports = async (req, res) => {
   const slug = slugFrom(req);
   if(!isValidSlug(slug)) return send(res, 404, genericPage(slug), "public, s-maxage=60");
 
-  let w;
+  // An extra link ({ parent }) shows its event's names and photo in its own design.
+  let w, dataSlug = slug;
   try {
-    w = await getDoc(`weddings/${slug}`, ["groomName", "brideName", "heroDateLine", "images", "title", "category", "templateId"]);
+    w = await getDoc(`weddings/${slug}`, FIELDS);
+    if(w && isValidSlug(w.parent)){
+      dataSlug = w.parent;
+      const main = await getDoc(`weddings/${dataSlug}`, FIELDS);
+      w = main && { ...main, templateId: w.templateId || "" };
+    }
   } catch(e){
+    // The rules refuse links that aren't open to guests: the generic page, which says so (see js/invite.js).
+    // Cached briefly, so switching a link back on shows within a minute.
+    if(e.status === 403) return send(res, 200, genericPage(slug), "public, s-maxage=60");
     console.error("event lookup failed", slug, e);
     return send(res, 200, genericPage(slug), "no-store");
   }
@@ -66,7 +77,7 @@ module.exports = async (req, res) => {
   const invite = wedding ? "Together with our families, we invite you to celebrate with us" : "You're invited to celebrate with us";
   const description = dateLine ? `${invite} — ${dateLine}` : invite + ".";
   const imgV = w.images && (w.images.og || w.images.cover);
-  const image = imgV ? `${origin}/api/og-image?w=${slug}&v=${imgV}` : `${origin}/assets/og-cover.jpg`;
+  const image = imgV ? `${origin}/api/og-image?w=${dataSlug}&v=${imgV}` : `${origin}/assets/og-cover.jpg`;
 
   const block = `<!-- og:start -->
 <title>${esc(title)}</title>

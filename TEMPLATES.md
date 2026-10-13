@@ -57,6 +57,25 @@ Inside an item:
 
 Without a `<template>`, the runtime uses the Classic design's markup.
 
+## Parts a link can hide: `data-part`
+
+Each link of an event can leave parts out (admin or editor, **Links** tab → **Show on this link**). The runtime hides a
+hidden part's elements with `display: none !important`, and leaves its content out of the page:
+
+| Part | Hidden automatically | Also |
+|---|---|---|
+| `cover` | `id="coupleCover"` | the uploaded photo isn't put in `data-bind="cover"` images, so the template's own picture shows |
+| `events` | `id="events"` | no event items are rendered |
+| `countdown` | `id="countdown"` | |
+| `wishes` | `id="wishes"` | the guest book isn't loaded |
+| `help` | | the `help` value is empty, so its element hides |
+| `contacts` | `id="coordinators"`, `[data-i18n="coordinatorsLabel"]` | no coordinators are rendered |
+| `music` | | no song, so no music button |
+
+Links to those sections (`<a href="#events">` in a menu or a scroll cue) hide with them. `id="stay"` hides when both
+`help` and `contacts` are hidden. For anything else that belongs to a part (a heading, a divider, a menu item), add
+`data-part="<part>"`; use `data-part="stay"` for something that should go only when the whole help section goes.
+
 ## Behaviour the runtime provides
 
 - **Intro**: `id="curtain-overlay"`. A click on `id="openCurtainBtn"` or any `[data-open-invite]` adds `open` to the overlay,

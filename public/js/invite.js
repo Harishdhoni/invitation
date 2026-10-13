@@ -2,9 +2,10 @@
 // The page is either the built-in Classic design (index.html) or a template from Firestore that
 // follows the hooks described in TEMPLATES.md; every hook is optional.
 import {
-  DEFAULT_CONFIG, TRANSLATIONS, SAMPLE_WISHES, tr, withDefaults, clone, isValidSlug, isValidId, isWedding, sampleFor
+  DEFAULT_CONFIG, TRANSLATIONS, SAMPLE_WISHES, SECTIONS, tr, withDefaults, clone, isValidSlug, isValidId, isWedding, sampleFor,
+  linkState
 } from "./defaults.js";
-import { isFirebaseConfigured, SITE_URL } from "./firebase-config.js";
+import { isFirebaseConfigured, SITE_URL, ADMIN_UID } from "./firebase-config.js";
 
 /* ---------------------------- small helpers ---------------------------- */
 const $ = id => document.getElementById(id);
@@ -57,9 +58,11 @@ const pageSlug = draftCategory != null ? "" : (meta("wedding-id")
   || "");
 let slug = isValidSlug(pageSlug) ? pageSlug : "";
 const badLink = !!pageSlug && !slug;
+// An extra link shows its event's details, photos, music and wishes, which are stored under the event.
+const dataSlug = () => config.parent || slug;
 
 const CONFIG_CACHE = () => "wi:config:" + slug;
-const IMG_PREFIX = () => `wi:img:${slug}:`;
+const IMG_PREFIX = () => `wi:img:${dataSlug()}:`;
 const IMG_CACHE = id => IMG_PREFIX() + id;
 const DEFAULT_WEDDING = "wi:default";
 const LOCAL_WISHES = "wi:wishes";
@@ -78,14 +81,20 @@ function cachedConfig(){
   catch { return null; }
 }
 let config = clone(BLANK);
-let notFound = false;
+let closed = "";     // "notFound" or "unavailable": the intro shows only that message
 let lang = "en";
 const T = () => TRANSLATIONS[lang];
 const images = {};   // imageId -> data URL currently known
 let fb = null;       // Firebase module, once loaded
 let wishes = [];
 let started = false;
-const weddingDoc = (...path) => fb.doc(fb.db, "weddings", slug, ...path);
+const weddingDoc = (...path) => fb.doc(fb.db, "weddings", dataSlug(), ...path);
+
+// Whether guests may open this link now. The rules decide (a closed link can't be read); this is for
+// copies saved on the device, and for telling the admin when they see a link guests can't.
+const isOpen = cfg => linkState(cfg) === "live" && (!cfg.link || linkState(cfg.link) === "live");
+// Parts of the invitation this link doesn't show (config.hiddenSections).
+const hidden = id => (config.hiddenSections || []).includes(id);
 const lists = {};    // events / wishes / coords -> { box, tpl } (tpl: the template's <template>, if any)
 
 /* ------------------------------- rendering ------------------------------- */
@@ -145,9 +154,11 @@ function pageTitle(){
 
 // data-bind hooks, plus the ids the Classic design and older templates use.
 const COMPAT = { names: ".couple-names", tagline: "#heroTagline", dateLine: "#heroDatePill", verse: "#curtainVerse", help: "#stayText", hashtag: "#footerHashtag" };
+// Emptied when there's no main date (or a closed link), so an earlier date doesn't stay on the page.
+const NO_DATE = { day: "", month: "", mon: "", monthNum: "", year: "", weekday: "", dateLong: "", time: "" };
 function renderValues(){
   const g = tr(config.groomName, lang), b = tr(config.brideName, lang);
-  const verse = notFound ? T().notFound : (config.curtainVerse || "");
+  const verse = closed ? T()[closed] : (config.curtainVerse || "");
   const values = {
     names: g || b ? () => namesNode(g, b) : "",
     name1: g, name2: b, initial1: initial(g), initial2: initial(b),
@@ -155,8 +166,9 @@ function renderValues(){
     tagline: tr(config.tagline, lang),
     dateLine: tr(config.heroDateLine, lang),
     verse: verse ? () => verseNode(verse) : "",
-    help: tr(config.accommodationText, lang),
+    help: hidden("help") ? "" : tr(config.accommodationText, lang),
     hashtag: config.hashtag || "",
+    ...NO_DATE,
     ...mainDate()
   };
   for(const [key, v] of Object.entries(values)){
@@ -219,7 +231,7 @@ function iconNode(ev){
 }
 
 function renderEvents(){
-  renderList("events", config.events, (ev, i) => ({
+  renderList("events", hidden("events") ? [] : config.events, (ev, i) => ({
     fields: {
       number: String(i + 1).padStart(2, "0"),
       name: tr(ev.name, lang), date: tr(ev.date, lang), time: tr(ev.time, lang),
@@ -270,7 +282,7 @@ function phoneLinks(phones){
 }
 
 function renderCoordinators(){
-  renderList("coords", config.coordinators || [], c => {
+  renderList("coords", hidden("contacts") ? [] : config.coordinators || [], c => {
     const phones = (c.phones || []).filter(Boolean);
     return {
       fields: { name: tr(c.name, lang), phone: phones[0] || "", phones: phones.length ? () => phoneLinks(phones) : "" },
@@ -289,8 +301,35 @@ function renderImages(){
     const want = src || img.dataset.defaultSrc;
     if(want && img.getAttribute("src") !== want) img.src = want;
   };
-  document.querySelectorAll('[data-bind="cover"], #coverImg').forEach(img => set(img, images.cover));
+  // A hidden cover photo leaves the template's own picture in place.
+  document.querySelectorAll('[data-bind="cover"], #coverImg').forEach(img => set(img, hidden("cover") ? "" : images.cover));
   document.querySelectorAll('[data-bind="emblem"], #deityImg').forEach(img => set(img, images.deity));
+}
+
+// Hide the parts this link leaves out: elements marked data-part="<id>", plus the section ids every
+// starter template and Classic use, and links to them (menus, scroll cues). The help section ("stay")
+// goes when both the help message and the contacts are hidden. An attribute plus one !important rule,
+// so neither the template's CSS nor the runtime's own show/hide can bring a hidden part back.
+const PART_SELECTORS = {
+  cover: '#coupleCover, a[href="#coupleCover"]',
+  events: '#events, a[href="#events"]',
+  countdown: '#countdown, a[href="#countdown"]',
+  wishes: '#wishes, a[href="#wishes"]',
+  contacts: '#coordinators, [data-i18n="coordinatorsLabel"]',
+  stay: '#stay, a[href="#stay"]'
+};
+function renderParts(){
+  if(!$("invitePartsStyle")){
+    const style = el("style", "", "[data-part-off]{display:none !important;}");
+    style.id = "invitePartsStyle";
+    (document.head || document.documentElement).append(style);
+  }
+  const off = { stay: hidden("help") && hidden("contacts") };
+  SECTIONS.forEach(s => { off[s.id] = hidden(s.id); });
+  for(const [id, isOff] of Object.entries(off)){
+    document.querySelectorAll(`[data-part="${id}"]` + (PART_SELECTORS[id] ? ", " + PART_SELECTORS[id] : ""))
+      .forEach(n => n.toggleAttribute("data-part-off", isOff));
+  }
 }
 
 function renderWishes(){
@@ -316,8 +355,9 @@ function renderAll(){
   translate(document);
   document.querySelectorAll(".lang-btn").forEach(b => b.classList.toggle("active", b.dataset.lang === lang));
 
-  document.querySelectorAll("#openCurtainBtn, [data-open-invite], .curtain-tap").forEach(n => setShown(n, !notFound));
+  document.querySelectorAll("#openCurtainBtn, [data-open-invite], .curtain-tap").forEach(n => setShown(n, !closed));
   renderValues();
+  renderParts();
   renderEvents();
   renderCoordinators();
   renderWishes();
@@ -405,12 +445,23 @@ async function loadRemoteImages(){
   if(missing.length){ renderImages(); renderEvents(); }
 }
 
-// The event's saved details, or null when there's no such event. Throws when offline.
+// The details this link shows, or null when there's no such event. An extra link ({ parent }) shows its
+// event's details in its own design, without the parts it hides. Throws when offline, and with code
+// "permission-denied" when the link (or its event) isn't open to guests now.
 async function fetchConfig(){
-  const snap = await fb.getDoc(weddingDoc());
+  const snap = await fb.getDoc(fb.doc(fb.db, "weddings", slug));
   if(!snap.exists()) return null;
-  const data = snap.data();
+  let data = snap.data();
+  if(isValidSlug(data.parent)){
+    const main = await fb.getDoc(fb.doc(fb.db, "weddings", data.parent));
+    if(!main.exists()) return null;
+    data = {
+      ...main.data(), parent: data.parent, templateId: data.templateId || "", hiddenSections: data.hiddenSections || [],
+      link: { active: data.active, startDate: data.startDate || "", endDate: data.endDate || "" }
+    };
+  }
   delete data.updatedAt;
+  delete data.createdAt;
   return withDefaults(data);
 }
 
@@ -421,11 +472,15 @@ function applyConfig(cfg){
     store.set(CONFIG_CACHE(), JSON.stringify(config));
     const keep = new Set(neededImageIds().map(IMG_CACHE));
     store.keys().filter(k => k.startsWith(IMG_PREFIX()) && !keep.has(k)).forEach(store.del);
+    // Tell the admin when they're looking at a link guests can't open. (Checked here too, because until the
+    // rules are deployed a closed link can still be read by anyone.)
+    if(!isOpen(config) && fb?.auth?.currentUser?.uid === ADMIN_UID) showToast(T().closedForGuests);
   }
   loadImagesFromCache();
   renderAll();
   renderImages();
   loadMusic();
+  syncWishes();
   return loadRemoteImages();
 }
 
@@ -434,7 +489,7 @@ function applyConfig(cfg){
 async function refreshConfig(){
   try {
     const cfg = await fetchConfig();
-    if(!cfg){ store.del(CONFIG_CACHE()); return showNotFound(); }
+    if(!cfg){ store.del(CONFIG_CACHE()); return showClosed("notFound"); }
     if((cfg.templateId || "") !== pageTemplate){
       store.set(CONFIG_CACHE(), JSON.stringify(cfg));
       const key = "wi:design:" + slug;
@@ -444,6 +499,7 @@ async function refreshConfig(){
     }
     await applyConfig(cfg);
   } catch(e){
+    if(e.code === "permission-denied"){ store.del(CONFIG_CACHE()); return showClosed("unavailable"); }
     console.warn("Could not load the details; showing the cached copy.", e);
     loadMusic();
   }
@@ -463,13 +519,17 @@ async function defaultWedding(){
   }
 }
 
-function showNotFound(){
-  notFound = true;
+// The intro shows only a message: the link doesn't exist ("notFound") or isn't open now ("unavailable").
+function showClosed(key){
+  closed = key;
   config = clone(BLANK);
   if(unsubWishes){ unsubWishes(); unsubWishes = null; }
   wishes = [];
+  for(const id of Object.keys(images)) delete images[id];
+  if(bgMusic && musicPlaying) stopMusic();
   if(musicBtn) setShown(musicBtn, false);
   renderAll();
+  renderImages();
 }
 
 /* ------------------------------ templates ------------------------------ */
@@ -518,6 +578,16 @@ async function useTemplate(id){
 
 /* -------------------------------- wishes -------------------------------- */
 let wishLimit = WISH_PAGE, unsubWishes = null;
+
+// Listen to the guest book unless this link hides it (saves the reads, too).
+function syncWishes(){
+  if(preview && !slug) return;
+  if(hidden("wishes") || closed){
+    if(unsubWishes){ unsubWishes(); unsubWishes = null; }
+    return;
+  }
+  if(!unsubWishes) subscribeWishes();
+}
 
 function subscribeWishes(){
   if(unsubWishes) unsubWishes();
@@ -580,6 +650,7 @@ async function sendWish(e){
 const MUSIC_CACHE = "wi-music";
 let musicBtn = null, bgMusic = null;
 let musicPlaying = false, musicReady = false, wantMusic = false, musicV = null;
+const song = () => hidden("music") ? null : config.music;
 
 // Templates may leave the music button out; add a plain one when there's a song.
 function ensureMusicControls(){
@@ -604,7 +675,7 @@ function ensureMusicControls(){
 }
 
 function startMusic(){
-  if(musicPlaying || !config.music || !bgMusic) return;
+  if(musicPlaying || !song() || !bgMusic) return;
   if(!musicReady){
     // iOS only lets an <audio> element play from a tap. Play a silent clip now so
     // the element is unlocked and the real song can start once it has loaded.
@@ -645,13 +716,14 @@ function silentWav(){
 }
 
 async function loadMusic(){
-  const m = config.music;
+  const m = song();
   if(m) ensureMusicControls();
   if(musicBtn){ musicBtn.hidden = !m; setShown(musicBtn, !!m); }
+  if(!m && musicPlaying) stopMusic();
   if(!m || musicV === m.v) return;
   musicV = m.v;
   musicReady = false;
-  const prefix = `music-cache/${slug}/`, key = prefix + m.v;
+  const prefix = `music-cache/${dataSlug()}/`, key = prefix + m.v;
   let blob = null;
   try {
     const hit = await (await caches.open(MUSIC_CACHE)).match(key);
@@ -787,7 +859,8 @@ function classicExtras(){
     const max = document.documentElement.scrollHeight - innerHeight;
     bar.style.width = (max > 0 ? top / max * 100 : 0) + "%";
     let current = "hero";
-    sections.forEach(s => { if(top >= s.offsetTop - innerHeight * 0.5) current = s.id; });
+    // Sections this link hides have no offsetParent.
+    sections.forEach(s => { if(s.offsetParent && top >= s.offsetTop - innerHeight * 0.5) current = s.id; });
     dots.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + current));
   }
   addEventListener("scroll", () => { if(!ticking){ ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
@@ -840,7 +913,7 @@ async function boot(){
     start();
     return loadLocalWishes();
   }
-  if(badLink){ start(); return showNotFound(); }
+  if(badLink){ start(); return showClosed("notFound"); }
 
   // A starter file from public/templates/, with sample details.
   if(previewFile){
@@ -868,24 +941,28 @@ async function boot(){
     if(!slug) wishes = clone(SAMPLE_WISHES);
     if(t?.html) await swapDocument(t.html);
     start();
-    if(cfg){ applyConfig(cfg); subscribeWishes(); }
+    if(cfg) applyConfig(cfg);
     return;
   }
 
   if(!slug){
     slug = await defaultWedding();
-    if(!slug){ start(); return showNotFound(); }
+    if(!slug){ start(); return showClosed("notFound"); }
   }
 
   // Use the details saved on the last visit straight away; otherwise wait for them,
-  // since they say which design this event uses.
-  const cached = cachedConfig();
+  // since they say which design this event uses. A copy whose dates say the link has
+  // closed isn't shown; the details are asked for again (only the admin gets them).
+  let cached = cachedConfig();
+  const cacheClosed = !!cached && !isOpen(cached);
+  if(cacheClosed) cached = null;
   let fresh = null;
   if(!cached){
     try {
       fresh = await fetchConfig();
-      if(!fresh){ start(); return showNotFound(); }
+      if(!fresh){ start(); return showClosed("notFound"); }
     } catch(e){
+      if(e.code === "permission-denied" || cacheClosed){ start(); return showClosed("unavailable"); }
       console.warn("Could not load the details.", e);
     }
   }
@@ -894,8 +971,8 @@ async function boot(){
 
   start();
   if(fresh) applyConfig(fresh);
-  else if(cached) refreshConfig();
-  subscribeWishes();
+  else if(cached){ syncWishes(); refreshConfig(); }
+  else syncWishes();
 }
 
 boot().catch(e => {

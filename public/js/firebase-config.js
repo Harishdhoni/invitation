@@ -24,3 +24,17 @@ export const ADMIN_UID = "YH9Rv09hCkcrTBKam3u0jcDwzRy2";
 export const SITE_URL = "https://invitation-five-mu.vercel.app";
 
 export const isFirebaseConfigured = !firebaseConfig.apiKey.startsWith("PASTE");
+
+// Local testing against the Firebase emulator (firebase emulators:start, see SETUP.md): add ?emulator=1 to a
+// localhost page and this browser uses the emulator until ?emulator=0. Live pages never do. The ports must
+// match "emulators" in firebase.json.
+export const useEmulator = (() => {
+  if(!["localhost", "127.0.0.1"].includes(location.hostname)) return false;
+  try {
+    const p = new URLSearchParams(location.search).get("emulator");
+    if(p === "1") localStorage.setItem("wi:emulator", "1");
+    if(p === "0") localStorage.removeItem("wi:emulator");
+    return localStorage.getItem("wi:emulator") === "1";
+  } catch { return false; }
+})();
+export const EMULATOR = { host: "127.0.0.1", firestorePort: 8085, authUrl: "http://127.0.0.1:9099" };

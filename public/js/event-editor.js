@@ -1,14 +1,17 @@
-// The invitation editor: details, photos, music, events, contacts, wishes and (admin only) design.
+// The invitation editor: details, photos, music, events, contacts, design, links and wishes.
 // Shared by the admin page (admin.js, all events) and the PIN editor page (editor.js, one event).
 // Which pages may write what is decided by firestore.rules, not by this file.
-import { clone, withDefaults, newId, tr, isWedding, isValidSlug } from "./defaults.js";
+import {
+  clone, withDefaults, newId, tr, isWedding, isValidSlug, SECTIONS, MAX_LINKS, AUTO_END_DAYS,
+  linkState, openState, lastDay, mainDay, addDays
+} from "./defaults.js";
 import { SITE_URL } from "./firebase-config.js";
 import { compressImage, compressPreviewImage, kb } from "./image-utils.js";
 import { openTrimmer } from "./audio-trim.js";
 import { $, show, el, toast, copyText } from "./admin-ui.js";
 
-// The editor's markup lives here once. The Design tab is only for the admin; it needs
-// template access that editors don't have.
+// The editor's markup lives here once. Only the admin can change the category (Design tab)
+// and when a link is open (Links tab).
 const editorMarkup = admin => `
   <div class="editor-head">
     <a class="back" id="backLink" href="#"${admin ? "" : " hidden"}>← All events</a>
@@ -27,6 +30,7 @@ const editorMarkup = admin => `
     <button class="tab" data-tab="events">Events</button>
     <button class="tab" data-tab="contacts">Help &amp; Contacts</button>
     <button class="tab" data-tab="design">Design</button>
+    <button class="tab" data-tab="links">Links <span class="count" id="linkCount"></span></button>
     <button class="tab" data-tab="wishes">Wishes <span class="count" id="wishCount"></span></button>
   </nav>
 
@@ -100,6 +104,34 @@ const editorMarkup = admin => `
           <div id="designPicker"></div>
         </div>
         <a class="btn ghost small" id="designPreviewLink" target="_blank" rel="noopener">Preview this event in the selected template ↗</a>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="links">
+      <p class="muted links-intro">Every link shows the same details, photos, music and guest book. Each link has its own design
+        and can leave parts out: for example, contact numbers on the family link but not on the one for friends.
+        ${admin ? "You decide when each link is open to guests." : "The admin decides when each link is open to guests."}</p>
+      <div id="linksList"></div>
+      <div class="card form-card" id="newLinkForm" hidden>
+        <h2>Another link</h2>
+        <label class="field"><span>Link name</span>
+          <span class="slug-input"><span class="slug-prefix" id="newLinkPrefix"></span><input type="text" id="newLinkSlug" autocomplete="off" spellcheck="false"></span>
+          <small class="hint">Lowercase letters, numbers and dashes. This is the link guests open, so it can't be changed later.</small>
+        </label>
+        <div class="field">
+          <span class="label">Design</span>
+          <div id="newLinkPicker"></div>
+          <small class="hint">Each link uses a different design.</small>
+        </div>
+        <p class="error" id="newLinkError" role="alert"></p>
+        <div class="row">
+          <button type="button" class="btn primary" id="createLinkBtn">Create link</button>
+          <button type="button" class="btn ghost" id="cancelLinkBtn">Cancel</button>
+        </div>
+      </div>
+      <div class="row links-add">
+        <button type="button" class="btn ghost" id="addLinkBtn">＋ Add another link</button>
+        <span class="muted" id="linkLimit"></span>
       </div>
     </section>
 
@@ -190,6 +222,8 @@ export function normalize(cfg){
     name: asBi(c.name),
     phones: c.phones || (c.phone ? [c.phone] : [])
   }));
+  s.hiddenSections = Array.isArray(s.hiddenSections) ? s.hiddenSections : [];
+  s.links = Array.isArray(s.links) ? s.links : [];
   return s;
 }
 
@@ -519,6 +553,7 @@ let templates = [];          // [{ id, name, categoryId, html, … }]
 let T = null;                // admin-templates.js: template cards and previews for the Design tab
 
 function renderDesign(){
+  if(!T) return;
   const sel = $("designCategory");
   if(sel){
     sel.replaceChildren(...categories.map(c => Object.assign(el("option", "", c.name), { value: c.id })));
@@ -531,6 +566,7 @@ function renderDesign(){
     (offered ? "" : ` (not a ${T.categoryName(categories, state.category)} template — pick one below)`);
   $("designPicker").replaceChildren(T.templatePicker({
     templates, category: state.category, selected: state.templateId, name: "designTemplate", canCreate: isAdminPage,
+    taken: links.map(l => l.data.templateId),
     onChange: id => {
       state.templateId = id;
       $("designCurrent").textContent = "Now showing: " + T.templateName(templates, id);
@@ -541,6 +577,264 @@ function renderDesign(){
   $("designPreviewLink").href = T.eventInTemplateLink(weddingId, state.templateId);
 }
 
+/* ---------------------------------- links ---------------------------------- */
+// The event link (weddings/<weddingId>, i.e. `state`) and its extra links: small documents
+// { parent, category, templateId, hiddenSections, active, startDate, endDate } that show this event's
+// details in another design. Their names are in the event's `links`, which changes only together with
+// creating or deleting one. Each link has its own design and hidden parts (admin and editor) and its own
+// on/off switch and dates (admin only). Edits are saved with Save changes; creating and deleting are immediate.
+let links = [];              // [{ id, data, dirty }]
+let savedCategory = "";      // the category as saved, so a change can be copied to the extra links
+let newLinkTemplate = "";
+const siteHost = () => SITE_URL.replace(/^https?:\/\//, "");
+const linkRef = id => fb.doc(fb.db, "weddings", id);
+const ADMIN_ONLY = ["active", "startDate", "endDate"];
+
+const linkData = d => ({
+  parent: d.parent, category: d.category || "wedding", templateId: d.templateId || "",
+  hiddenSections: d.hiddenSections || [], active: d.active !== false, startDate: d.startDate || "", endDate: d.endDate || ""
+});
+// The designs other links of this event use; each link needs its own.
+const usedTemplates = except => [state.templateId, ...links.map(l => l.data.templateId)].filter((id, i) => i !== except);
+
+export const STATE_LABELS = { live: "Open", off: "Off", scheduled: "Not open yet", ended: "Ended" };
+const STATE_BADGE = { live: "ok", off: "off", scheduled: "wait", ended: "off" };
+export const stateBadge = state => el("span", "badge " + STATE_BADGE[state], STATE_LABELS[state]);
+const fmtDay = d => new Date(d + "T12:00:00Z").toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+
+// The last day guests can open a link: its own end date or, for an extra link, its event's, whichever
+// comes first. `auto` when that is the 15 days after the event.
+function closing(cfg, main){
+  const src = main || cfg;
+  return [
+    cfg.endDate && { day: cfg.endDate, auto: false },
+    lastDay(src) && { day: lastDay(src), auto: !src.endDate }
+  ].filter(Boolean).sort((a, b) => a.day.localeCompare(b.day))[0] || { day: "", auto: false };
+}
+
+// What guests get on a link, in words: { state, text }. `main` is the event, for an extra link.
+export function linkStatus(cfg, main = null){
+  const state = openState(cfg, main);
+  const viaMain = !!main && linkState(cfg) === "live" && state !== "live";
+  if(state === "off") return { state, text: viaMain ? "Closed, because the event link is switched off." : "Switched off. Guests see “This invitation isn't open right now”." };
+  if(state === "scheduled") return { state, text: `Opens to guests on ${fmtDay((viaMain ? main : cfg).startDate)}.` };
+  const end = closing(cfg, main);
+  const why = end.auto ? `, ${AUTO_END_DAYS} days after the event` : "";
+  if(state === "ended") return { state, text: `Closed. It was open until ${fmtDay(end.day)}${why}.` };
+  return { state, text: end.day ? `Open to guests until ${fmtDay(end.day)}${why}.` : "Open to guests, with no end date." };
+}
+
+function dateField(label, obj, key, hint, onChange){
+  const wrap = el("label", "field");
+  const input = Object.assign(el("input"), { type: "date", value: obj[key] || "" });
+  input.addEventListener("change", () => { obj[key] = input.value; onChange(); });
+  wrap.append(el("span", "", label), input, el("small", "hint", hint));
+  return wrap;
+}
+
+// One card in the Links tab. `link` is null for the event link (whose settings live in `state`).
+function linkCard(link){
+  const cfg = link ? link.data : state;
+  const id = link ? link.id : weddingId;
+  const changed = () => { if(link) link.dirty = true; setDirty(); refreshStatus(); };
+
+  const card = el("div", "card item link-card");
+  const head = el("div", "item-head");
+  const title = el("h3", "", `${siteHost()}/${id}`);
+  const tools = el("div", "item-tools");
+  const open = el("a", "btn ghost small", "Open ↗");
+  Object.assign(open, { href: previewLink(id), target: "_blank", rel: "noopener" });
+  const copy = el("button", "btn ghost small", "Copy link");
+  copy.type = "button";
+  copy.addEventListener("click", () => copyText(shareLink(id)));
+  tools.append(copy, open);
+  if(link){
+    const del = el("button", "btn danger small", "Delete");
+    del.type = "button";
+    del.addEventListener("click", () => deleteLink(link));
+    tools.append(del);
+  }
+  head.append(title, tools);
+
+  const status = el("p", "link-status");
+  function refreshStatus(){
+    const s = linkStatus(cfg, link ? state : null);
+    status.replaceChildren(stateBadge(s.state), " ", s.text);
+  }
+  refreshStatus();
+  card.append(head, el("p", "link-kind muted", link ? "Extra link" : "Event link"), status);
+
+  // When guests can open it: the admin's switch and dates.
+  if(isAdminPage){
+    const box = el("div", "link-window");
+    const on = el("label", "check");
+    const cb = Object.assign(el("input"), { type: "checkbox", checked: cfg.active !== false });
+    cb.addEventListener("change", () => { cfg.active = cb.checked; changed(); });
+    on.append(cb, " Open to guests");
+    const day = mainDay(state);
+    const endHint = link ? "Leave empty to keep it open as long as the event link."
+      : `Leave empty to close it ${AUTO_END_DAYS} days after the event` + (day ? ` (after ${fmtDay(addDays(day, AUTO_END_DAYS))}).` : ".");
+    const dates = el("div", "two-col");
+    dates.append(
+      dateField("Start date (optional)", cfg, "startDate", "Guests can open it from this day. Empty: straight away.", changed),
+      dateField("End date (optional)", cfg, "endDate", "The last day guests can open it. " + endHint, changed)
+    );
+    box.append(on, dates);
+    card.append(box);
+  }
+
+  // Its design: the event link's is picked in the Design tab.
+  if(T){
+    const design = el("div", "field");
+    design.append(el("span", "label", "Design"));
+    if(!link){
+      const row = el("p", "muted");
+      const go = el("button", "linkish", "change it in the Design tab");
+      go.type = "button";
+      go.addEventListener("click", () => openTab("design"));
+      row.append(T.templateName(templates, state.templateId) + " — ", go);
+      design.append(row);
+    } else {
+      const row = el("div", "row link-design");
+      const sel = el("select");
+      const used = usedTemplates(1 + links.indexOf(link));
+      const list = T.templatesIn(templates, state.category);
+      sel.append(...list.map(t => Object.assign(el("option", "", t.name + (used.includes(t.id) ? " (used by another link)" : "")),
+        { value: t.id, disabled: used.includes(t.id) })));
+      if(!list.some(t => t.id === cfg.templateId)) sel.prepend(Object.assign(el("option", "", T.templateName(templates, cfg.templateId)), { value: cfg.templateId }));
+      sel.value = cfg.templateId;
+      const preview = el("a", "btn ghost small", "Preview ↗");
+      Object.assign(preview, { href: T.eventInTemplateLink(weddingId, cfg.templateId), target: "_blank", rel: "noopener" });
+      sel.addEventListener("change", () => {
+        cfg.templateId = sel.value;
+        changed();
+        renderLinks();
+        renderDesign();
+      });
+      row.append(sel, preview);
+      design.append(row);
+    }
+    card.append(design);
+  }
+
+  // Which parts of the invitation it shows.
+  const parts = el("div", "field");
+  parts.append(el("span", "label", "Show on this link"));
+  const checks = el("div", "part-checks");
+  SECTIONS.forEach(s => {
+    const l = el("label", "check");
+    const cb = Object.assign(el("input"), { type: "checkbox", checked: !cfg.hiddenSections.includes(s.id) });
+    cb.addEventListener("change", () => {
+      cfg.hiddenSections = cb.checked ? cfg.hiddenSections.filter(x => x !== s.id) : [...cfg.hiddenSections, s.id];
+      changed();
+    });
+    l.append(cb, " " + s.label);
+    checks.append(l);
+  });
+  parts.append(checks, el("small", "hint", "Templates without a part simply don't show it. Hidden parts are left off the page; the details stay saved."));
+  card.append(parts);
+  return card;
+}
+
+function renderLinks(){
+  $("linksList").replaceChildren(linkCard(null), ...links.map(linkCard));
+  const total = 1 + links.length;
+  $("linkCount").textContent = total > 1 ? String(total) : "";
+  // Editors can have up to MAX_LINKS in all (the rules refuse more); the admin can add any number.
+  const full = !isAdminPage && total >= MAX_LINKS;
+  show("addLinkBtn", !full && $("newLinkForm").hidden);
+  $("linkLimit").textContent = isAdminPage ? "" : `${total} of ${MAX_LINKS} links` + (full ? " — delete one to add another." : "");
+}
+
+function openNewLinkForm(){
+  const free = T ? T.templatesIn(templates, state.category).filter(t => !usedTemplates().includes(t.id)) : [];
+  newLinkTemplate = free[0]?.id ?? "";
+  $("newLinkSlug").value = "";
+  $("newLinkSlug").placeholder = `${weddingId}-friends`.slice(0, 40);
+  $("newLinkPrefix").textContent = siteHost() + "/";
+  $("newLinkError").textContent = free.length ? "" : "Every design in this category is already used by a link. Change a link's design, or delete one, first.";
+  $("createLinkBtn").disabled = !free.length;
+  $("newLinkPicker").replaceChildren(T ? T.templatePicker({
+    templates, category: state.category, selected: newLinkTemplate, name: "newLinkTemplate", canCreate: isAdminPage,
+    taken: usedTemplates(), onChange: id => { newLinkTemplate = id; }
+  }) : "");
+  show("newLinkForm");
+  show("addLinkBtn", false);
+  $("newLinkSlug").focus();
+}
+
+$("addLinkBtn").addEventListener("click", openNewLinkForm);
+$("cancelLinkBtn").addEventListener("click", () => { show("newLinkForm", false); renderLinks(); });
+
+// Creates the link and adds it to the event's `links` in one write, which is how the rules count them.
+$("createLinkBtn").addEventListener("click", async () => {
+  const id = $("newLinkSlug").value.trim().toLowerCase();
+  const error = $("newLinkError");
+  error.textContent = "";
+  if(!isValidSlug(id)) return void (error.textContent = "Use 3–40 lowercase letters, numbers and dashes, like " +
+    `${weddingId}-friends`.slice(0, 40) + ". admin, api, assets, css, editor, js, index and templates are used by the site itself.");
+  if(usedTemplates().includes(newLinkTemplate)) return void (error.textContent = "Pick a design that no other link of this event uses.");
+
+  const btn = $("createLinkBtn");
+  btn.disabled = true;
+  try {
+    // A link someone else's event uses may be closed to this browser, which reads as "permission denied".
+    let taken = true;
+    try { taken = (await fb.getDoc(linkRef(id))).exists(); }
+    catch(e){ if(e.code !== "permission-denied") throw e; }
+    if(taken) throw new Error(`“${id}” is already used. Pick a different link name.`);
+
+    const data = linkData({ parent: weddingId, category: state.category, templateId: newLinkTemplate });
+    const batch = fb.writeBatch(fb.db);
+    batch.set(linkRef(id), { ...data, createdAt: fb.serverTimestamp(), updatedAt: fb.serverTimestamp() });
+    batch.update(wdoc(), { links: fb.arrayUnion(id) });
+    await batch.commit();
+    links.push({ id, data, dirty: false });
+    show("newLinkForm", false);
+    renderLinks();
+    renderDesign();
+    toast(`Created ${siteHost()}/${id}. Copy it from its card to share it.`);
+  } catch(e){
+    console.error(e);
+    error.textContent = e.code === "permission-denied"
+      ? (isAdminPage ? "Permission denied — deploy the latest firestore.rules (see SETUP.md)."
+        : `Couldn't create the link. An event can have ${MAX_LINKS} links; if it has fewer, your editor access may have changed.`)
+      : e.message;
+  }
+  btn.disabled = false;
+});
+
+async function deleteLink(link){
+  if(!confirm(`Delete the link ${siteHost()}/${link.id}?\n\nGuests who open it will see that the link isn't valid. ` +
+    "This event, its details, its wishes and its other links stay as they are.")) return;
+  try {
+    const batch = fb.writeBatch(fb.db);
+    batch.delete(linkRef(link.id));
+    batch.update(wdoc(), { links: fb.arrayRemove(link.id) });
+    await batch.commit();
+    links = links.filter(l => l !== link);
+    renderLinks();
+    renderDesign();
+    toast(`Deleted ${siteHost()}/${link.id}.`);
+  } catch(e){
+    console.error(e);
+    toast(e.code === "permission-denied" ? "Couldn't delete the link — your access may have changed." : "Delete failed: " + e.message);
+  }
+}
+
+async function loadLinks(ids){
+  const found = await Promise.all((ids || []).map(async id => {
+    try {
+      const snap = await fb.getDoc(linkRef(id));
+      return snap.exists() ? { id, data: linkData(snap.data()), dirty: false } : null;
+    } catch(e){
+      console.warn("couldn't load the link", id, e);
+      return null;
+    }
+  }));
+  links = found.filter(Boolean);
+}
+
 $("designCategory")?.addEventListener("change", () => {
   state.category = $("designCategory").value;
   // Switch to the new category's first template; keep the current one if the category has none yet.
@@ -549,6 +843,7 @@ $("designCategory")?.addEventListener("change", () => {
   setDirty();
   renderDesign();
   renderDetails();
+  renderLinks();
 });
 
 $("addEventBtn").addEventListener("click", () => {
@@ -733,6 +1028,10 @@ async function loadSavedImages(){
 /* ---------------------------------- save ---------------------------------- */
 async function save(){
   if(!dirty || !state) return;
+  if([state, ...links.map(l => l.data)].some(c => c.startDate && c.endDate && c.endDate < c.startDate)){
+    openTab("links");
+    return toast("A link's end date is before its start date. Fix the dates in the Links tab, then save.");
+  }
   $("saveBtn").disabled = true;
   $("saveStatus").textContent = "Saving…";
   const oldMusic = state.music;
@@ -759,13 +1058,33 @@ async function save(){
       if(!keep.has(id)){ batch.delete(wdoc("images", id)); delete images[id]; }
     }
 
-    batch.set(wdoc(), { ...clone(state), images, music, updatedAt: fb.serverTimestamp() });
+    // The event link. Its list of extra links changes only when one is created or deleted, and only the
+    // admin may switch it on or off or set its dates, so those fields are left as saved. mergeFields
+    // replaces each field given (the whole images map included) and keeps the others.
+    const main = { ...clone(state), images, music, updatedAt: fb.serverTimestamp() };
+    delete main.links;
+    if(!isAdminPage) ADMIN_ONLY.forEach(k => delete main[k]);
+    batch.set(wdoc(), main, { mergeFields: Object.keys(main) });
+
+    // Extra links that changed. A new category is copied to all of them (only the admin can change it).
+    const categoryChanged = isAdminPage && state.category !== savedCategory;
+    for(const l of links){
+      if(!l.dirty && !categoryChanged) continue;
+      const fields = { templateId: l.data.templateId, hiddenSections: l.data.hiddenSections, updatedAt: fb.serverTimestamp() };
+      if(isAdminPage){
+        fields.category = state.category;
+        ADMIN_ONLY.forEach(k => { fields[k] = l.data[k]; });
+      }
+      batch.update(linkRef(l.id), fields);
+    }
     try {
       await batch.commit();
     } catch(e){
       if(music && music !== oldMusic) deleteMusicChunks(music); // config still points at the old song
       throw e;
     }
+    links.forEach(l => { l.dirty = false; l.data.category = state.category; });
+    savedCategory = state.category;
 
     // The new config is live; the previous song's chunks are no longer referenced.
     if(oldMusic && oldMusic !== music) deleteMusicChunks(oldMusic);
@@ -848,10 +1167,13 @@ function watchWishes(){
 
 
 /* ---------------------------------- tabs ---------------------------------- */
-document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => {
-  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t === tab));
-  document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.dataset.panel === tab.dataset.tab));
-}));
+function openTab(name){
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === name));
+  document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.dataset.panel === name));
+  // The links' end dates follow the main date, which may have just changed.
+  if(name === "links" && state) renderLinks();
+}
+document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => openTab(tab.dataset.tab)));
 
 $("copyLinkBtn").addEventListener("click", () => copyText(shareLink(weddingId)));
 
@@ -873,8 +1195,11 @@ export async function openEditor({ mod, id, backHref = "", firstRun = false, onA
   if(!snap?.exists()) throw new Error(`There's no event with the link name "${weddingId}".`);
 
   const data = snap.data();
+  if(isValidSlug(data.parent)) throw new Error(`“${weddingId}” is an extra link of ${data.parent}. Open that event and use its Links tab.`);
   delete data.updatedAt;
   state = normalize(data);
+  savedCategory = state.category;
+  await loadLinks(state.links);
   try {
     T = await import("./admin-templates.js");
     T.useFirebase(fb);
@@ -901,7 +1226,8 @@ export async function openEditor({ mod, id, backHref = "", firstRun = false, onA
   renderHelp();
   renderEvents();
   renderCoords();
-  if(T) renderDesign();
+  renderDesign();
+  renderLinks();
   refreshPhoto("cover");
   refreshPhoto("deity");
   refreshMusic();

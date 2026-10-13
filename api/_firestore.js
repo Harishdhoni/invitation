@@ -25,11 +25,12 @@ function plain(v){
 }
 
 // Returns the document's fields (only `fields` if given), or null when it doesn't exist.
+// Throws otherwise; the error's `status` is 403 when the rules refuse (an event that isn't open to guests).
 async function getDoc(path, fields = []){
   const mask = fields.map(f => "mask.fieldPaths=" + encodeURIComponent(f)).join("&");
   const r = await fetch(BASE + path + (mask ? "?" + mask : ""), { signal: AbortSignal.timeout(5000) });
   if(r.status === 404) return null;
-  if(!r.ok) throw new Error(`Firestore ${r.status}: ${(await r.text()).slice(0, 200)}`);
+  if(!r.ok) throw Object.assign(new Error(`Firestore ${r.status}: ${(await r.text()).slice(0, 200)}`), { status: r.status });
   return plain({ mapValue: { fields: (await r.json()).fields || {} } });
 }
 

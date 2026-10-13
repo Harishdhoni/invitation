@@ -8,6 +8,8 @@ Human setup and deploy steps are in [SETUP.md](SETUP.md). The template contract 
 Tamil / English invitation websites for weddings, housewarmings, birthdays, baby showers and any other category the admin adds.
 Many events run at once. Each one lives at `/<slug>` (e.g. `/arjun-meera`) with its own details, photos, music,
 guest book and template. One admin (email + password) manages everything. An event's editor gets in with a PIN.
+An event can have extra links that show the same details in other designs, each with its own hidden parts and its own
+on/off switch and dates.
 
 - **No build step.** No `package.json`, no npm dependencies, no bundler, no framework, no TypeScript.
   Plain HTML, CSS and ES-module JavaScript, served as-is from `public/`.
@@ -25,6 +27,8 @@ There are no build, test or lint scripts.
 |---|---|
 | Run locally | Start Apache in XAMPP, then open `http://localhost/wedding-invite/public/` |
 | Syntax-check every JS file | `for f in public/js/*.js api/*.js; do node --check "$f"; done` (Node 24 detects ES modules) |
+| Local emulator (needs Java 21) | `firebase emulators:start --only firestore,auth --export-on-exit .emulator-data` (+ `--import .emulator-data` later), then open a page with `?emulator=1`. Test admin setup: SETUP.md §1 |
+| Compile the rules without deploying | `firebase deploy --only firestore:rules --dry-run` |
 | Deploy Firestore rules + indexes | `firebase deploy --only firestore:rules,firestore:indexes` |
 | Deploy the site (Vercel) | `git push` to `main` |
 | Deploy the site (Firebase Hosting) | `firebase deploy --only hosting` |
@@ -42,9 +46,14 @@ Local URLs (all under `http://localhost/wedding-invite/public/`):
 | `?template-file=templates/<file>.html&category=<id>` | A starter file from `public/templates/` before it is added to Firestore |
 
 Important:
-- **Local pages use the live Firestore project** (`wedding-invitation-769fc`). There is no emulator and no staging.
-  Anything saved from a local admin page, and any wish sent from a local invite, is real production data. Test on a
-  throwaway event and delete it afterwards.
+- **Local pages use the live Firestore project** (`wedding-invitation-769fc`) unless the browser is switched to the
+  emulator. There is no staging. Anything saved from a local admin page, and any wish sent from a local invite, is
+  real production data. Test on a throwaway event and delete it afterwards, or use the emulator.
+- **Emulator**: `?emulator=1` on a localhost page makes that browser use the Firestore and Auth emulators
+  (`useEmulator` in `firebase-config.js`, wired in `firebase.js` and `editor-firebase.js`) until `?emulator=0`. It runs
+  the local `firestore.rules`, so rules can be tested before deploying. It starts empty: create the test admin
+  with the real admin UID (SETUP.md §1), then **Add starter templates**. Firestore emulator REST calls with
+  `Authorization: Bearer owner` bypass the rules, which is handy for seeding test data.
 - **Vercel does not deploy `firestore.rules` or `firestore.indexes.json`.** After you edit either one, run the firebase
   deploy command. Deploying affects the live site, so ask the user before you run it.
 - **`api/` functions run only on Vercel.** XAMPP serves `public/` as static files. To check an `api/` change, use a
@@ -81,16 +90,18 @@ Important:
 - `editor-firebase.js`: a separate **named app (`"editor"`)** with anonymous auth. This keeps an editor session and an
   admin session in the same browser from replacing each other. Keep the two apps separate.
 - `admin.js`: admin boot, login and routing by URL params, the events list (category filter chips, upcoming before
-  past), new event, delete, the Main link setting and the one-time legacy import.
+  past, each event's open/closed status and its extra links, **Switch off / on**), new event, delete (with its extra
+  links), the Main link setting and the one-time legacy import.
 - `admin-templates.js`: categories, the Templates page (grouped by category, with a category dropdown that is
   remembered for the tab in `sessionStorage` `wi:templatesCategory`), the template editor (HTML textarea,
   upload/download, live iframe preview), `templatePicker`, lazy iframe `thumbnail`s and the starter import. Exports
   `CLASSIC` (id `""`).
 - `admin-access.js`: the editor PIN panel on each event card (create, change, revoke, copy details).
 - `event-editor.js`: the **event editor**, shared by the admin and editor pages. Tabs: details, photos & music,
-  events, contacts, design, wishes. Builds its markup into `#editorView` **when the module is imported**, so the host
-  page must already contain `#editorView`. `#editorView[data-admin]` turns on the admin-only parts (back link,
-  category select, "create template" links).
+  events, contacts, design, links, wishes. Builds its markup into `#editorView` **when the module is imported**, so the
+  host page must already contain `#editorView`. `#editorView[data-admin]` turns on the admin-only parts (back link,
+  category select, "create template" links, each link's on/off switch and dates). The Links tab lists the event link
+  and the extra links; it also exports `linkStatus`/`stateBadge`, which the events list uses.
 - `audio-trim.js`: an in-browser song cutter. It decodes with Web Audio, draws a waveform with draggable handles and
   optional fades, and encodes MP3 with lamejs (loaded from cdnjs on first use; WAV if that fails).
 - `image-utils.js`: resizes and compresses photos in the browser into data URLs under a character budget
@@ -106,8 +117,9 @@ Important:
 
 ### Serverless functions in `api/` (Vercel only, CommonJS)
 
-- `invite.js`: the target of the `vercel.json` rewrite `/:slug([a-z0-9-]+)`. It reads `weddings/<slug>` (and the
-  template) through the Firestore REST API with no credentials. It returns the template HTML, or Classic
+- `invite.js`: the target of the `vercel.json` rewrite `/:slug([a-z0-9-]+)`. It reads `weddings/<slug>` (and, for an
+  extra link, its parent event, and the template) through the Firestore REST API with no credentials. A 403 (a link
+  that isn't open to guests) gets the generic page, cached for 60 s. It returns the template HTML, or Classic
   `index.html`, with the OG/Twitter tags replaced between `<!-- og:start -->` and `<!-- og:end -->`. It also adds
   `<meta name="wedding-id">` and `<meta name="template-id">` and appends `<script type="module" src="js/invite.js">`.
   Cache: `s-maxage=300, stale-while-revalidate=86400`.
@@ -120,7 +132,11 @@ Important:
 1. The `vercel.json` rewrite sends the request to `api/invite.js`, which returns HTML with that event's preview tags,
    its template and the meta tags.
 2. `invite.js` reads the slug from `meta[name=wedding-id]` (or `?w=`, or the last path segment). It uses the cached
-   config from `localStorage` (`wi:config:<slug>`) or fetches `weddings/<slug>`.
+   config from `localStorage` (`wi:config:<slug>`) or fetches `weddings/<slug>`. For an extra link (`{ parent }`) it
+   also fetches the parent and merges them: the parent's details with the link's `templateId` and `hiddenSections`,
+   plus `parent` and `link` (the link's own on/off and dates). Images, music and wishes are read from the parent
+   (`dataSlug()`). A refused read (`permission-denied`) means the link isn't open: the intro shows `unavailable`.
+   A cached copy whose dates say it has closed isn't shown.
 3. If the config's `templateId` doesn't match the page's design (`meta[name=template-id]`, `""` = Classic),
    `useTemplate()` fetches the template and `swapDocument()` replaces `document.documentElement`. Template scripts
    are recreated so they run, and a synthetic `DOMContentLoaded` is dispatched.
@@ -139,8 +155,9 @@ site/config                the pre-multi-event invitation (only used by the impo
 categories/<id>            { name, order }                           admin only
 templates/<id>             { name, categoryId, description, html, v, createdAt, updatedAt }
                            get: anyone · list: admin + any editor · write: admin
-weddings/<slug>            one event of any category (see fields below)
-                           get: anyone · list/create/delete: admin · update: admin, or that event's editor (limited)
+weddings/<slug>            one event of any category (see fields below), or an extra link of one
+                           get: anyone while the link is open (isLive), admin and its editor always · list: admin
+                           create/delete: admin, or the event's editor for extra links · update: admin, or the editor (limited)
   images/<id>              { dataUrl, w, h, updatedAt }   ids: cover, og, deity, event-<eventId>
   music/<v>_<i>            { data: Bytes }                ~900 KB chunks of one song
   wishes/<auto>            { name, message, hidden, createdAt }
@@ -157,6 +174,14 @@ Event fields (`weddings/<slug>`):
 - `events[]`: `{ id, icon: { type: "emoji"|"image", emoji, imageId }, …bilingual fields, mapQuery, mapUrl }`.
 - `coordinators[]`: `{ name: { en, ta }, phones: [] }`.
 - `images`: `{ <imageId>: <version timestamp> }`. `music`: `{ v, chunks, size, type, name }` or `null`. `updatedAt`.
+- When guests can open it (admin only): `active` (missing = `true`), `startDate` / `endDate` (`"YYYY-MM-DD"`, India
+  time, both inclusive, `""` = none). With no `endDate` the link closes 15 days after the date in `weddingDateTimeISO`.
+- `hiddenSections`: part ids from `SECTIONS` in `defaults.js` that this link doesn't show (admin and editor).
+- `links`: the slugs of the event's extra links. Changes only in the same batch as creating or deleting one.
+- **Extra link** docs (`weddings/<slug>` too, so the slug namespace and the rewrite are shared) hold only
+  `{ parent, category, templateId, hiddenSections, active, startDate, endDate, createdAt, updatedAt }`. They show the
+  parent's details, photos, music and one shared guest book. `category` is a copy of the parent's (the admin's save
+  copies a change). An event has at most 3 links in all when an editor adds them (`MAX_LINKS`); the admin isn't limited.
 - `groomName` / `brideName` are the two names for **every** category (shown as `name1` / `name2`). The field names
   and the `weddings` collection are older than categories. Keep them so existing links and documents keep working.
 
@@ -168,10 +193,17 @@ Event fields (`weddings/<slug>`):
 - **Editor**: signs in anonymously, then writes `editors/<uid> = { pin, slug }`. The rules accept that only if
   `pins/<pin>.slug == slug`. `isEditorOf(slug)` checks again on every write that the pin doc still exists, so deleting
   the pin doc (Change or Revoke) cuts access immediately. An editor may update their event but not its `category`,
-  and may change `templateId` only to a template in the same category (or `""` for weddings). They may write its
-  images and music, and hide, unhide or delete its wishes, but not rewrite them.
-- **Guest**: may `get` an event by slug (not list them), read visible wishes, and create a wish of exactly
-  `{ name (1–60), message (1–500), hidden: false, createdAt: request.time }` on an event that exists.
+  `active`, `startDate` or `endDate`, and may change `templateId` only to a template in the same category (or `""` for
+  weddings). They may write its images and music, and hide, unhide or delete its wishes, but not rewrite them.
+  They may create extra links (switched on, no dates, the event's category, recorded in `links` in the same batch,
+  at most 2: `linksChangeOk`), change an extra link's `templateId` and `hiddenSections`, and delete one.
+- **Guest**: may `get` an event or link by slug (not list them) while it is open (`isLive`: switched on, between its
+  dates, and before the 15-day auto end, all in India time), read visible wishes of an open event, and create a wish
+  of exactly `{ name (1–60), message (1–500), hidden: false, createdAt: request.time }` on an open event (not on an
+  extra link's path). An extra link needs its parent to be open too, since that is where its details are read.
+  Images and music stay readable by id, as before.
+- `isLive` compares dates as numbers (`"2027-02-12"` → `20270212`) against `request.time` shifted to India time, so
+  the rules never parse dates. `get` allows `resource == null`, so looking up a free slug isn't refused.
 - To change who can do what, change the rules first, then the UI, then deploy the rules.
 
 ## Conventions
@@ -227,11 +259,15 @@ Without a build step there is no shared config, so these are duplicated on purpo
 |---|---|
 | Admin UID | `firestore.rules` `isAdmin()` · `public/js/firebase-config.js` `ADMIN_UID` |
 | Firebase project id | `firebase-config.js` · `api/_firestore.js` `PROJECT_ID` · `.firebaserc` |
+| Emulator ports (Firestore 8085, Auth 9099) | `firebase.json` `emulators` · `EMULATOR` in `firebase-config.js` |
 | Live site URL | `firebase-config.js` `SITE_URL` · `og:image` / `og:url` in `public/index.html` |
 | Slug and id rules | `defaults.js` `isValidSlug` / `isValidId` · `api/_firestore.js` · the `vercel.json` rewrite regex |
 | Reserved slugs | `RESERVED_SLUGS` in `defaults.js`. Add every new top-level page or folder in `public/` |
 | Firebase SDK version | `firebase.js` · `editor-firebase.js` · `translate.js` |
 | Template hooks | `invite.js` (the implementation) · `TEMPLATES.md` · the Hooks `<details>` in `admin.html` · `templates/blank.html` |
+| Parts a link can hide | `SECTIONS` in `defaults.js` · `PART_SELECTORS` and the render functions in `invite.js` · the table in `TEMPLATES.md` · the Hooks `<details>` in `admin.html` |
+| When a link is open (switch, dates, 15-day auto end, India time) | `firestore.rules` `isLive` · `linkState` / `AUTO_END_DAYS` in `defaults.js` |
+| Links per event (3 in all for editors) | `firestore.rules` `linksChangeOk` (`after.size() <= 2`) · `MAX_LINKS` in `defaults.js` |
 | No-cache headers for html/js/css | `vercel.json` `headers` (Vercel) · `public/.htaccess` (local Apache, so edits show on a normal reload) |
 | Starter templates | `public/templates/starters.json` · the starter count in `README.md` and `SETUP.md` ("Add 27 starter templates") · the catalog in `PRODUCT.md` §6 |
 | Site credit | the `.site-credit` footer in `admin.html` and `editor.html` |
@@ -276,9 +312,14 @@ Without a build step there is no shared config, so these are duplicated on purpo
   English for template date hooks.
 - **iOS audio**: music can start only from a tap. `startMusic()` plays a silent WAV on the intro tap to unlock the
   element, then plays the song once it has loaded. Keep music starting from a user gesture.
-- **Stale docs**: the comment at the top of `event-editor.js` says the Design tab is admin-only, and SETUP.md §9 says
-  editors have no Design tab. Since `adb3565`, editors **do** get a Design tab, limited to templates in their event's
-  category. Only the category select is admin-only.
+- **The event editor saves with `mergeFields`.** `save()` writes the main doc with `set(…, { mergeFields })` and
+  leaves out `links` (and, for editors, `active`/`startDate`/`endDate`), so a stale copy can't undo a link created
+  elsewhere or the admin's dates. A top-level field dropped from `state` is therefore no longer deleted on save.
+- **Closed links and caches**: guests' devices keep the config in `localStorage`, so `invite.js` checks `linkState`
+  before using a cached copy. Vercel can serve an event's page HTML for ~5 minutes after it closes, but the page
+  then can't read the details, so guests see the "not open" message.
+- **The 15-day rule applies to old events too.** An event without an `endDate` closes 15 days after its main date
+  as soon as the rules are deployed. To keep one open, set an end date in its Links tab.
 - **Secrets**: `.env.local` and `.vercel/` hold the Vercel CLI link and token. They are gitignored. Never commit or
   print them. The Firebase web `apiKey` in `firebase-config.js` is public by design; the rules protect the data.
 - **HEIC photos** can't be decoded by browsers. The upload shows an error asking for JPG, PNG or WebP.
@@ -297,6 +338,9 @@ There are no automated tests. Check changes by hand:
    `--window-size` can't go below about 500px on Windows, and `--virtual-time-budget` can freeze animations that start
    after load.
 4. Editor or rules changes: test as the admin, as an editor (PIN entered in a different browser profile), and as a
-   guest (private window). Rules changes need a deploy first, so ask before deploying.
+   guest (private window). On the emulator this needs no deploy. Against live data rules changes need a deploy
+   first, so ask before deploying. Before that,
+   `firebase deploy --only firestore:rules --dry-run` compiles them without deploying: an unknown function or
+   method shows as an `Invalid function name` warning, so check the output for warnings.
 5. `api/` changes: check on a Vercel deployment. Confirm the preview tags with
    `curl -s https://<deployment>/<slug> | grep og:`.

@@ -59,7 +59,58 @@ export const DEFAULT_CONFIG = {
   category: "wedding",
   templateId: "",
   // Optional heading for the invitation and its link preview, e.g. "Aarav turns 1!".
-  title: { en: "", ta: "" }
+  title: { en: "", ta: "" },
+  // When guests can open the link (see linkState below). Only the admin changes these.
+  active: true,
+  startDate: "",   // "YYYY-MM-DD", the first day guests can open it; "" = straight away
+  endDate: "",     // "YYYY-MM-DD", the last day; "" = 15 days after the main date
+  // Parts of the invitation this link doesn't show (ids from SECTIONS).
+  hiddenSections: [],
+  // Link names of the event's extra links: weddings/<slug> docs with { parent: <this event> }.
+  links: []
+};
+
+/* ------------------------- parts that can be hidden ------------------------- */
+// Each link can hide any of these. invite.js finds them by their data-part hook, or by the section ids
+// every starter template and Classic use (see PART_SELECTORS there).
+export const SECTIONS = [
+  { id: "cover", label: "Cover photo" },
+  { id: "events", label: "Events" },
+  { id: "countdown", label: "Countdown" },
+  { id: "wishes", label: "Guest book (wishes)" },
+  { id: "help", label: "Help message" },
+  { id: "contacts", label: "Contact numbers" },
+  { id: "music", label: "Background music" }
+];
+
+/* ------------------------- when a link is open to guests ------------------------- */
+// A link is open while it is switched on and today, in India, is between its start and end dates.
+// With no end date it stays open until 15 days after the event's main date. An extra link also
+// needs its event link to be open, since that is where its details come from.
+// firestore.rules does the same check (isLive) and is what actually turns guests away; keep the two in step.
+export const AUTO_END_DAYS = 15;
+// An event's links in total, its event link included. Editors can't add more (firestore.rules: linksChangeOk).
+export const MAX_LINKS = 3;
+
+const isDay = s => typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
+// Today's date in India as "YYYY-MM-DD"; such dates compare correctly as strings.
+export const indiaToday = () => new Date(Date.now() + 330 * 60000).toISOString().slice(0, 10);
+export const addDays = (day, n) => new Date(Date.parse(day + "T00:00:00Z") + n * 86400000).toISOString().slice(0, 10);
+export const mainDay = cfg => /^\d{4}-\d{2}-\d{2}T/.test(cfg?.weddingDateTimeISO || "") ? cfg.weddingDateTimeISO.slice(0, 10) : "";
+// The last day guests can open the link, or "" when it has no end.
+export const lastDay = cfg => isDay(cfg?.endDate) ? cfg.endDate : mainDay(cfg) ? addDays(mainDay(cfg), AUTO_END_DAYS) : "";
+
+// "live", "off" (switched off), "scheduled" (before its start date) or "ended".
+export function linkState(cfg, today = indiaToday()){
+  if(cfg?.active === false) return "off";
+  if(isDay(cfg?.startDate) && today < cfg.startDate) return "scheduled";
+  const last = lastDay(cfg);
+  return last && today > last ? "ended" : "live";
+}
+// The state guests see on an extra link: its own, or else its event's (`main`).
+export const openState = (link, main) => {
+  const own = linkState(link);
+  return own === "live" && main ? linkState(main) : own;
 };
 
 /* ------------------------------ categories ------------------------------ */
@@ -193,6 +244,8 @@ export const TRANSLATIONS = {
     footerThanks: "With gratitude and love, we thank you for being part of our story.",
     musicHint: "Toggle background music",
     notFound: "This invitation link isn't valid. Please check the link you received.",
+    unavailable: "This invitation isn't open right now. Please check with the person who sent you the link.",
+    closedForGuests: "Guests can't open this link right now — it is switched off or outside its dates. You see it because you're signed in as the admin.",
     previewWish: "This is a preview — wishes aren't saved."
   },
   ta: {
@@ -217,6 +270,8 @@ export const TRANSLATIONS = {
     footerThanks: "எங்கள் வாழ்க்கைப் பயணத்தின் ஒரு பகுதியாக இருப்பதற்கு அன்புடனும் நன்றியுடனும்.",
     musicHint: "பின்னணி இசை",
     notFound: "இந்த அழைப்பிதழ் இணைப்பு செல்லுபடியாகவில்லை. நீங்கள் பெற்ற இணைப்பைச் சரிபார்க்கவும்.",
+    unavailable: "இந்த அழைப்பிதழ் தற்போது திறக்கப்படவில்லை. இணைப்பை அனுப்பியவரிடம் கேட்டுத் தெரிந்துகொள்ளவும்.",
+    closedForGuests: "இந்த இணைப்பை விருந்தினர்கள் இப்போது திறக்க முடியாது — இது அணைக்கப்பட்டுள்ளது அல்லது அதன் தேதிகளுக்கு வெளியே உள்ளது. நீங்கள் நிர்வாகியாக உள்நுழைந்திருப்பதால் இதைப் பார்க்கிறீர்கள்.",
     previewWish: "இது முன்னோட்டம் — வாழ்த்துகள் சேமிக்கப்படாது."
   }
 };

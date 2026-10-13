@@ -51,6 +51,10 @@ Every event's page has these parts. Each template decides which parts to show an
 - **Controls**: an EN / தமிழ் switch (remembered on that device), **Copy Invite Link** (always the live link), and a
   music button that appears only when the event has a song.
 - **Link problems**: a mistyped or deleted link shows "This invitation link isn't valid…" instead of sample content.
+  A link that is switched off, not open yet, or past its end shows "This invitation isn't open right now…".
+- **Extra links**: an event can be shared at up to three links, each in its own design. Each link can leave parts
+  out (cover photo, events, countdown, guest book, help message, contact numbers, music). Guests on every link
+  see the same details and write in the same guest book.
 - **Main link**: the bare site address (`/`) shows whichever event the admin marked **Main link**.
 - **Link previews**: on Vercel, each event link previews with its own title, date line and cover photo. The main
   link always shows the generic card.
@@ -65,8 +69,10 @@ Every event's page has these parts. Each template decides which parts to show an
 - **＋ New event**: pick a category, type the name(s), pick a template, and confirm the link name (suggested from
   the names, e.g. `arjun-meera`, `aarav-birthday`). The new event starts with that category's sample events and
   contacts, ready to replace.
-- On each event card: **Edit**, **Copy link**, **Show at main link**, **Delete** (type the link name to confirm; this
-  removes the details, photos, music, wishes and PIN) and the **Editor PIN** panel.
+- On each event card: whether guests can open it now (**Open**, **Off**, **Not open yet**, **Ended**) and until when,
+  its extra links with theirs, **Edit**, **Copy link**, **Switch off** / **Switch on**, **Show at main link**,
+  **Delete** (type the link name to confirm; this removes the details, photos, music, wishes, extra links and PIN)
+  and the **Editor PIN** panel.
 - **Import your current invitation**: shown once, for sites that started before multi-event support. It copies
   the old invitation into an event and makes it the main link, so links already sent keep working.
 
@@ -79,6 +85,7 @@ Every event's page has these parts. Each template decides which parts to show an
 | Events | Add, reorder or remove events. Name, date, time, venue, address, description, Maps search text or link, emoji or image icon |
 | Help & Contacts | Message for outstation guests, and coordinators with any number of phone numbers |
 | Design | The event's category (admin only) and template, with previews of the event in any template |
+| Links | The event link and its extra links. For each: its status, what it shows (**Show on this link**), its design (extra links), and (admin only) **Open to guests**, **Start date** and **End date**. **＋ Add another link** and **Delete** take effect at once |
 | Wishes | Every wish, live: hide, unhide or delete. Changes apply immediately |
 
 - **Auto-translate**: about a second after you stop typing in an English box, the Tamil box fills in (Gemini through
@@ -105,8 +112,10 @@ Every event's page has these parts. Each template decides which parts to show an
 
 - One field: the PIN (e.g. `K7QM-X2PD`; case, spaces and dashes don't matter).
 - A valid PIN opens the event editor for **that event only**. It has the same tabs as the admin's, except:
-  no list of other events, no category change, and no creating templates. The Design tab offers only templates from
-  the event's own category.
+  no list of other events, no category change, no creating templates, and no switching links on or off or changing
+  their dates. The Design tab offers only templates from the event's own category.
+- In **Links** the editor can add extra links up to three in all, each with a different design, choose what each
+  link shows, and delete extra links. New links start open, until the event's own end.
 - The browser remembers the PIN until the admin changes or revokes it, or the editor clicks **Leave editor**.
 - When the admin changes or revokes the PIN, the editor's next save is refused and they are asked for the new PIN.
 
@@ -126,6 +135,10 @@ Every event's page has these parts. Each template decides which parts to show an
    starter) → restyle it, check the phone preview → Save → create an event in that category.
 6. **Revoke access** (admin): **Revoke** on the event card. The PIN stops working immediately, even for someone
    editing at that moment.
+7. **A second link for friends** (editor or admin): Links → **＋ Add another link** → `arjun-meera-friends`, pick
+   *Modern Editorial* → untick **Contact numbers** and **Countdown** on its card → Save → **Copy link** on that card.
+8. **Close a link** (admin): **Switch off** on the event card, or set an **End date** in the Links tab. Without one,
+   the event's links close 15 days after its main date.
 
 ## 5. Business rules and limits
 
@@ -136,6 +149,8 @@ Every event's page has these parts. Each template decides which parts to show an
 | Names per event | Two (groom and bride for weddings). Other categories use one name, or two shown as "Ravi & Priya" |
 | Main date and time | Entered and shown in India time (IST, UTC+05:30) |
 | Wish | Name 1–60 characters, message 1–500. New wishes are visible. Only the admin or that event's editor can hide or delete them |
+| When a link is open | While switched on, from its start date to its end date (both optional, India time, inclusive). With no end date: until 15 days after the event's main date. An extra link is also closed whenever its event link is. Only the admin sets these. Guests on a closed link can't read the details or write wishes |
+| Links per event | Up to 3 in all (the event link and 2 extra) when an editor adds them; the admin isn't limited. Each link uses a different design. Extra link names follow the slug rules and can't be changed |
 | Editor PIN | 8 characters from `A–Z` and `2–9` without look-alikes (32⁸ ≈ 10¹² combinations). One PIN per event at a time |
 | Photos | Compressed in the browser to fit one Firestore document (≈ 900 KB). Cover up to 1600 px, emblem 900 px, event icons 256 px. The link-preview copy is a JPEG of 1200 px or less, under 300 KB. HEIC isn't supported |
 | Music | Source file up to 60 MB, saved clip up to 10 MB (MP3 or M4A), stored in ≈ 900 KB pieces |
@@ -195,6 +210,10 @@ New templates start from `public/templates/blank.html`, which uses every hook wi
   or change their event's category.
 - **The admin and editor pages** are marked `noindex, nofollow`.
 - **Guest input** (wishes) is length-limited by the rules and always shown as plain text.
+- **Closed links** are refused by the rules, so the details can't be read while a link is off or outside its dates.
+  Photos and music stay readable by their ids.
+- **Hidden parts are not secret.** A link that hides the contacts doesn't show them, but the event's details are
+  saved once and downloaded by every link's page.
 - **No tracking.** There are no analytics, ads or third-party trackers. Guests' devices keep only caches (details,
   photos, music, language choice).
 
@@ -219,9 +238,9 @@ These are things the product doesn't do today.
 - **Fixed to India time**, and only English and Tamil. Translation runs only from English to Tamil.
 - **One cover photo.** There is no gallery.
 - **Per-event link previews need Vercel.** On Firebase Hosting every link shows the generic card.
-- **No staging environment.** Local testing uses the live database.
-- **Documentation drift**: SETUP.md §9 still says editors have no Design tab. They do have one, limited to their
-  event's category.
+- **No staging environment.** Local testing uses the live database, unless the browser is switched to the local Firebase emulator (SETUP.md §1).
+- **Extra links share everything but the design and the hidden parts.** A link can't have its own wording, photos or
+  guest book.
 
 ## 10. Glossary
 
@@ -230,6 +249,8 @@ These are things the product doesn't do today.
 | Event | One invitation (a wedding, housewarming, birthday…). Stored as `weddings/<slug>` for historical reasons |
 | Link name / slug | The part after the site address that identifies an event, e.g. `arjun-meera` |
 | Main link | The bare site address `/`, which shows one chosen event |
+| Event link | An event's own link (`/arjun-meera`), as opposed to its extra links |
+| Extra link | Another link to the same event, in its own design and with its own hidden parts, on/off switch and dates |
 | Category | A kind of event (Weddings, Housewarmings, Birthdays, Baby Showers, or one the admin adds). Each has its own templates and sample details |
 | Template | A whole HTML page design that any event in its category can use |
 | Classic | The built-in Maroon & Gold wedding design in `index.html` |
