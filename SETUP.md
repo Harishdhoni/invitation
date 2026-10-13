@@ -204,9 +204,12 @@ An event has one PIN at a time. Deleting an event removes its PIN.
 2. **Hosting that allows selling**: Vercel's free Hobby plan is for non-commercial use. Upgrade the project to
    **Vercel Pro**, or move to a host whose free plan allows commercial use.
 3. **Your own domain** (e.g. `yourbrand.in`): add it in the host's dashboard, then update `SITE_URL` in
-   `public/js/firebase-config.js` and the `og:image`/`og:url` tags in `public/index.html` and `public/home.html`.
-4. **Admin → Settings**: business name, price, UPI ID, WhatsApp number, support email and address. The sales page,
-   the customer's editor and the PIN message use them straight away. The business name also signs every invitation.
+   `public/js/firebase-config.js` and the `og:image`/`og:url` tags in `public/index.html`, `public/home.html` and
+   `public/showcase.html`.
+4. **Admin → Settings**: business name, price, UPI ID, GPay / PhonePe number, WhatsApp number, support email and
+   address. The sales page, the customer's editor and the WhatsApp message use them straight away. The business name
+   also signs every invitation. To reword the WhatsApp message to new customers, click **Start from the standard
+   message**, change it, and check it with **Preview with sample details**.
 5. **Read the legal pages** (`terms.html`, `privacy.html`, `refund.html`, `contact.html`) and have them checked by a
    professional. They describe what this site really does with data, but only you can promise your refund terms.
 6. Deploy the rules (`firebase deploy --only firestore:rules`); they add the paid check and the private `orders`.
@@ -214,9 +217,12 @@ An event has one PIN at a time. Deleting an event removes its PIN.
 **For each order**
 
 1. A customer messages you from the sales page (**Order on WhatsApp**).
-2. **＋ New event**: names, design, link name, the customer's name and phone. Leave **Already paid** unticked.
-3. On the card: **Create editor PIN** → **Copy details** → paste it into the WhatsApp chat. The message has a link
-   that opens their editor with the PIN filled in, and how to pay.
+2. **＋ New event**: names, design, link name, the customer's name and **WhatsApp number**. Leave **Already paid**
+   unticked. Click **Create event**.
+3. Their editor PIN is made and WhatsApp opens on their chat with the message typed in: their editor link (with the
+   PIN in it), their invitation link, and how to pay ₹200 with their name in the payment note. Tap **Send**. If the
+   browser blocks the new tab, click **Send on WhatsApp** in the green box. To send it again later, use
+   **Send on WhatsApp** on the event's card.
 4. The customer fills it in and checks it with **View site** (only they can see it). Guests who open the link see
    "This invitation isn't open right now".
 5. They pay with **Pay ₹200 by UPI** in their editor and send you the screenshot. Check it reached your account, then

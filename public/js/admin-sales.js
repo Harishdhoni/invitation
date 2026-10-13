@@ -6,6 +6,7 @@
 // phone numbers and payment references stay out of weddings/<slug>, because anyone with the link can read it.
 import { SALES_DEFAULTS, salesSettings, whatsappLink, tr, indiaToday } from "./defaults.js";
 import { $, show, el, toast, actionBtn, permissionHint } from "./admin-ui.js";
+import { DEFAULT_MESSAGE, customerMessage } from "./admin-access.js";
 
 let fb = null;
 export const useFirebase = mod => { fb = mod; };
@@ -175,7 +176,14 @@ export function downloadCsv(events, orders, statusOf){
 
 /* --------------------------------- settings --------------------------------- */
 // admin?view=settings: what customers see about buying (site/settings, public).
-const FIELDS = { businessName: "setBusinessName", price: "setPrice", upiId: "setUpiId", whatsapp: "setWhatsapp", email: "setEmail", address: "setAddress" };
+const FIELDS = { businessName: "setBusinessName", price: "setPrice", upiId: "setUpiId", payNumber: "setPayNumber",
+  whatsapp: "setWhatsapp", email: "setEmail", address: "setAddress", welcomeMessage: "setWelcomeMessage" };
+const formValues = () => {
+  const data = {};
+  for(const [key, id] of Object.entries(FIELDS)) data[key] = $(id).value.trim();
+  data.price = Math.round(Number(data.price)) || SALES_DEFAULTS.price;
+  return data;
+};
 
 export async function enterSettings(){
   show("settingsView");
@@ -188,11 +196,19 @@ export async function enterSettings(){
     s = salesSettings();
   }
   for(const [key, id] of Object.entries(FIELDS)) $(id).value = s[key] ?? "";
+  // The customer message: start from the standard wording, and see it with sample details (unpaid).
+  $("setMessageDefault").addEventListener("click", () => {
+    if($("setWelcomeMessage").value.trim() && !confirm("Replace your message with the standard one?")) return;
+    $("setWelcomeMessage").value = DEFAULT_MESSAGE;
+  });
+  $("setMessagePreview").addEventListener("click", () => {
+    $("setMessageSample").textContent = customerMessage({ name: "Arjun & Meera", slug: "arjun-meera", pin: "ABCDEFGH", paid: false,
+      sales: salesSettings(formValues()), customer: "Arjun Kumar" });
+    show("setMessageSample");
+  });
   $("settingsForm").addEventListener("submit", async e => {
     e.preventDefault();
-    const data = {};
-    for(const [key, id] of Object.entries(FIELDS)) data[key] = $(id).value.trim();
-    data.price = Math.round(Number(data.price)) || SALES_DEFAULTS.price;
+    const data = formValues();
     $("settingsError").textContent = "";
     $("settingsSaveBtn").disabled = true;
     try {

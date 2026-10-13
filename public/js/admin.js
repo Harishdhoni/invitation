@@ -1,4 +1,4 @@
-import { tr, slugify, isValidSlug, sampleFor, clone, salesSettings, lastDay, addDays, indiaToday } from "./defaults.js";
+import { tr, slugify, isValidSlug, sampleFor, clone, salesSettings, lastDay, addDays, indiaToday, whatsappLink } from "./defaults.js";
 import { isFirebaseConfigured, ADMIN_UID, SITE_URL } from "./firebase-config.js";
 import { compressPreviewImage } from "./image-utils.js";
 import { $, show, el, toast, actionBtn, copyText, permissionHint } from "./admin-ui.js";
@@ -6,7 +6,9 @@ import {
   useFirebase, loadCategories, loadTemplates, templatesIn, templateName, categoryName, templatePicker,
   enterTemplates, enterTemplateEditor
 } from "./admin-templates.js";
-import { useFirebase as useAccessFirebase, loadPins, revokePin, accessPanel } from "./admin-access.js";
+import {
+  useFirebase as useAccessFirebase, loadPins, revokePin, accessPanel, issuePin, customerMessage, sendOnWhatsApp
+} from "./admin-access.js";
 import {
   useFirebase as useSalesFirebase, loadOrders, newOrder, markOrderDeleted, orderPanel, salesSummary, downloadCsv, enterSettings
 } from "./admin-sales.js";
@@ -238,7 +240,9 @@ function weddingCard(w, isPast){
   if(extras.length) card.append(more);
   const sale = orderPanel({ w, orders, sales: salesSettings(settings), onChange: renderWeddings });
   if(sale) card.append(sale);
-  if(pinsReady) card.append(accessPanel({ slug: w.id, name: coupleNames(w.cfg, w.id), pins, paid: w.cfg.paid !== false, sales: salesSettings(settings) }));
+  const order = orders.get(w.id) || {};
+  if(pinsReady) card.append(accessPanel({ slug: w.id, name: coupleNames(w.cfg, w.id), pins, paid: w.cfg.paid !== false,
+    sales: salesSettings(settings), customer: order.customer || "", phone: order.phone || "" }));
   card.append(acts);
   return card;
 }
@@ -414,17 +418,65 @@ $("newWeddingForm").addEventListener("submit", async e => {
     cfg.hashtag = category === "wedding" ? "#" + [groom, bride].map(n => n.replace(/[^\p{L}\p{N}]/gu, "")).join("Weds") : "";
     // An unpaid invitation can be filled in and previewed by its customer, but guests can't open it yet.
     cfg.paid = $("newPaid").checked;
+    const customer = $("newCustomer").value.trim(), phone = $("newPhone").value.trim();
     const batch = fb.writeBatch(fb.db);
     batch.set(ref, { ...cfg, updatedAt: fb.serverTimestamp() });
-    newOrder(batch, id, { customer: $("newCustomer").value.trim(), phone: $("newPhone").value.trim(), paid: cfg.paid,
-      price: salesSettings(settings).price });
+    newOrder(batch, id, { customer, phone, paid: cfg.paid, price: salesSettings(settings).price });
     await batch.commit();
-    location.href = `?w=${id}&new=1`;
+    // Without a customer's number this is the admin's own event: straight to its editor.
+    if(!whatsappLink(phone)){ location.href = `?w=${id}&new=1`; return; }
+    await welcomeCustomer({ id, name: [groom, bride].filter(Boolean).join(" & "), customer, phone, paid: cfg.paid });
   } catch(e){
     error.textContent = e.message;
-    $("createWeddingBtn").disabled = false;
   }
+  $("createWeddingBtn").disabled = false;
 });
+
+// A customer's new invitation: make their editor PIN and open WhatsApp on their chat with the message typed in
+// (editor link, invitation link, how to pay). The browser may block a tab opened after these writes, so the
+// panel always has its own Send on WhatsApp link too.
+async function welcomeCustomer({ id, name, customer, phone, paid }){
+  const who = customer || phone;
+  show("newWeddingForm", false);
+  showCreated({ id, name, customer: who, phone, waiting: true });
+  let pin = null;
+  try {
+    // On a bad connection this could take a while; the event is saved already, and its card can make the PIN later.
+    pin = await Promise.race([issuePin(id), new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("making the PIN took too long. Check your internet connection")), 12000))]);
+  } catch(e){
+    console.error(e);
+    toast("The invitation was created, but its editor PIN wasn't: " + permissionHint(e) + ".");
+  }
+  const message = pin && customerMessage({ name, slug: id, pin, paid, sales: salesSettings(settings), customer });
+  const opened = !!message && sendOnWhatsApp(phone, message);
+  showCreated({ id, name, customer: who, phone, message, opened });
+  loadWeddings();
+}
+
+function showCreated({ id, name, customer, phone, message, opened, waiting = false }){
+  const box = $("createdPanel");
+  const acts = el("div", "row");
+  if(message){
+    const send = el("a", "btn primary", opened ? "Open WhatsApp again" : "Send on WhatsApp");
+    Object.assign(send, { href: whatsappLink(phone, message), target: "_blank", rel: "noopener" });
+    acts.append(send, actionBtn("Copy message", "ghost", () => copyText(message, "Message copied.")));
+  }
+  const edit = el("a", "btn ghost small", "Open its editor");
+  edit.href = `?w=${id}&new=1`;
+  acts.append(edit, actionBtn("Close", "ghost", () => show("createdPanel", false)));
+  box.replaceChildren(
+    el("h2", "", `✓ ${name} is created`),
+    el("p", "muted", waiting ? `Making ${customer}'s editor PIN and message…`
+      : !message ? `Create its editor PIN on its card, then use Send on WhatsApp there.`
+      : opened ? `WhatsApp opened on ${customer}'s chat with the message typed in. Tap Send there.`
+      : `Tap Send on WhatsApp to message ${customer}: the message is typed in for you.`),
+    ...(message ? [el("pre", "message-preview", message)] : []),
+    acts
+  );
+  show("createdPanel");
+  box.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
 /* ------------------------- import the old invitation ------------------------- */
 // Copies site/config and the top-level images, music and wishes into weddings/<id>.

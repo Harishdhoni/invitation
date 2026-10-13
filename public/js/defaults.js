@@ -120,7 +120,9 @@ export const openState = (link, main) => {
 /* ------------------------------ selling ------------------------------ */
 // What customers see about buying an invitation, set on the admin's Settings page (site/settings, which
 // anyone can read, so only put public details here). businessName also signs every invitation.
-export const SALES_DEFAULTS = { businessName: "", price: 200, upiId: "", whatsapp: "", email: "", address: "" };
+// payNumber is the phone number customers can pay to on GPay or PhonePe; welcomeMessage is the admin's own wording
+// for the WhatsApp message to a new customer ("" = the standard one in admin-access.js).
+export const SALES_DEFAULTS = { businessName: "", price: 200, upiId: "", payNumber: "", whatsapp: "", email: "", address: "", welcomeMessage: "" };
 export const salesSettings = s => ({ ...SALES_DEFAULTS, ...(s || {}) });
 // wa.me wants the number with its country code and no symbols; a 10-digit number is taken as Indian.
 export function whatsappLink(number, text = ""){
@@ -326,7 +328,7 @@ export const newId = () => Math.random().toString(36).slice(2, 10);
 // Each wedding lives at weddings/<slug> and is shared as SITE_URL/<slug>.
 // Names that are real paths on the site can't be used.
 const RESERVED_SLUGS = new Set(["admin", "api", "assets", "css", "js", "index", "templates", "editor",
-  "home", "terms", "privacy", "refund", "contact", "help"]);
+  "home", "showcase", "terms", "privacy", "refund", "contact", "help"]);
 
 export const slugify = s => (s || "").toLowerCase()
   .normalize("NFKD").replace(/[̀-ͯ]/g, "")

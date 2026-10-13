@@ -43,6 +43,7 @@ Local URLs (all under `http://localhost/wedding-invite/public/`):
 | `?w=<slug>` | An event (locally, `/<slug>` paths don't work; use `?w=`) |
 | `/` (no params) | Goes to `home.html`, the sales page (on Vercel a server redirect to `/home`; elsewhere `invite.js` redirects) |
 | `home.html`, `help.html`, `terms.html`, `privacy.html`, `refund.html`, `contact.html` | The sales page and the information pages |
+| `showcase.html` (`/showcase` on Vercel), `?category=<id>` for one kind of event | The page to share with people who want to know about the product: what guests and customers get, and every design with a live preview |
 | `?w=<slug>&editor-preview=1` | The customer's own preview of their invitation, read with their editor session (works while it is unpaid or closed) |
 | `?template=<id>` | A saved template with sample details. Use `classic` for the built-in design |
 | `?template=<id>&w=<slug>` | An event in another template. Nothing is saved |
@@ -76,12 +77,12 @@ Important:
 | `public/admin.html` (`/admin`) | `js/admin.js` | The one admin |
 | `public/editor.html` (`/editor`) | `js/editor.js` | Someone holding an event's PIN |
 | `public/templates/*.html`: 27 starter designs (10 wedding, 1 housewarming, 11 birthday, 5 baby shower) listed in `starters.json`, copied into Firestore on request | none (the runtime is injected) | n/a |
-| `public/home.html` (the sales page, served at `/`) and `help`, `terms`, `privacy`, `refund`, `contact` `.html` | `js/site.js` | Customers |
+| `public/home.html` (the sales page, served at `/`), `showcase.html` (the tour with every design) and `help`, `terms`, `privacy`, `refund`, `contact` `.html` | `js/site.js` | Customers |
 
 `admin.html` and `editor.html` share `css/admin.css` and end with the same `.site-credit` footer
 ("© 2026 · Powered by Harish S"). On the editor page `event-editor.js` swaps in the business name from Settings.
 The sales and information pages share `css/home.css`. `public/assets/templates/<id>.webp` are phone screenshots of
-the starter designs for the sales page's gallery.
+the starter designs for the sales page's gallery and the showcase.
 
 ### Modules in `public/js/`
 
@@ -105,13 +106,20 @@ the starter designs for the sales page's gallery.
   remembered for the tab in `sessionStorage` `wi:templatesCategory`), the template editor (HTML textarea,
   upload/download, live iframe preview), `templatePicker`, lazy iframe `thumbnail`s and the starter import. Exports
   `CLASSIC` (id `""`).
-- `admin-access.js`: the editor PIN panel on each event card (create, change, revoke, copy details). **Copy details**
-  is the customer message: a one-tap `editor?pin=` link, the PIN, and how to pay while unpaid.
+- `admin-access.js`: the editor PIN panel on each event card (create, change, revoke, copy details, and **Send on
+  WhatsApp** when the order has a number). `customerMessage()` builds the customer message from Settings'
+  `welcomeMessage` (or `DEFAULT_MESSAGE`): a one-tap `editor?pin=` link, the PIN, the invitation link and, while
+  unpaid, how to pay. `issuePin()` and `sendOnWhatsApp()` are also used by **Create event** in `admin.js`, which makes
+  the PIN and opens WhatsApp when a customer number is given (`welcomeCustomer`). WhatsApp can't be sent without a
+  tap from a website; fully automatic sending would need Meta's WhatsApp Business API and a server function.
 - `admin-sales.js`: selling. Orders (`loadOrders`, `newOrder`, `markOrderDeleted`), the order panel with **Mark as
   paid** / **Mark unpaid** (one batch: `weddings/<slug>.paid` + `orders/<slug>`), `salesSummary`, `downloadCsv`, and
   the Settings view (`?view=settings`, `site/settings`).
 - `site.js`: the sales and information pages. Reads `site/settings` through the Firestore REST API (no SDK) and fills
-  `data-site`, `data-site-if`, `a[data-whatsapp]`, `a[data-mailto]` and the `#gallery` (from `starters.json`).
+  `data-site`, `data-site-if`, `a[data-whatsapp]`, `a[data-mailto]` and the `#gallery` (from `starters.json`). On the
+  showcase it also builds `#showcase` (category chips, a **Preview** and a **Choose** WhatsApp button per design), the
+  hero's `#designReel` strip and the `#designPreview` dialog, which shows `./?template=<id>` in a scaled phone frame on
+  wide screens (phones open the design in a new tab, so the intro and music play).
 - `event-editor.js`: the **event editor**, shared by the admin and editor pages. Tabs: details, photos & music,
   events, contacts, design, links, wishes. Builds its markup into `#editorView` **when the module is imported**, so the
   host page must already contain `#editorView`. `#editorView[data-admin]` turns on the admin-only parts (back link,
@@ -280,7 +288,7 @@ Without a build step there is no shared config, so these are duplicated on purpo
 | Admin UID | `firestore.rules` `isAdmin()` · `public/js/firebase-config.js` `ADMIN_UID` |
 | Firebase project id | `firebase-config.js` · `api/_firestore.js` `PROJECT_ID` · `.firebaserc` |
 | Emulator ports (Firestore 8085, Auth 9099) | `firebase.json` `emulators` · `EMULATOR` in `firebase-config.js` |
-| Live site URL | `firebase-config.js` `SITE_URL` · `og:image` / `og:url` in `public/index.html` |
+| Live site URL | `firebase-config.js` `SITE_URL` · `og:image` / `og:url` in `public/index.html` · `og:image` in `home.html` and `showcase.html` |
 | Slug and id rules | `defaults.js` `isValidSlug` / `isValidId` · `api/_firestore.js` · the `vercel.json` rewrite regex |
 | Reserved slugs | `RESERVED_SLUGS` in `defaults.js`. Add every new top-level page or folder in `public/` |
 | Firebase SDK version | `firebase.js` · `editor-firebase.js` · `translate.js` |
@@ -291,8 +299,9 @@ Without a build step there is no shared config, so these are duplicated on purpo
 | No-cache headers for html/js/css | `vercel.json` `headers` (Vercel) · `public/.htaccess` (local Apache, so edits show on a normal reload) |
 | Starter templates | `public/templates/starters.json` · the starter count in `README.md` and `SETUP.md` ("Add 27 starter templates") · the catalog in `PRODUCT.md` §6 |
 | Site credit | the `.site-credit` footer in `admin.html` and `editor.html` |
-| Sales settings (businessName, price, upiId, whatsapp, email, address) | `SALES_DEFAULTS` in `defaults.js` · `FIELDS` in `admin-sales.js` and the Settings form in `admin.html` · `data-site` hooks in `site.js` and the sales/info pages |
+| Sales settings (businessName, price, upiId, payNumber, whatsapp, email, address, welcomeMessage) | `SALES_DEFAULTS` in `defaults.js` · `FIELDS` in `admin-sales.js` and the Settings form in `admin.html` · `data-site` hooks in `site.js` and the sales/info pages |
 | Bare address → sales page | `vercel.json` redirect of `/` to `/home` (a redirect, because Vercel serves `index.html` before any rewrite; its `missing` list must name every query the invite page takes: `w`, `template`, `template-file`, `editor-preview`) · the `home.html` redirect in `invite.js` `boot()` |
+| Customer message placeholders | `customerMessage()` / `MESSAGE_PLACEHOLDERS` in `admin-access.js` · the hint under the message box in `admin.html` |
 | Design screenshots | `public/assets/templates/<id>.webp`, one per entry in `starters.json` plus `classic` |
 | Wish limits (60 / 500) | `firestore.rules` (both wish blocks) · `maxlength` in templates and `index.html` · `sendWish()` in `invite.js` |
 | Size limits | Images: `image-utils.js` (900K-char data URL). Music: `MUSIC_*` in `event-editor.js` (900 KB chunks, 10 MB saved, 60 MB source). Template: `MAX_HTML` in `admin-templates.js` (900 KB) |

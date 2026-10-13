@@ -50,6 +50,10 @@
       <a href="?view=settings" id="navSettings">Settings</a>
     </nav>
     <div class="top-actions">
+      <nav class="site-links" aria-label="Customer pages">
+        <a href="home.html" target="_blank" rel="noopener" title="The sales page customers see at your site's address">Home page ↗</a>
+        <a href="showcase.html" target="_blank" rel="noopener" title="Every design: the page to share with customers">Showcase ↗</a>
+      </nav>
       <span class="who" id="whoAmI"></span>
       <button class="btn ghost" id="logoutBtn">Log out</button>
     </div>
@@ -98,7 +102,8 @@
       </label>
       <div class="two-col">
         <label class="field"><span>Customer name (optional)</span><input type="text" id="newCustomer"></label>
-        <label class="field"><span>Customer phone (optional)</span><input type="tel" id="newPhone" placeholder="+91 90000 00000"></label>
+        <label class="field"><span>Customer WhatsApp number (optional)</span><input type="tel" id="newPhone" placeholder="+91 90000 00000">
+          <small class="hint">With a number, their editor PIN is made and WhatsApp opens on their chat with the message ready to send.</small></label>
       </div>
       <label class="check new-paid"><input type="checkbox" id="newPaid"> Already paid</label>
       <small class="hint new-paid-hint">Unpaid invitations can be filled in and previewed by the customer, but guests can't open them until you click <b>Mark as paid</b>.</small>
@@ -108,6 +113,9 @@
         <button type="button" class="btn ghost" id="cancelNewBtn">Cancel</button>
       </div>
     </form>
+
+    <!-- After creating a customer's event: the WhatsApp message (js/admin.js showCreated) -->
+    <div class="card form-card created" id="createdPanel" hidden role="status"></div>
 
     <div class="list-tools">
       <input type="search" id="eventSearch" placeholder="Search names, link name or customer" aria-label="Search events">
@@ -129,12 +137,24 @@
           <small class="hint">Also signs every invitation (“Made with …”). Leave it empty for no signature.</small></label>
         <label class="field"><span>Price per invitation (₹)</span><input type="number" id="setPrice" min="1" step="1"></label>
         <label class="field"><span>UPI ID</span><input type="text" id="setUpiId" placeholder="yourname@okaxis"></label>
+        <label class="field"><span>GPay / PhonePe number (optional)</span><input type="tel" id="setPayNumber" placeholder="+91 90000 00000">
+          <small class="hint">The number customers can pay to, if they'd rather pay to a number than a UPI ID.</small></label>
         <label class="field"><span>WhatsApp number</span><input type="tel" id="setWhatsapp" placeholder="+91 90000 00000">
           <small class="hint">Customers order and send payment screenshots here.</small></label>
         <label class="field"><span>Support email</span><input type="email" id="setEmail"></label>
       </div>
       <label class="field"><span>Business address</span><textarea id="setAddress"></textarea>
         <small class="hint">Shown on the Contact page (payment gateways ask for one).</small></label>
+      <label class="field"><span>WhatsApp message to new customers</span><textarea id="setWelcomeMessage" class="message-box"></textarea>
+        <small class="hint">Sent (you tap Send) when you create an event with a customer's number, and by <b>Send on WhatsApp</b> /
+          <b>Copy details</b>. Leave it empty for the standard message. These are filled in for you:
+          <code>{customer}</code> <code>{names}</code> <code>{editorLink}</code> <code>{pin}</code> <code>{inviteLink}</code>
+          <code>{payment}</code> (how to pay, or “payment received”) <code>{price}</code> <code>{helpLink}</code> <code>{business}</code>.</small></label>
+      <div class="row message-tools">
+        <button type="button" class="btn ghost small" id="setMessageDefault">Start from the standard message</button>
+        <button type="button" class="btn ghost small" id="setMessagePreview">Preview with sample details</button>
+      </div>
+      <pre class="message-preview" id="setMessageSample" hidden></pre>
       <p class="error" id="settingsError" role="alert"></p>
       <button type="submit" class="btn primary" id="settingsSaveBtn">Save settings</button>
     </form>

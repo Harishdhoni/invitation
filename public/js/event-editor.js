@@ -1222,15 +1222,17 @@ async function loadSales(){
     el("b", "", "Your invitation is ready to fill in. "),
     `Guests can open it once ₹${s.price} is paid. Until then, View site shows it only to you.`
   );
-  if(s.upiId){
-    const upi = el("p", "muted", "UPI ID: ");
-    const id = el("code", "", s.upiId);
+  // Where to pay, each with a copy button: the UPI ID and/or the GPay / PhonePe number.
+  for(const [label, value] of [["UPI ID", s.upiId], ["GPay / PhonePe number", s.payNumber]]){
+    if(!value) continue;
+    const line = el("p", "muted", label + ": ");
     const copy = el("button", "linkish", "copy");
     copy.type = "button";
-    copy.addEventListener("click", () => copyText(s.upiId, "UPI ID copied."));
-    upi.append(id, " ", copy);
-    box.append(upi);
+    copy.addEventListener("click", () => copyText(value, label + " copied."));
+    line.append(el("code", "", value), " ", copy);
+    box.append(line);
   }
+  if(s.upiId || s.payNumber) box.append(el("p", "muted", "Please write your name in the payment note, so we know it's from you."));
   if(acts.children.length) box.append(acts);
   show("payBanner");
 }

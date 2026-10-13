@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#4a0f1c">
+<!-- The showcase: a page to share with anyone who wants to know what the invitations are, with every design.
+     ?category=<id> opens it on one kind of event. Business details and the designs are filled in by js/site.js. -->
+<title>Invitations · Every design</title>
+<meta name="description" content="Invitation websites in Tamil and English for weddings, housewarmings, birthdays and baby showers. See what guests get, what you can change, and every design.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="See every invitation design">
+<meta property="og:description" content="Invitation websites in Tamil and English for weddings, housewarmings, birthdays and baby showers. Tap any design to open it live.">
+<meta property="og:image" content="https://invitation-five-mu.vercel.app/assets/og-cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/emblem.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Noto+Sans+Tamil:wght@400;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/home.css">
+</head>
+<body>
+
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="home.html"><img src="assets/emblem.svg" alt=""><span data-site="businessName" data-fallback="Invitations">Invitations</span></a>
+    <nav class="site-nav" aria-label="Sections">
+      <a href="home.html">Home</a>
+      <a class="optional" href="#guests">For guests</a>
+      <a class="optional" href="#designs">Designs</a>
+      <a class="optional" href="#pricing">Pricing</a>
+      <a class="btn gold small" href="contact.html" data-whatsapp="Hi! I'd like an invitation website.">Order now</a>
+    </nav>
+  </div>
+</header>
+
+<section class="tour-hero">
+  <div class="wrap">
+    <p class="eyebrow">Weddings · Housewarmings · Birthdays · Baby showers</p>
+    <h1>An invitation your guests open, not just look at</h1>
+    <p class="lead">A designed web page for your family's celebration, in Tamil and English, shared as one link on WhatsApp.
+      Here is everything it does, and every design you can choose.</p>
+    <ul class="stats">
+      <li><b data-count="designs">28</b>designs</li>
+      <li><b data-count="occasions">4</b>kinds of events</li>
+      <li><b>EN · தமிழ்</b>on every page</li>
+      <li><b>₹<span data-site="price">200</span></b>per invitation</li>
+    </ul>
+    <div class="cta">
+      <a class="btn gold" href="#designs">See every design</a>
+      <a class="btn ghost" href="contact.html" data-whatsapp="Hi! I'd like an invitation website (₹{price}).">Order on WhatsApp</a>
+    </div>
+  </div>
+  <div class="reel" id="designReel" aria-hidden="true"><div class="reel-track"></div></div>
+</section>
+
+<section class="section" id="guests">
+  <div class="wrap tour-split">
+    <div class="chat" aria-hidden="true">
+      <div class="chat-head"><span class="chat-avatar">A</span><span><b>Arjun</b><small>online</small></span></div>
+      <div class="chat-body">
+        <div class="bubble">
+          <div class="link-card">
+            <img src="assets/og-cover.jpg" alt="" width="1200" height="630">
+            <span><b>Arjun weds Meera</b><small>💍 12th February 2027 • Chennai</small><small data-site-host>invitation-five-mu.vercel.app</small></span>
+          </div>
+          <p>With the blessings of our families, we invite you to our wedding 🙏 Please open the link for the details.</p>
+          <span class="time">10:24 am ✓✓</span>
+        </div>
+        <div class="bubble in"><p>Opened it! The music and the doors opening… beautiful 😍 See you there!</p><span class="time">10:31 am</span></div>
+      </div>
+    </div>
+    <div>
+      <p class="eyebrow">What your guests see</p>
+      <h2>One link, and the whole invitation opens</h2>
+      <p class="sub">No app, no PDF to zoom into. It opens in any phone's browser, straight from WhatsApp.</p>
+      <ol class="journey">
+        <li><b>A link with your photo</b><span>WhatsApp shows your names, the date and your cover photo, so family know at once it's from you.</span></li>
+        <li><b>Tap to open</b><span>Every design opens its own way: curtains part, temple doors swing open, a wax seal breaks, a seed sprouts. Your song starts with it.</span></li>
+        <li><b>Everything in one place</b><span>Each ceremony with its date, time and a Google Maps button, a live countdown, and your family's numbers to call.</span></li>
+        <li><b>Wishes for you</b><span>Guests write their blessings in the guest book, and you read every one.</span></li>
+      </ol>
+    </div>
+  </div>
+  <div class="wrap">
+    <ul class="pills" aria-label="In every invitation">
+      <li>EN / தமிழ் switch</li><li>Your names and photo</li><li>Your song</li><li>Opening animation</li><li>Every ceremony</li>
+      <li>Google Maps directions</li><li>Live countdown</li><li>Tap-to-call contacts</li><li>Guest book</li>
+      <li>Help for out-of-town guests</li><li>Copy-link button</li><li>Quick on slow data</li>
+    </ul>
+  </div>
+</section>
+
+<section class="section alt" id="designs">
+  <div class="wrap">
+    <p class="eyebrow">Designs</p>
+    <h2>Pick a design you love</h2>
+    <p class="sub">Each one is shown with sample details: yours replace them. Tap a design to open it live, then
+      <b>Choose</b> to tell us on WhatsApp. You can switch to another design later.</p>
+    <div id="showcase"><p class="sub">Loading designs…</p></div>
+  </div>
+</section>
+
+<section class="section" id="editor">
+  <div class="wrap tour-split flip">
+    <div>
+      <p class="eyebrow">What you can do</p>
+      <h2>You fill it in yourself, from your phone</h2>
+      <p class="sub">We send you a private editor link with a PIN. Nothing to install, nothing technical, and you can
+        come back and change it any time.</p>
+      <ul class="includes">
+        <li><b>Type in English, get Tamil.</b> The Tamil fills in by itself, with names and places in Tamil script. Change any word you like.</li>
+        <li><b>Your photo and your song.</b> Upload a photo and cut just the part of the song you want, right on the page.</li>
+        <li><b>Every ceremony.</b> Add as many as you need, each with its date, time, venue and map.</li>
+        <li><b>Change the design any time.</b> Switch to another design for your kind of event. Your details stay.</li>
+        <li><b>Up to 3 links.</b> For example one for family with phone numbers and one for friends without, each in its own design.</li>
+        <li><b>Look after the guest book.</b> Hide or delete any wish.</li>
+        <li><b>See it before you pay.</b> Preview exactly what your guests will see.</li>
+      </ul>
+    </div>
+    <div class="mock" aria-hidden="true">
+      <div class="mock-card">
+        <p class="mock-label">Your editor PIN</p>
+        <p class="mock-pin">K7QM-X2PD</p>
+      </div>
+      <div class="mock-card">
+        <p class="mock-label">Name · English</p>
+        <p class="mock-field">Arjun</p>
+        <p class="mock-label">Name · தமிழ் <span class="mock-badge">அ filled in for you</span></p>
+        <p class="mock-field ta">அர்ஜுன்</p>
+      </div>
+      <div class="mock-card">
+        <p class="mock-label">Song · cut the part you want</p>
+        <svg class="mock-wave" viewBox="0 0 240 48" preserveAspectRatio="none">
+          <defs><clipPath id="wavePick"><rect x="62" y="0" width="104" height="48"/></clipPath></defs>
+          <rect class="pick" x="62" y="0" width="104" height="48" rx="4"/>
+          <path id="waveBars" d="M4 20v8M10 16v16M16 12v24M22 18v12M28 8v32M34 14v20M40 20v8M46 10v28M52 16v16M58 6v36M64 12v24M70 4v40M76 14v20M82 8v32M88 2v44M94 12v24M100 6v36M106 16v16M112 4v40M118 10v28M124 2v44M130 14v20M136 8v32M142 4v40M148 12v24M154 6v36M160 16v16M166 10v28M172 18v12M178 8v32M184 14v20M190 20v8M196 12v24M202 16v16M208 10v28M214 18v12M220 14v20M226 20v8M232 16v16M238 22v4"/>
+          <use class="on" href="#waveBars" clip-path="url(#wavePick)"/>
+          <rect class="handle" x="60" y="0" width="4" height="48" rx="2"/><rect class="handle" x="164" y="0" width="4" height="48" rx="2"/>
+        </svg>
+        <p class="mock-small">0:42 – 1:58 · fade in and out</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section alt" id="pricing">
+  <div class="wrap tour-split">
+    <div>
+      <p class="eyebrow">How it works</p>
+      <h2>Ready in four steps</h2>
+      <div class="steps tour-steps">
+        <div class="step"><h3>Message us on WhatsApp</h3><p>Tell us the kind of event, the names and the design you like.</p></div>
+        <div class="step"><h3>Get your editor link</h3><p>We send you your own link and PIN. Only you can change your invitation.</p></div>
+        <div class="step"><h3>Fill it in and preview</h3><p>Add your ceremonies, photo and song, and see exactly what guests will see.</p></div>
+        <div class="step"><h3>Pay and share</h3><p>Pay ₹<span data-site="price">200</span> by UPI. Your link opens to guests. Share it on WhatsApp.</p></div>
+      </div>
+    </div>
+    <div class="price-card">
+      <p class="eyebrow">Per invitation</p>
+      <p class="price">₹<span data-site="price">200</span></p>
+      <ul class="includes">
+        <li>Any design, for any kind of event</li>
+        <li>Up to 3 links in different designs</li>
+        <li>Tamil and English, photo, music, guest book</li>
+        <li>Edit it yourself any time with your PIN</li>
+        <li>Open to guests until 15 days after your event</li>
+        <li>Fill it in and preview it before you pay</li>
+      </ul>
+      <a class="btn primary" href="contact.html" data-whatsapp="Hi! I'd like an invitation website (₹{price}).">Order on WhatsApp</a>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="faq">
+  <div class="wrap">
+    <h2 class="center">Questions</h2>
+    <div class="faq">
+      <details><summary>Can I change the details after I share the link?</summary><p>Yes. Change anything in your editor at any time; guests see the new details the next time they open the link.</p></details>
+      <details><summary>Do my guests need to install anything?</summary><p>No. The invitation opens in any phone's browser, straight from WhatsApp.</p></details>
+      <details><summary>Is it in Tamil?</summary><p>Every text is in Tamil and English. Guests choose with one tap. Names and places are written in Tamil script for you.</p></details>
+      <details><summary>How long does the link work?</summary><p>Until 15 days after your event's date. Ask us if you'd like it open longer.</p></details>
+      <details><summary>Who can see my invitation?</summary><p>Only people who have the link. It isn't listed anywhere. See our <a href="privacy.html">privacy policy</a>.</p></details>
+    </div>
+    <p class="center more">More answers on the <a href="help.html">help page</a>.</p>
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="wrap">
+    <h2>Found a design you like?</h2>
+    <p>Tell us on WhatsApp. Fill it in, preview it, and pay only when you're happy.</p>
+    <a class="btn primary" href="contact.html" data-whatsapp="Hi! I'd like an invitation website (₹{price}).">Order on WhatsApp</a>
+  </div>
+</section>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>© <span data-year>2026</span> <span data-site="businessName" data-fallback="Invitations">Invitations</span></span>
+    <nav aria-label="Information">
+      <a href="home.html">Home</a><a href="help.html">Help</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refund.html">Refunds</a><a href="contact.html">Contact</a>
+    </nav>
+  </div>
+</footer>
+
+<!-- The live preview of one design, on wide screens (js/site.js previewer). -->
+<dialog class="preview" id="designPreview" aria-labelledby="previewName">
+  <div class="preview-body">
+    <div class="preview-phone loading" data-preview="phone"><iframe title="Live preview of the design"></iframe></div>
+    <div class="preview-side">
+      <p class="eyebrow" data-preview="category"></p>
+      <h3 id="previewName" data-preview="name"></h3>
+      <p data-preview="desc"></p>
+      <p class="preview-note">Sample details. Scroll inside the phone to see the whole page. Open it full screen to see the
+        opening animation and switch to தமிழ்.</p>
+      <div class="preview-actions">
+        <a class="btn primary" href="contact.html" data-preview="order" data-whatsapp="Hi! I'd like an invitation website (₹{price}).">Choose this design</a>
+        <a class="btn ghost dark" data-preview="open" target="_blank" rel="noopener">Open full screen ↗</a>
+      </div>
+      <div class="preview-nav">
+        <button type="button" data-preview="prev" aria-label="Previous design">‹</button>
+        <span data-preview="count"></span>
+        <button type="button" data-preview="next" aria-label="Next design">›</button>
+      </div>
+    </div>
+    <button type="button" class="preview-close" data-preview="close" aria-label="Close">×</button>
+  </div>
+</dialog>
+
+<script type="module" src="js/site.js"></script>
+</body>
+</html>

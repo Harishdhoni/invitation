@@ -70,25 +70,33 @@ Every event's page has these parts. Each template decides which parts to show an
 
 ### 3.2 The admin page (`/admin`)
 
+The header has the admin's sections (**Events**, **Templates**, **Settings**) and, in a new tab, the pages customers
+see: **Home page ↗** (the sales page) and **Showcase ↗** (every design, the page to share with customers).
+
 **Events**
 - A list of every event: upcoming ones first (soonest at the top), then past ones. Above it: this month's takings,
   how many are waiting for payment, and all-time takings; status chips (**All / Unpaid / Open / Closed**); a search
   box (names, link names, customer name or phone); and category chips once there is more than one category.
 - **＋ New event**: pick a category, type the name(s), pick a template, confirm the link name (suggested from
-  the names, e.g. `arjun-meera`, `aarav-birthday`), and optionally the customer's name and phone and **Already paid**.
+  the names, e.g. `arjun-meera`, `aarav-birthday`), and optionally the customer's name and WhatsApp number and
+  **Already paid**. With a number, the editor PIN is made at once and WhatsApp opens on the customer's chat with the
+  message typed in (the admin taps Send).
   The new event starts with that category's sample events and contacts, ready to replace. Unless **Already paid** is
   ticked it starts **Unpaid**.
 - On each event card: whether guests can open it now (**Open**, **Unpaid**, **Off**, **Not open yet**, **Ended**) and
   until when, its extra links with theirs, the customer (with a WhatsApp link) and payment (**Mark as paid** with
   amount, method, reference and note; **Mark unpaid**), **Edit**, **Copy link**, **Switch off** / **Switch on**,
   **Delete** (type the link name to confirm; this removes the details, photos, music, wishes, extra links and PIN,
-  and keeps the order for the accounts) and the **Editor PIN** panel. **Copy details** there is the message for the
-  customer: their one-tap editor link, the PIN, their invitation link, and how to pay while unpaid.
+  and keeps the order for the accounts) and the **Editor PIN** panel. **Send on WhatsApp** (when the customer's number is
+  known) and **Copy details** there give the customer message: their one-tap editor link, the PIN, their invitation
+  link, and while unpaid, how to pay with their name in the payment note.
 - **Export CSV**: every invitation with its customer and payment, for the accounts.
 - **Clean up ended**: deletes the photos, music and wishes of invitations that closed more than 90 days ago.
 
-**Settings** (`?view=settings`): business name (also signs every invitation), price, UPI ID, WhatsApp number,
-support email and business address. Customers see them on the sales page, on the editor page and in the PIN message.
+**Settings** (`?view=settings`): business name (also signs every invitation), price, UPI ID, GPay / PhonePe number,
+WhatsApp number, support email, business address, and the wording of the WhatsApp message to new customers (with
+placeholders such as `{customer}`, `{editorLink}` and `{payment}`, and a preview). Customers see these on the sales
+page, on the editor page and in that message.
 - **Import your current invitation**: shown once, for sites that started before multi-event support. It copies
   the old invitation into an event with its own link.
 
@@ -145,6 +153,11 @@ support email and business address. Customers see them on the sales page, on the
 - **`/`** (`home.html`): what you get, a gallery of every design (screenshots that open a live preview with sample
   details), the price, how it works in three steps, questions and answers, and **Order on WhatsApp** buttons that open
   a chat with a message ready.
+- **`/showcase`** (`showcase.html`): the page to share with anyone who asks what this is. It walks through what
+  guests see (a sample WhatsApp chat with the link), every design with category chips (`/showcase?category=birthday`
+  opens on birthdays), what the customer can change in their editor, the steps, the price and a few questions. Each
+  design has **Preview** (a live phone-sized preview beside its details on a computer, the full page on a phone) and
+  **Choose**, a WhatsApp message naming the design.
 - **Help** (how to make your invitation, step by step), **Terms**, **Privacy**, **Refunds** and **Contact**. They show
   the business name, price and contact details from Settings.
 
