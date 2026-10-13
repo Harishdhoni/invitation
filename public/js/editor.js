@@ -8,7 +8,7 @@
 //    for as long as the pin document exists. Changing or revoking the PIN in the admin deletes it.
 import { isFirebaseConfigured } from "./firebase-config.js";
 import { $, show, toast } from "./admin-ui.js";
-import { normalizePin, isValidPin } from "./pin.js";
+import { normalizePin, isValidPin, formatPin } from "./pin.js";
 import { openEditor, hasUnsavedChanges, discardChanges } from "./event-editor.js";
 
 let fb = null;
@@ -117,6 +117,17 @@ async function boot(){
     toast("Couldn't load Firebase — check your internet connection.");
     return;
   }
+  // A link with the PIN in it (editor?pin=ABCD-EFGH, from the admin's Copy details) opens straight away.
+  // The PIN is taken out of the address bar first.
+  const params = new URLSearchParams(location.search);
+  const linkPin = normalizePin(params.get("pin") || "");
+  if(params.has("pin")) history.replaceState(null, "", location.pathname);
+  if(isValidPin(linkPin)){
+    showPinForm();
+    $("pinInput").value = formatPin(linkPin);
+    return $("pinForm").requestSubmit();
+  }
+
   // Come back to the same event without asking for the PIN again, while it is still valid.
   let access = null;
   try {

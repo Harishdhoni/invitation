@@ -1,4 +1,4 @@
-import { tr, slugify, isValidSlug, sampleFor, clone } from "./defaults.js";
+import { tr, slugify, isValidSlug, sampleFor, clone, salesSettings, lastDay, addDays, indiaToday } from "./defaults.js";
 import { isFirebaseConfigured, ADMIN_UID, SITE_URL } from "./firebase-config.js";
 import { compressPreviewImage } from "./image-utils.js";
 import { $, show, el, toast, actionBtn, copyText, permissionHint } from "./admin-ui.js";
@@ -7,6 +7,9 @@ import {
   enterTemplates, enterTemplateEditor
 } from "./admin-templates.js";
 import { useFirebase as useAccessFirebase, loadPins, revokePin, accessPanel } from "./admin-access.js";
+import {
+  useFirebase as useSalesFirebase, loadOrders, newOrder, markOrderDeleted, orderPanel, salesSummary, downloadCsv, enterSettings
+} from "./admin-sales.js";
 import {
   openEditor, normalize, coupleNames, shareLink, previewLink, musicChunkId, hasUnsavedChanges, discardChanges,
   linkStatus, stateBadge
@@ -24,13 +27,16 @@ let categories = [];         // [{ id, name, order }]
 let templates = [];          // [{ id, name, categoryId, html, … }]
 
 /* ------------------------------ weddings list ------------------------------ */
-let settings = {};           // site/settings: { defaultWedding, legacyImported }
+let settings = {};           // site/settings: { legacyImported, and the sales settings (price, upiId, …) }
 let weddings = [];           // [{ id, cfg }]: events, without their extra links
 let extraLinks = new Map();  // event id -> [{ id, cfg }]: its extra links ({ parent } docs in weddings/)
+let orders = new Map();      // event id -> orders/<id>: who bought it and how they paid
 let legacyConfig = null;     // site/config from before multi-wedding, until it's imported
 
 const SLUG_RULES = "Use 3–40 lowercase letters, numbers and dashes, like arjun-meera. " +
-  "admin, api, assets, css, editor, js, index and templates are used by the site itself.";
+  "Some names (admin, editor, help, terms, …) are used by the site itself.";
+// Photos, music and wishes of invitations that closed longer ago than this can be cleaned up.
+const CLEANUP_DAYS = 90;
 const siteHost = () => SITE_URL.replace(/^https?:\/\//, "");
 
 function weddingTime(cfg){
@@ -50,7 +56,6 @@ async function inBatches(items, write){
 function enterList(){
   show("weddingsView");
   document.querySelectorAll(".slug-prefix").forEach(s => { s.textContent = siteHost() + "/"; });
-  $("importMainLink").textContent = siteHost() + "/";
   loadWeddings();
 }
 
@@ -101,6 +106,13 @@ async function loadWeddings(){
     pinsReady = false;
     toast("Couldn't load editor PINs — deploy the latest firestore.rules (see SETUP.md).");
   }
+  try {
+    orders = await loadOrders();
+  } catch(e){
+    console.warn("orders unavailable", e);
+    orders = new Map();
+    toast("Couldn't load orders — deploy the latest firestore.rules (see SETUP.md).");
+  }
 
   if(legacyConfig && $("importForm").hidden){
     $("importSlug").value = slugify(`${tr(legacyConfig.groomName, "en")}-${tr(legacyConfig.brideName, "en")}`);
@@ -130,19 +142,55 @@ function renderCategoryFilter(){
       .map(id => chip(id, categoryName(categories, id), counts[id])));
 }
 
+// Status chips: unpaid, open to guests, and closed (switched off, not open yet, or ended).
+let statusFilter = "all";
+const STATUS_GROUPS = { unpaid: "Unpaid", live: "Open", closed: "Closed" };
+const statusGroup = w => { const s = linkStatus(w.cfg).state; return s === "unpaid" || s === "live" ? s : "closed"; };
+
+function renderStatusFilter(){
+  const counts = { all: weddings.length, unpaid: 0, live: 0, closed: 0 };
+  weddings.forEach(w => { if(!w.cfg.parent) counts[statusGroup(w)]++; });
+  const chip = (id, label) => {
+    const b = el("button", "chip", label);
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(statusFilter === id));
+    b.append(el("span", "n", String(counts[id])));
+    b.addEventListener("click", () => { statusFilter = id; renderWeddings(); });
+    return b;
+  };
+  $("statusFilter").replaceChildren(chip("all", "All"), ...Object.entries(STATUS_GROUPS).map(([id, label]) => chip(id, label)));
+}
+
+// Names (English and Tamil), link names, and the customer's name and phone.
+let searchText = "";
+function matchesSearch(w){
+  const q = searchText.trim().toLowerCase();
+  if(!q) return true;
+  const o = orders.get(w.id) || {};
+  const hay = [w.id, ...(extraLinks.get(w.id) || []).map(l => l.id), w.cfg.groomName?.en, w.cfg.groomName?.ta,
+    w.cfg.brideName?.en, w.cfg.brideName?.ta, o.customer, o.phone].filter(Boolean).join(" ").toLowerCase();
+  const digits = q.replace(/\D/g, "");
+  return hay.includes(q) || (digits.length >= 4 && String(o.phone || "").replace(/\D/g, "").includes(digits));
+}
+$("eventSearch").addEventListener("input", e => { searchText = e.target.value; renderWeddings(); });
+
 function renderWeddings(){
   renderCategoryFilter();
+  renderStatusFilter();
+  $("salesSummary").replaceChildren(salesSummary(weddings, orders));
   // Upcoming events first (soonest at the top), then past ones (most recent first).
   // An event counts as upcoming until a day after its main date.
   const cutoff = Date.now() - 86_400_000;
   const time = w => weddingTime(w.cfg) ?? Infinity;
-  const shown = weddings.filter(w => categoryFilter === "all" || eventCategory(w.cfg) === categoryFilter);
+  const shown = weddings.filter(w => (categoryFilter === "all" || eventCategory(w.cfg) === categoryFilter)
+    && (statusFilter === "all" || statusGroup(w) === statusFilter) && matchesSearch(w));
   const upcoming = shown.filter(w => time(w) >= cutoff).sort((a, b) => time(a) - time(b));
   const past = shown.filter(w => time(w) < cutoff).sort((a, b) => time(b) - time(a));
 
   $("weddingsList").replaceChildren(...upcoming.map(w => weddingCard(w, false)), ...past.map(w => weddingCard(w, true)));
-  $("weddingsStatus").textContent = weddings.length ? "" : "No events yet. Click ＋ New event to create the first one.";
-  show("weddingsStatus", !weddings.length);
+  $("weddingsStatus").textContent = !weddings.length ? "No events yet. Click ＋ New event to create the first one."
+    : !shown.length ? "No events match. Clear the search or pick another filter." : "";
+  show("weddingsStatus", !shown.length);
 }
 
 const linkAnchor = id => {
@@ -156,9 +204,7 @@ function weddingCard(w, isPast){
   const card = el("div", "card wedding-card" + (isPast ? " past" : ""));
   const head = el("div", "item-head");
   const tags = el("div", "item-tools");
-  const isMain = settings.defaultWedding === w.id;
   const status = linkStatus(w.cfg);
-  if(isMain) tags.append(el("span", "badge main", "Main link"));
   if(isPast) tags.append(el("span", "badge off", "Past"));
   tags.append(stateBadge(status.state), el("span", "badge cat", categoryName(categories, eventCategory(w.cfg))));
   head.append(el("h3", "", coupleNames(w.cfg, w.id)), tags);
@@ -186,12 +232,13 @@ function weddingCard(w, isPast){
   acts.append(w.cfg.active === false
     ? actionBtn("Switch on", "ghost", () => setActive(w, true))
     : actionBtn("Switch off", "ghost", () => setActive(w, false)));
-  if(!isMain) acts.append(actionBtn("Show at main link", "ghost", () => setMainWedding(w)));
   acts.append(actionBtn("Delete", "danger", () => deleteWedding(w)));
 
   card.append(head, when, design, linkAnchor(w.id), el("p", "link-status", status.text));
   if(extras.length) card.append(more);
-  if(pinsReady) card.append(accessPanel({ slug: w.id, name: coupleNames(w.cfg, w.id), pins }));
+  const sale = orderPanel({ w, orders, sales: salesSettings(settings), onChange: renderWeddings });
+  if(sale) card.append(sale);
+  if(pinsReady) card.append(accessPanel({ slug: w.id, name: coupleNames(w.cfg, w.id), pins, paid: w.cfg.paid !== false, sales: salesSettings(settings) }));
   card.append(acts);
   return card;
 }
@@ -228,16 +275,44 @@ async function setActive(w, on){
   }
 }
 
-async function setMainWedding(w){
-  try {
-    await fb.setDoc(settingsDoc(), { defaultWedding: w.id }, { merge: true });
-    settings.defaultWedding = w.id;
-    renderWeddings();
-    toast(`${siteHost()}/ now shows ${coupleNames(w.cfg, w.id)}.`);
-  } catch(e){
-    toast("Failed: " + e.message);
-  }
+// An event's photos, music chunks and wishes. Photos and music are listed in the config, so they can be
+// deleted without downloading them.
+async function eventDataRefs(w){
+  const ref = (...path) => fb.doc(fb.db, "weddings", w.id, ...path);
+  const refs = Object.keys(w.cfg.images || {}).map(id => ref("images", id));
+  const m = w.cfg.music;
+  if(m) for(let i = 0; i < m.chunks; i++) refs.push(ref("music", musicChunkId(m.v, i)));
+  const wishes = await fb.getDocs(fb.collection(ref(), "wishes"));
+  return [...refs, ...wishes.docs.map(d => d.ref)];
 }
+
+// Removes the photos, music and wishes of invitations that closed more than CLEANUP_DAYS ago, to keep storage
+// and personal data down (the privacy page says so). The event's text and its order stay.
+async function cleanupEnded(){
+  const before = addDays(indiaToday(), -CLEANUP_DAYS);
+  const old = weddings.filter(w => !w.cfg.parent && !w.cfg.cleanedAt && lastDay(w.cfg) && lastDay(w.cfg) < before);
+  if(!old.length) return toast(`Nothing to clean up: no invitation closed more than ${CLEANUP_DAYS} days ago.`);
+  if(!confirm(`Clean up ${old.length} invitation${old.length === 1 ? "" : "s"} that closed more than ${CLEANUP_DAYS} days ago?\n\n` +
+    "Their photos, music and wishes are deleted for good. Names, details and order records stay.")) return;
+  const btn = $("cleanupBtn");
+  btn.disabled = true;
+  try {
+    for(const [i, w] of old.entries()){
+      btn.textContent = `Cleaning ${i + 1}/${old.length}…`;
+      await inBatches(await eventDataRefs(w), (batch, r) => batch.delete(r));
+      await fb.updateDoc(fb.doc(fb.db, "weddings", w.id), { images: {}, music: null, cleanedAt: fb.serverTimestamp() });
+    }
+    toast(`Cleaned up ${old.length} invitation${old.length === 1 ? "" : "s"}.`);
+  } catch(e){
+    console.error(e);
+    toast("Clean-up stopped: " + permissionHint(e));
+  }
+  btn.disabled = false;
+  btn.textContent = "Clean up ended";
+  loadWeddings();
+}
+$("cleanupBtn").addEventListener("click", cleanupEnded);
+$("exportCsvBtn").addEventListener("click", () => downloadCsv(weddings, orders, w => linkStatus(w.cfg).state));
 
 async function deleteWedding(w){
   const name = coupleNames(w.cfg, w.id);
@@ -251,19 +326,13 @@ async function deleteWedding(w){
   $("weddingsStatus").textContent = `Deleting ${name}…`;
   show("weddingsStatus");
   try {
-    const ref = (...path) => fb.doc(fb.db, "weddings", w.id, ...path);
-    // Photos and music are listed in the config, so they can be deleted without downloading them.
-    const refs = Object.keys(w.cfg.images || {}).map(id => ref("images", id));
-    const m = w.cfg.music;
-    if(m) for(let i = 0; i < m.chunks; i++) refs.push(ref("music", musicChunkId(m.v, i)));
-    const wishes = await fb.getDocs(fb.collection(ref(), "wishes"));
-    refs.push(...wishes.docs.map(d => d.ref));
+    const refs = await eventDataRefs(w);
     // Its extra links show its details, so they go too.
     refs.push(...(extraLinks.get(w.id) || []).map(l => fb.doc(fb.db, "weddings", l.id)));
     await inBatches(refs, (batch, r) => batch.delete(r));
     if(pinsReady) await revokePin(w.id);   // the editor's access goes with the event
-    await fb.deleteDoc(ref());   // last, so a failed delete can simply be retried
-    if(settings.defaultWedding === w.id) await fb.setDoc(settingsDoc(), { defaultWedding: "" }, { merge: true });
+    await fb.deleteDoc(fb.doc(fb.db, "weddings", w.id));   // last, so a failed delete can simply be retried
+    await markOrderDeleted(w.id, orders);   // the sale stays in the accounts
     toast(`Deleted ${name}.`);
   } catch(e){
     console.error(e);
@@ -343,8 +412,13 @@ $("newWeddingForm").addEventListener("submit", async e => {
     cfg.brideName = { en: bride, ta: "" };
     cfg.templateId = newTemplate;
     cfg.hashtag = category === "wedding" ? "#" + [groom, bride].map(n => n.replace(/[^\p{L}\p{N}]/gu, "")).join("Weds") : "";
-    await fb.setDoc(ref, { ...cfg, updatedAt: fb.serverTimestamp() });
-    if(!settings.defaultWedding) await fb.setDoc(settingsDoc(), { defaultWedding: id }, { merge: true });
+    // An unpaid invitation can be filled in and previewed by its customer, but guests can't open it yet.
+    cfg.paid = $("newPaid").checked;
+    const batch = fb.writeBatch(fb.db);
+    batch.set(ref, { ...cfg, updatedAt: fb.serverTimestamp() });
+    newOrder(batch, id, { customer: $("newCustomer").value.trim(), phone: $("newPhone").value.trim(), paid: cfg.paid,
+      price: salesSettings(settings).price });
+    await batch.commit();
     location.href = `?w=${id}&new=1`;
   } catch(e){
     error.textContent = e.message;
@@ -401,7 +475,7 @@ async function importLegacy(id, status){
   // The wedding doc goes last: until it exists, the link shows "not found" and a retry starts over.
   status("Saving details…");
   await fb.setDoc(target(), { ...cfg, images, updatedAt: fb.serverTimestamp() });
-  await fb.setDoc(settingsDoc(), { defaultWedding: id, legacyImported: true }, { merge: true });
+  await fb.setDoc(settingsDoc(), { legacyImported: true }, { merge: true });
 }
 
 $("importForm").addEventListener("submit", async e => {
@@ -415,7 +489,7 @@ $("importForm").addEventListener("submit", async e => {
   try {
     await importLegacy(id, text => { btn.textContent = text; });
     show("importForm", false);
-    toast(`Imported ✓ ${siteHost()}/${id} is ready, and the main link shows it too.`);
+    toast(`Imported ✓ ${siteHost()}/${id} is ready.`);
     loadWeddings();
   } catch(e){
     console.error(e);
@@ -473,14 +547,16 @@ async function enterApp(user){
     show("uidBanner");
   }
 
-  // admin?w=<event> edits an event, ?template=<id|new> edits a template,
-  // ?view=templates lists templates, and plain admin lists events.
+  // admin?w=<event> edits an event, ?template=<id|new> edits a template, ?view=templates lists
+  // templates, ?view=settings is what customers see about buying, and plain admin lists events.
   const templateParam = params.get("template");
   const onTemplates = !!templateParam || params.get("view") === "templates";
-  $(onTemplates ? "navTemplates" : "navEvents").classList.add("active");
+  const onSettings = params.get("view") === "settings";
+  $(onTemplates ? "navTemplates" : onSettings ? "navSettings" : "navEvents").classList.add("active");
   if(weddingId) enterEditor();
   else if(templateParam) enterTemplateEditor(templateParam, params.get("category"));
   else if(onTemplates) enterTemplates();
+  else if(onSettings) enterSettings();
   else enterList();
 }
 
@@ -506,6 +582,7 @@ if(!isFirebaseConfigured){
     fb = mod;
     useFirebase(mod);
     useAccessFirebase(mod);
+    useSalesFirebase(mod);
     fb.onAuthStateChanged(fb.auth, user => {
       if(user) enterApp(user);
       else { show("appView", false); show("loginView"); }

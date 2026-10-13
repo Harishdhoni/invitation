@@ -6,6 +6,10 @@ music, every event's time and directions, a countdown, a guest book and tap-to-c
 number of these invitations from a single admin page. They can give a family member a PIN so that person can edit
 one invitation and nothing else.
 
+It is sold to the public: **₹200 buys one invitation** (the price is set in the admin). A customer orders on
+WhatsApp, gets their editor PIN, fills in and previews the invitation, and pays by UPI. The admin marks it paid and
+its link opens to guests.
+
 This document describes what the product does and the rules it follows. The code itself is described in
 [CLAUDE.md](CLAUDE.md), setup in [SETUP.md](SETUP.md) and template authoring in [TEMPLATES.md](TEMPLATES.md).
 
@@ -19,7 +23,8 @@ This document describes what the product does and the rules it follows. The code
 | **Tamil-first, bilingual** | Every text field has an English and a Tamil version. Guests switch with one tap. The admin types English and the Tamil fills in automatically |
 | **Phone-first for guests** | Made for mobile browsers on slow data. Repeat visits load from the cache, music is fetched while the intro shows, and the iOS audio limits are handled |
 | **Easy for families to run** | The admin and editor pages assume no technical knowledge. Photos are compressed and songs are cut in the browser, with no other tools |
-| **Free at family scale** | Runs on the Firebase free (Spark) plan and Vercel hobby hosting. There is no server to maintain |
+| **Cheap to run** | Firebase (pay-as-you-go Blaze plan once selling: about ₹1–3 per invitation) and static hosting. There is no server to maintain |
+| **Simple to sell** | One price per invitation. Customers try before they pay; the admin tracks who paid and opens their link |
 | **One design per event** | Each event picks its template from its category, and a template change applies to every event that uses it |
 
 ## 2. Users
@@ -28,7 +33,8 @@ This document describes what the product does and the rules it follows. The code
 |---|---|---|---|
 | **Guest** | Relatives and friends, mostly on phones, opening a link from WhatsApp. May prefer Tamil | Opens an event by its link. No login | See when and where, get directions, call someone, leave a wish, feel the occasion |
 | **Admin** | The site owner. One person, who did the one-time Firebase setup | Email + password. Full control | Create and manage many events, choose designs, hand off editing, moderate wishes |
-| **Editor** | A family member or host trusted with one invitation. Not technical | Types an 8-character PIN on `/editor` | Fill in and update their own invitation's details, photos, music and wishes |
+| **Editor (customer)** | Whoever bought the invitation, or a family member they trust. Not technical | Taps the editor link (with the PIN in it) or types the 8-character PIN on `/editor` | Fill in and update their own invitation, preview it, pay, share it |
+| **Visitor** | Someone thinking of buying | The sales page at `/` | See the designs and the price, order on WhatsApp |
 
 ## 3. Surfaces and features
 
@@ -55,7 +61,8 @@ Every event's page has these parts. Each template decides which parts to show an
 - **Extra links**: an event can be shared at up to three links, each in its own design. Each link can leave parts
   out (cover photo, events, countdown, guest book, help message, contact numbers, music). Guests on every link
   see the same details and write in the same guest book.
-- **Main link**: the bare site address (`/`) shows whichever event the admin marked **Main link**.
+- **Signature**: once the admin sets a business name, every invitation ends with a small “Made with <name>” line
+  linking to the sales page.
 - **Link previews**: on Vercel, each event link previews with its own title, date line and cover photo. The main
   link always shows the generic card.
 - **Repeat visits**: details, photos and music are cached on the device. If Firebase can't be reached, the last
@@ -64,17 +71,26 @@ Every event's page has these parts. Each template decides which parts to show an
 ### 3.2 The admin page (`/admin`)
 
 **Events**
-- A list of every event: upcoming ones first (soonest at the top), then past ones. Once there is more than one
-  category, filter chips appear.
-- **＋ New event**: pick a category, type the name(s), pick a template, and confirm the link name (suggested from
-  the names, e.g. `arjun-meera`, `aarav-birthday`). The new event starts with that category's sample events and
-  contacts, ready to replace.
-- On each event card: whether guests can open it now (**Open**, **Off**, **Not open yet**, **Ended**) and until when,
-  its extra links with theirs, **Edit**, **Copy link**, **Switch off** / **Switch on**, **Show at main link**,
-  **Delete** (type the link name to confirm; this removes the details, photos, music, wishes, extra links and PIN)
-  and the **Editor PIN** panel.
+- A list of every event: upcoming ones first (soonest at the top), then past ones. Above it: this month's takings,
+  how many are waiting for payment, and all-time takings; status chips (**All / Unpaid / Open / Closed**); a search
+  box (names, link names, customer name or phone); and category chips once there is more than one category.
+- **＋ New event**: pick a category, type the name(s), pick a template, confirm the link name (suggested from
+  the names, e.g. `arjun-meera`, `aarav-birthday`), and optionally the customer's name and phone and **Already paid**.
+  The new event starts with that category's sample events and contacts, ready to replace. Unless **Already paid** is
+  ticked it starts **Unpaid**.
+- On each event card: whether guests can open it now (**Open**, **Unpaid**, **Off**, **Not open yet**, **Ended**) and
+  until when, its extra links with theirs, the customer (with a WhatsApp link) and payment (**Mark as paid** with
+  amount, method, reference and note; **Mark unpaid**), **Edit**, **Copy link**, **Switch off** / **Switch on**,
+  **Delete** (type the link name to confirm; this removes the details, photos, music, wishes, extra links and PIN,
+  and keeps the order for the accounts) and the **Editor PIN** panel. **Copy details** there is the message for the
+  customer: their one-tap editor link, the PIN, their invitation link, and how to pay while unpaid.
+- **Export CSV**: every invitation with its customer and payment, for the accounts.
+- **Clean up ended**: deletes the photos, music and wishes of invitations that closed more than 90 days ago.
+
+**Settings** (`?view=settings`): business name (also signs every invitation), price, UPI ID, WhatsApp number,
+support email and business address. Customers see them on the sales page, on the editor page and in the PIN message.
 - **Import your current invitation**: shown once, for sites that started before multi-event support. It copies
-  the old invitation into an event and makes it the main link, so links already sent keep working.
+  the old invitation into an event with its own link.
 
 **Event editor** (also used by editors, see 3.3)
 
@@ -110,7 +126,12 @@ Every event's page has these parts. Each template decides which parts to show an
 
 ### 3.3 The editor page (`/editor`)
 
-- One field: the PIN (e.g. `K7QM-X2PD`; case, spaces and dashes don't matter).
+- One field: the PIN (e.g. `K7QM-X2PD`; case, spaces and dashes don't matter). The link in the PIN message
+  (`/editor?pin=K7QM-X2PD`) fills it in and opens the editor straight away.
+- **While unpaid**: a banner says guests can open it once ₹200 is paid, with **Pay ₹200 by UPI** (opens GPay, PhonePe
+  or any UPI app with the amount filled in), the UPI ID to copy, and **Send the payment screenshot on WhatsApp**.
+- **View site** (and **Open ↗** in Links) shows the customer their own invitation even while guests can't open it,
+  with a note saying whether guests can see it yet.
 - A valid PIN opens the event editor for **that event only**. It has the same tabs as the admin's, except:
   no list of other events, no category change, no creating templates, and no switching links on or off or changing
   their dates. The Design tab offers only templates from the event's own category.
@@ -118,6 +139,14 @@ Every event's page has these parts. Each template decides which parts to show an
   link shows, and delete extra links. New links start open, until the event's own end.
 - The browser remembers the PIN until the admin changes or revokes it, or the editor clicks **Leave editor**.
 - When the admin changes or revokes the PIN, the editor's next save is refused and they are asked for the new PIN.
+
+### 3.4 The sales page and information pages
+
+- **`/`** (`home.html`): what you get, a gallery of every design (screenshots that open a live preview with sample
+  details), the price, how it works in three steps, questions and answers, and **Order on WhatsApp** buttons that open
+  a chat with a message ready.
+- **Help** (how to make your invitation, step by step), **Terms**, **Privacy**, **Refunds** and **Contact**. They show
+  the business name, price and contact details from Settings.
 
 ## 4. Key journeys
 
@@ -139,17 +168,23 @@ Every event's page has these parts. Each template decides which parts to show an
    *Modern Editorial* → untick **Contact numbers** and **Countdown** on its card → Save → **Copy link** on that card.
 8. **Close a link** (admin): **Switch off** on the event card, or set an **End date** in the Links tab. Without one,
    the event's links close 15 days after its main date.
+9. **Sell one** (visitor → admin → customer): the visitor taps **Order on WhatsApp** on the sales page → the admin
+   creates the event with the customer's name and phone (unpaid), creates a PIN and sends **Copy details** → the
+   customer taps the link, fills in the invitation and checks it with **View site** → pays with **Pay ₹200 by UPI** and
+   sends the screenshot → the admin clicks **Mark as paid** → the customer shares the link.
 
 ## 5. Business rules and limits
 
 | Rule | Value |
 |---|---|
-| Link name (slug) | 3–40 characters: lowercase letters, numbers, single dashes. **Can't be changed after creation.** Reserved: `admin`, `api`, `assets`, `css`, `editor`, `index`, `js`, `templates` |
+| Link name (slug) | 3–40 characters: lowercase letters, numbers, single dashes. **Can't be changed after creation.** Reserved: `admin`, `api`, `assets`, `css`, `editor`, `index`, `js`, `templates`, `home`, `help`, `terms`, `privacy`, `refund`, `contact` |
 | Category and template ids | 2–40 characters, same pattern. Reserved template ids: `classic`, `new`, `blank` |
 | Names per event | Two (groom and bride for weddings). Other categories use one name, or two shown as "Ravi & Priya" |
 | Main date and time | Entered and shown in India time (IST, UTC+05:30) |
 | Wish | Name 1–60 characters, message 1–500. New wishes are visible. Only the admin or that event's editor can hide or delete them |
-| When a link is open | While switched on, from its start date to its end date (both optional, India time, inclusive). With no end date: until 15 days after the event's main date. An extra link is also closed whenever its event link is. Only the admin sets these. Guests on a closed link can't read the details or write wishes |
+| Price | ₹200 per invitation by default (Settings). Payment by UPI, recorded by the admin with **Mark as paid** |
+| Unpaid invitations | Can be filled in and previewed by the customer; guests can't open their links or write wishes until marked paid. Events made before selling count as paid |
+| When a link is open | While paid and switched on, from its start date to its end date (both optional, India time, inclusive). With no end date: until 15 days after the event's main date. An extra link is also closed whenever its event link is. Only the admin sets these. Guests on a closed link can't read the details or write wishes |
 | Links per event | Up to 3 in all (the event link and 2 extra) when an editor adds them; the admin isn't limited. Each link uses a different design. Extra link names follow the slug rules and can't be changed |
 | Editor PIN | 8 characters from `A–Z` and `2–9` without look-alikes (32⁸ ≈ 10¹² combinations). One PIN per event at a time |
 | Photos | Compressed in the browser to fit one Firestore document (≈ 900 KB). Cover up to 1600 px, emblem 900 px, event icons 256 px. The link-preview copy is a JPEG of 1200 px or less, under 300 KB. HEIC isn't supported |
@@ -212,6 +247,10 @@ New templates start from `public/templates/blank.html`, which uses every hook wi
 - **Guest input** (wishes) is length-limited by the rules and always shown as plain text.
 - **Closed links** are refused by the rules, so the details can't be read while a link is off or outside its dates.
   Photos and music stay readable by their ids.
+- **Customer and payment details** (orders) can be read only by the admin, never through an invitation link.
+  The sales details in Settings are public by design.
+- **Retention**: photos, music and wishes are deleted with **Clean up ended** about 3 months after an invitation
+  closes, as the privacy page says. Order records are kept for the accounts.
 - **Hidden parts are not secret.** A link that hides the contacts doesn't show them, but the event's details are
   saved once and downloaded by every link's page.
 - **No tracking.** There are no analytics, ads or third-party trackers. Guests' devices keep only caches (details,
@@ -219,18 +258,22 @@ New templates start from `public/templates/blank.html`, which uses every hook wi
 
 ## 8. Running costs and limits
 
-- **Firebase Spark (free)**: 50,000 Firestore reads per day, shared by all events. A guest visit costs about 1 read
-  for the details, photos on the first visit only, and up to 30 for the wishes wall. That is enough for several
-  weddings at once. For very heavy traffic, the Blaze plan is pay-as-you-go and still about free at this scale.
+- **Firebase**: a guest visit costs about 2 reads for the details and the signature, photos on the first visit only,
+  and up to 30 for the wishes wall. The free Spark plan's 50,000 reads a day are shared by all events, so two big
+  weddings on one day can use them up. **Selling needs the pay-as-you-go Blaze plan** (with a budget alert): a
+  300-guest wedding costs about ₹1–3.
 - **Gemini through Firebase AI Logic**: the free tier. When the quota is hit, the admin sees "Translation limit
   reached for the moment".
-- **Vercel**: static hosting plus two small functions for link previews.
+- **Hosting**: static pages plus two small functions for link previews. Vercel's free Hobby plan is for
+  non-commercial use only; selling needs Vercel Pro (about $20 a month) or a host whose free plan allows commercial use.
 
 ## 9. Known limitations
 
 These are things the product doesn't do today.
 
 - **One admin account.** The admin UID is fixed in the rules. There are no roles and no second admin.
+- **Payments are confirmed by hand.** There is no online checkout yet: the admin checks the UPI payment and clicks
+  **Mark as paid**. (Planned: Razorpay checkout that marks it paid automatically.)
 - **One editor PIN per event.** There's no record of who changed what.
 - **No RSVP or headcount**, no guest list, no reminders or messages sent from the site.
 - **No analytics** on how many people opened an invitation.
@@ -248,9 +291,11 @@ These are things the product doesn't do today.
 |---|---|
 | Event | One invitation (a wedding, housewarming, birthday…). Stored as `weddings/<slug>` for historical reasons |
 | Link name / slug | The part after the site address that identifies an event, e.g. `arjun-meera` |
-| Main link | The bare site address `/`, which shows one chosen event |
 | Event link | An event's own link (`/arjun-meera`), as opposed to its extra links |
 | Extra link | Another link to the same event, in its own design and with its own hidden parts, on/off switch and dates |
+| Order | The record of who bought an invitation and how they paid (`orders/<slug>`, admin only) |
+| Unpaid | A sold invitation whose payment hasn't been recorded yet: its customer can edit and preview it, guests can't open it |
+| Sales page | The bare site address `/`: designs, price and **Order on WhatsApp** |
 | Category | A kind of event (Weddings, Housewarmings, Birthdays, Baby Showers, or one the admin adds). Each has its own templates and sample details |
 | Template | A whole HTML page design that any event in its category can use |
 | Classic | The built-in Maroon & Gold wedding design in `index.html` |

@@ -5,6 +5,7 @@
 // editors/<uid> = { pin, slug } is the record a signed-in editor leaves (see js/editor.js); it is
 // cleaned up here when the PIN goes away.
 import { SITE_URL } from "./firebase-config.js";
+import { salesSettings } from "./defaults.js";
 import { el, toast, actionBtn, copyText } from "./admin-ui.js";
 import { generatePin, formatPin } from "./pin.js";
 
@@ -50,15 +51,25 @@ export async function revokePin(slug){
   await batch.commit();
 }
 
-// What the admin sends to the editor.
-const shareText = (name, slug, pin) =>
-  `Edit the invitation for ${name}\n` +
-  `Invitation: ${SITE_URL}/${slug}\n` +
-  `Editor page: ${editorPageLink()}\n` +
-  `PIN: ${formatPin(pin)}`;
+// What the admin sends the customer: a link that opens their editor straight away (editor.js reads the
+// PIN from it), the PIN itself, and while the invitation is unpaid, how to pay. `sales` is site/settings.
+function shareText({ name, slug, pin, paid, sales }){
+  const lines = [
+    `Your invitation for ${name} is ready to fill in.`,
+    `Open the editor: ${editorPageLink()}?pin=${formatPin(pin)}`,
+    `(or open ${editorPageLink()} and type the PIN ${formatPin(pin)})`,
+    `Your invitation link: ${SITE_URL}/${slug}`
+  ];
+  if(!paid){
+    lines.push("", `Guests can open the link once ₹${sales.price} is paid.`);
+    if(sales.upiId) lines.push(`Pay by UPI to ${sales.upiId}` + (sales.whatsapp ? ` and send the screenshot to ${sales.whatsapp} on WhatsApp.` : "."));
+  }
+  lines.push("", `Help: ${SITE_URL}/help`);
+  return lines.join("\n");
+}
 
 // The "Editor access" block of an event card. `pins` is shared with the list and kept up to date here.
-export function accessPanel({ slug, name, pins }){
+export function accessPanel({ slug, name, pins, paid = true, sales = salesSettings() }){
   const box = el("div", "access");
 
   async function run(job, done){
@@ -96,7 +107,7 @@ export function accessPanel({ slug, name, pins }){
     code.title = "Editor PIN";
     const acts = el("div", "row");
     acts.append(
-      actionBtn("Copy details", "ghost", () => copyText(shareText(name, slug, rec.pin), "Copied — send the link and PIN to the editor.")),
+      actionBtn("Copy details", "ghost", () => copyText(shareText({ name, slug, pin: rec.pin, paid, sales }), "Copied — send it to the customer.")),
       actionBtn("Change", "ghost", change),
       actionBtn("Revoke", "danger", revoke)
     );

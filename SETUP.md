@@ -12,15 +12,15 @@ TEMPLATES.md            → how a template shows an event's details (for writing
 ```
 
 Each event has its own link name and its own link, e.g. `https://invitation-five-mu.vercel.app/arjun-meera`.
-The main link `/` shows whichever event is marked **Main link** in the admin.
+The bare address `/` is the sales page (`home.html`), with Help, Terms, Privacy, Refunds and Contact pages next to it.
 
 ## 1. Preview locally (works right away)
 
 Start **Apache** in the XAMPP Control Panel, then open:
 
 - Admin:  http://localhost/wedding-invite/public/admin.html
-- Invite: http://localhost/wedding-invite/public/?w=arjun-meera (the event's link name after `?w=`),
-  or http://localhost/wedding-invite/public/ for the main-link event
+- Invite: http://localhost/wedding-invite/public/?w=arjun-meera (the event's link name after `?w=`)
+- Sales page: http://localhost/wedding-invite/public/ (opens `home.html`)
 - A template with sample details: http://localhost/wedding-invite/public/?template=temple-gold
 
 Until Firebase is connected the invite shows sample data and the admin page shows "Connect Firebase first".
@@ -126,12 +126,11 @@ Weddings, Housewarmings, Birthdays and Baby Showers.
   you can change it. Lowercase letters, numbers and dashes only. It can't be changed later, because it's the link guests open.
   The new event starts with that category's sample events and contacts for you to replace.
 - **Import your current invitation** — shown once if you used this site before multi-wedding support. It copies the old
-  details, photos, music and wishes into a wedding with its own link name, and makes it the main link so links you already
-  sent keep working. The old data is left as it was (you can delete the `site/config`, `images`, `music` and `wishes`
+  details, photos, music and wishes into a wedding with its own link name. The old data is left as it was (you can delete the `site/config`, `images`, `music` and `wishes`
   collections in the Firebase console once you're happy).
 - Each event card shows whether guests can open its link now (**Open**, **Off**, **Not open yet** or **Ended**) and
   until when, and lists its extra links. It has **Edit**, **Copy link** (the link to send guests), **Switch off** /
-  **Switch on**, **Show at main link** (what `/` shows), and **Delete** (removes its details, photos, music, wishes and
+  **Switch on**, and **Delete** (removes its details, photos, music, wishes and
   extra links; you type the link name to confirm).
 
 ## 7. Fill in an event's details
@@ -171,7 +170,7 @@ a link, and the wishes, take effect at once.)
 Use **Copy link** in the admin (or the invite's own Copy Invite Link button). On Vercel, WhatsApp and Facebook show
 the invitation title (or "Groom weds Bride"), the date line, and the cover photo — filled in automatically from the admin.
 A preview can take up to ~5 minutes to reflect a change, and WhatsApp keeps showing the old preview in messages
-already sent. The main link `/` always shows the generic card in `public/assets/og-cover.jpg`.
+already sent. The sales page `/` shows the generic card in `public/assets/og-cover.jpg`.
 
 ## 9. Let someone else edit one invitation (PIN)
 
@@ -194,6 +193,38 @@ Until then the Editor PIN row doesn't appear, and the editor page can't verify P
 PINs are 8 characters (letters and numbers without look-alikes, so no 0/O or 1/I) rather than 4–6 digits: the page has no
 password, so the PIN is the only thing standing between the internet and the editor, and a short number could be guessed.
 An event has one PIN at a time. Deleting an event removes its PIN.
+
+## 10. Selling invitations
+
+**Before the first sale**
+
+1. **Firebase → Upgrade to Blaze** (pay as you go) and set a **budget alert** (e.g. ₹500/month) under
+   Billing → Budgets & alerts. On the free plan two busy weddings on the same day can use up the daily reads and stop
+   every invitation until midnight (Pacific time). On Blaze a 300-guest wedding costs about ₹1–3.
+2. **Hosting that allows selling**: Vercel's free Hobby plan is for non-commercial use. Upgrade the project to
+   **Vercel Pro**, or move to a host whose free plan allows commercial use.
+3. **Your own domain** (e.g. `yourbrand.in`): add it in the host's dashboard, then update `SITE_URL` in
+   `public/js/firebase-config.js` and the `og:image`/`og:url` tags in `public/index.html` and `public/home.html`.
+4. **Admin → Settings**: business name, price, UPI ID, WhatsApp number, support email and address. The sales page,
+   the customer's editor and the PIN message use them straight away. The business name also signs every invitation.
+5. **Read the legal pages** (`terms.html`, `privacy.html`, `refund.html`, `contact.html`) and have them checked by a
+   professional. They describe what this site really does with data, but only you can promise your refund terms.
+6. Deploy the rules (`firebase deploy --only firestore:rules`); they add the paid check and the private `orders`.
+
+**For each order**
+
+1. A customer messages you from the sales page (**Order on WhatsApp**).
+2. **＋ New event**: names, design, link name, the customer's name and phone. Leave **Already paid** unticked.
+3. On the card: **Create editor PIN** → **Copy details** → paste it into the WhatsApp chat. The message has a link
+   that opens their editor with the PIN filled in, and how to pay.
+4. The customer fills it in and checks it with **View site** (only they can see it). Guests who open the link see
+   "This invitation isn't open right now".
+5. They pay with **Pay ₹200 by UPI** in their editor and send you the screenshot. Check it reached your account, then
+   click **Mark as paid** on the card (amount, how they paid, the UPI reference). The link opens to guests.
+6. Use the chips at the top (**Unpaid**, **Open**, **Closed**) and the search box to find orders. **Export CSV** gives
+   you every invitation and payment for your accounts.
+7. Every month or so click **Clean up ended**: it deletes the photos, music and wishes of invitations that closed
+   more than 90 days ago, as the privacy page promises.
 
 ## Notes
 

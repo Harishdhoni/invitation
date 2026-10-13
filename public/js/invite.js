@@ -45,7 +45,10 @@ const draftCategory = meta("invite-preview");
 // ?template=<id> previews a saved template; ?template-file= a starter file in public/templates/.
 const previewTemplate = isValidId(params.get("template")) ? params.get("template") : "";
 const previewFile = /^templates\/[a-z0-9-]+\.html$/.test(params.get("template-file") || "") ? params.get("template-file") : "";
-const preview = draftCategory != null || !!previewTemplate || !!previewFile;
+// ?editor-preview=1: the customer's own view from the editor page. It reads with their editor session, so it
+// works before the invitation is paid or while it is closed; like the other previews it sends and caches nothing.
+const editorPreview = params.get("editor-preview") === "1";
+const preview = draftCategory != null || !!previewTemplate || !!previewFile || editorPreview;
 // The design already in this page: a template put here by api/invite.js, or "" for Classic.
 let pageTemplate = meta("template-id") || "";
 
@@ -64,7 +67,7 @@ const dataSlug = () => config.parent || slug;
 const CONFIG_CACHE = () => "wi:config:" + slug;
 const IMG_PREFIX = () => `wi:img:${dataSlug()}:`;
 const IMG_CACHE = id => IMG_PREFIX() + id;
-const DEFAULT_WEDDING = "wi:default";
+const BRAND_CACHE = "wi:brand";
 const LOCAL_WISHES = "wi:wishes";
 const WISH_PAGE = 30;
 
@@ -362,6 +365,8 @@ function renderAll(){
   renderCoordinators();
   renderWishes();
   updateCountdown();
+  renderPreviewBar();
+  if(brandName) renderCredit(brandName);
   document.dispatchEvent(new CustomEvent("invite:render", { detail: { config: clone(config), lang } }));
 }
 
@@ -505,18 +510,55 @@ async function refreshConfig(){
   }
 }
 
-// The main link "/" shows whichever event the admin marked as the main one.
-async function defaultWedding(){
+/* ----------------------------- signature + preview bar ----------------------------- */
+// "Made with <business name>" at the very end of the page, linking to the sales page. The name comes from
+// the admin's Settings (site/settings); there is no line until one is set. Not in admin thumbnails.
+let brandName = "";
+async function addCredit(){
+  if(window.self !== window.top || !fb) return;
+  renderCredit(store.get(BRAND_CACHE) || "");
   try {
     const snap = await fb.getDoc(fb.doc(fb.db, "site", "settings"));
-    const s = snap.exists() ? snap.data().defaultWedding : "";
-    if(!isValidSlug(s)) return "";
-    store.set(DEFAULT_WEDDING, s);
-    return s;
+    const name = String((snap.exists() && snap.data().businessName) || "").trim();
+    if(name) store.set(BRAND_CACHE, name); else store.del(BRAND_CACHE);
+    renderCredit(name);
   } catch(e){
-    console.warn("Could not load site settings; using the last known event.", e);
-    return store.get(DEFAULT_WEDDING) || "";
+    console.warn("Couldn't load the site settings for the signature.", e);
   }
+}
+function renderCredit(name){
+  brandName = name;
+  let box = $("madeWith");
+  if(!name) return box?.remove();
+  if(!box){
+    box = el("p");
+    box.id = "madeWith";
+    // Room underneath for the round music button, which sits at the bottom right.
+    Object.assign(box.style, { margin: "0", padding: "20px 16px 84px", textAlign: "center", fontSize: "12px", lineHeight: "1.5", opacity: ".7" });
+    document.body.append(box);
+  }
+  const a = el("a", "", name);
+  Object.assign(a, { href: SITE_URL + "/", target: "_blank", rel: "noopener" });
+  a.style.color = "inherit";
+  box.replaceChildren(T().madeWith + " ", a);
+}
+
+// A small note on the customer's preview (?editor-preview=1) saying whether guests can see it yet.
+// Bottom left, clear of the music button and of the template's own top bar.
+function renderPreviewBar(){
+  if(!editorPreview || closed) return $("editorPreviewBar")?.remove();
+  let bar = $("editorPreviewBar");
+  if(!bar){
+    bar = el("div");
+    bar.id = "editorPreviewBar";
+    bar.setAttribute("role", "status");
+    Object.assign(bar.style, {
+      position: "fixed", left: "12px", bottom: "12px", zIndex: 2500, maxWidth: "calc(100vw - 92px)", padding: "8px 14px",
+      borderRadius: "14px", background: "rgba(20,16,14,.88)", color: "#fff", font: "13px/1.4 system-ui,sans-serif", pointerEvents: "none"
+    });
+    document.body.append(bar);
+  }
+  bar.textContent = isOpen(config) ? T().editorPreview : T().editorPreviewClosed;
 }
 
 // The intro shows only a message: the link doesn't exist ("notFound") or isn't open now ("unavailable").
@@ -567,7 +609,8 @@ async function useTemplate(id){
       if(!t?.html) return console.warn(`Template "${id}" not found; showing the current design.`);
       html = t.html;
     } else {
-      html = await (await fetch("./", { cache: "no-cache" })).text();
+      // By name: on the live site "/" is the sales page.
+      html = await (await fetch("./index.html", { cache: "no-cache" })).text();
     }
     await swapDocument(html);
     pageTemplate = id;
@@ -924,7 +967,10 @@ async function boot(){
     return start();
   }
 
-  try { fb = await import("./firebase.js"); }
+  // The bare site address is the sales page. Vercel serves it straight away; this covers XAMPP and Firebase Hosting.
+  if(!slug && !previewTemplate) return location.replace("home.html");
+
+  try { fb = await import(editorPreview ? "./editor-firebase.js" : "./firebase.js"); }
   catch(e){
     console.warn("Firebase unavailable; using local data.", e);
     config = cachedConfig() || clone(BLANK);
@@ -942,18 +988,15 @@ async function boot(){
     if(t?.html) await swapDocument(t.html);
     start();
     if(cfg) applyConfig(cfg);
+    addCredit();
     return;
-  }
-
-  if(!slug){
-    slug = await defaultWedding();
-    if(!slug){ start(); return showClosed("notFound"); }
   }
 
   // Use the details saved on the last visit straight away; otherwise wait for them,
   // since they say which design this event uses. A copy whose dates say the link has
   // closed isn't shown; the details are asked for again (only the admin gets them).
-  let cached = cachedConfig();
+  // Previews always read fresh.
+  let cached = preview ? null : cachedConfig();
   const cacheClosed = !!cached && !isOpen(cached);
   if(cacheClosed) cached = null;
   let fresh = null;
@@ -973,6 +1016,7 @@ async function boot(){
   if(fresh) applyConfig(fresh);
   else if(cached){ syncWishes(); refreshConfig(); }
   else syncWishes();
+  addCredit();
 }
 
 boot().catch(e => {

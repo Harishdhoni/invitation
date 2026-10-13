@@ -47,6 +47,7 @@
     <nav class="mainnav" aria-label="Admin sections">
       <a href="?" id="navEvents">Events</a>
       <a href="?view=templates" id="navTemplates">Templates</a>
+      <a href="?view=settings" id="navSettings">Settings</a>
     </nav>
     <div class="top-actions">
       <span class="who" id="whoAmI"></span>
@@ -60,13 +61,18 @@
   <main id="weddingsView" class="list-main" hidden>
     <div class="list-head">
       <h1 class="page-title">Events</h1>
-      <button class="btn primary" id="newWeddingBtn">＋ New event</button>
+      <div class="row">
+        <button class="btn ghost" id="exportCsvBtn" title="Every invitation with its customer and payment, for your accounts">Export CSV</button>
+        <button class="btn ghost" id="cleanupBtn" title="Delete photos, music and wishes of invitations that closed more than 90 days ago">Clean up ended</button>
+        <button class="btn primary" id="newWeddingBtn">＋ New event</button>
+      </div>
     </div>
+    <div id="salesSummary"></div>
 
     <form class="card form-card" id="importForm" hidden>
       <h2>Import your current invitation</h2>
       <p class="muted">Copies the invitation you made before — details, photos, music and wishes — into a wedding with its own link.
-        The main link (<span id="importMainLink"></span>) keeps showing it, so links you already sent still work. Nothing is deleted.</p>
+        Nothing is deleted.</p>
       <label class="field"><span>Link name</span>
         <span class="slug-input"><span class="slug-prefix"></span><input type="text" id="importSlug" required></span>
       </label>
@@ -90,6 +96,12 @@
         <span class="slug-input"><span class="slug-prefix"></span><input type="text" id="newSlug" required></span>
         <small class="hint">Lowercase letters, numbers and dashes. This is the link guests open, so it can't be changed later.</small>
       </label>
+      <div class="two-col">
+        <label class="field"><span>Customer name (optional)</span><input type="text" id="newCustomer"></label>
+        <label class="field"><span>Customer phone (optional)</span><input type="tel" id="newPhone" placeholder="+91 90000 00000"></label>
+      </div>
+      <label class="check new-paid"><input type="checkbox" id="newPaid"> Already paid</label>
+      <small class="hint new-paid-hint">Unpaid invitations can be filled in and previewed by the customer, but guests can't open them until you click <b>Mark as paid</b>.</small>
       <p class="error" id="newWeddingError" role="alert"></p>
       <div class="row">
         <button type="submit" class="btn primary" id="createWeddingBtn">Create event</button>
@@ -97,9 +109,35 @@
       </div>
     </form>
 
+    <div class="list-tools">
+      <input type="search" id="eventSearch" placeholder="Search names, link name or customer" aria-label="Search events">
+      <div class="chips" id="statusFilter" role="group" aria-label="Filter by status"></div>
+    </div>
     <div class="chips" id="categoryFilter" role="group" aria-label="Filter by category"></div>
     <p class="muted" id="weddingsStatus">Loading events…</p>
     <div class="wedding-list" id="weddingsList"></div>
+  </main>
+
+  <!-- SETTINGS (admin page with ?view=settings) -->
+  <main id="settingsView" class="list-main" hidden>
+    <div class="list-head"><h1 class="page-title">Settings</h1></div>
+    <form class="card form-card settings-form" id="settingsForm">
+      <p class="muted">Customers see these on the sales page, on the editor page while their invitation is unpaid, and in the
+        message you copy for them. Anyone can read them, so don't put anything private here.</p>
+      <div class="two-col">
+        <label class="field"><span>Business name</span><input type="text" id="setBusinessName" placeholder="Your business name">
+          <small class="hint">Also signs every invitation (“Made with …”). Leave it empty for no signature.</small></label>
+        <label class="field"><span>Price per invitation (₹)</span><input type="number" id="setPrice" min="1" step="1"></label>
+        <label class="field"><span>UPI ID</span><input type="text" id="setUpiId" placeholder="yourname@okaxis"></label>
+        <label class="field"><span>WhatsApp number</span><input type="tel" id="setWhatsapp" placeholder="+91 90000 00000">
+          <small class="hint">Customers order and send payment screenshots here.</small></label>
+        <label class="field"><span>Support email</span><input type="email" id="setEmail"></label>
+      </div>
+      <label class="field"><span>Business address</span><textarea id="setAddress"></textarea>
+        <small class="hint">Shown on the Contact page (payment gateways ask for one).</small></label>
+      <p class="error" id="settingsError" role="alert"></p>
+      <button type="submit" class="btn primary" id="settingsSaveBtn">Save settings</button>
+    </form>
   </main>
 
   <!-- TEMPLATES (admin page with ?view=templates) -->

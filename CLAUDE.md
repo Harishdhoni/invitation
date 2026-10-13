@@ -9,7 +9,8 @@ Tamil / English invitation websites for weddings, housewarmings, birthdays, baby
 Many events run at once. Each one lives at `/<slug>` (e.g. `/arjun-meera`) with its own details, photos, music,
 guest book and template. One admin (email + password) manages everything. An event's editor gets in with a PIN.
 An event can have extra links that show the same details in other designs, each with its own hidden parts and its own
-on/off switch and dates.
+on/off switch and dates. Invitations are sold to the public (₹200 each by default): the admin records the customer
+and payment, and an invitation stays closed to guests until it is marked **paid**. The bare address `/` is the sales page.
 
 - **No build step.** No `package.json`, no npm dependencies, no bundler, no framework, no TypeScript.
   Plain HTML, CSS and ES-module JavaScript, served as-is from `public/`.
@@ -40,7 +41,9 @@ Local URLs (all under `http://localhost/wedding-invite/public/`):
 | `admin.html` | Admin: events list. `?w=<slug>` edits an event, `?view=templates` lists templates, `?template=<id>` / `?template=new&category=<id>` edits one |
 | `editor.html` | PIN editor |
 | `?w=<slug>` | An event (locally, `/<slug>` paths don't work; use `?w=`) |
-| `/` (no params) | The event marked **Main link** (`site/settings.defaultWedding`) |
+| `/` (no params) | Redirects to `home.html`, the sales page (on Vercel `/` serves it directly) |
+| `home.html`, `help.html`, `terms.html`, `privacy.html`, `refund.html`, `contact.html` | The sales page and the information pages |
+| `?w=<slug>&editor-preview=1` | The customer's own preview of their invitation, read with their editor session (works while it is unpaid or closed) |
 | `?template=<id>` | A saved template with sample details. Use `classic` for the built-in design |
 | `?template=<id>&w=<slug>` | An event in another template. Nothing is saved |
 | `?template-file=templates/<file>.html&category=<id>` | A starter file from `public/templates/` before it is added to Firestore |
@@ -73,15 +76,20 @@ Important:
 | `public/admin.html` (`/admin`) | `js/admin.js` | The one admin |
 | `public/editor.html` (`/editor`) | `js/editor.js` | Someone holding an event's PIN |
 | `public/templates/*.html`: 27 starter designs (10 wedding, 1 housewarming, 11 birthday, 5 baby shower) listed in `starters.json`, copied into Firestore on request | none (the runtime is injected) | n/a |
+| `public/home.html` (the sales page, served at `/`) and `help`, `terms`, `privacy`, `refund`, `contact` `.html` | `js/site.js` | Customers |
 
 `admin.html` and `editor.html` share `css/admin.css` and end with the same `.site-credit` footer
-("© 2026 · Powered by Harish S").
+("© 2026 · Powered by Harish S"). On the editor page `event-editor.js` swaps in the business name from Settings.
+The sales and information pages share `css/home.css`. `public/assets/templates/<id>.webp` are phone screenshots of
+the starter designs for the sales page's gallery.
 
 ### Modules in `public/js/`
 
 - `invite.js`: the **guest runtime**. Works out which event the page is for, loads its config (from localStorage
   first, then Firestore), switches to the event's template if needed, fills in the hooks, and runs the intro,
   countdown, music, language switch, reveal-on-scroll and guest book. Fires `invite:render` after every render.
+  With no event to show it sends the visitor to `home.html`. `?editor-preview=1` reads with `editor-firebase.js` (the
+  customer's session) and shows a preview note. `addCredit()` appends "Made with <businessName>" once Settings has one.
 - `defaults.js`: `DEFAULT_CONFIG` (sample wedding), per-category `SAMPLES` / `sampleFor()`, `DEFAULT_CATEGORIES`,
   `TRANSLATIONS` (guest UI strings in EN + TA), `SAMPLE_WISHES`. Also the helpers `tr`, `withDefaults`, `clone`,
   `newId`, `slugify`, `isValidSlug`, `isValidId` and `RESERVED_SLUGS`.
@@ -91,12 +99,19 @@ Important:
   admin session in the same browser from replacing each other. Keep the two apps separate.
 - `admin.js`: admin boot, login and routing by URL params, the events list (category filter chips, upcoming before
   past, each event's open/closed status and its extra links, **Switch off / on**), new event, delete (with its extra
-  links), the Main link setting and the one-time legacy import.
+  links) and the one-time legacy import. Above the list: a takings summary, status chips, search, **Export CSV**
+  and **Clean up ended**.
 - `admin-templates.js`: categories, the Templates page (grouped by category, with a category dropdown that is
   remembered for the tab in `sessionStorage` `wi:templatesCategory`), the template editor (HTML textarea,
   upload/download, live iframe preview), `templatePicker`, lazy iframe `thumbnail`s and the starter import. Exports
   `CLASSIC` (id `""`).
-- `admin-access.js`: the editor PIN panel on each event card (create, change, revoke, copy details).
+- `admin-access.js`: the editor PIN panel on each event card (create, change, revoke, copy details). **Copy details**
+  is the customer message: a one-tap `editor?pin=` link, the PIN, and how to pay while unpaid.
+- `admin-sales.js`: selling. Orders (`loadOrders`, `newOrder`, `markOrderDeleted`), the order panel with **Mark as
+  paid** / **Mark unpaid** (one batch: `weddings/<slug>.paid` + `orders/<slug>`), `salesSummary`, `downloadCsv`, and
+  the Settings view (`?view=settings`, `site/settings`).
+- `site.js`: the sales and information pages. Reads `site/settings` through the Firestore REST API (no SDK) and fills
+  `data-site`, `data-site-if`, `a[data-whatsapp]`, `a[data-mailto]` and the `#gallery` (from `starters.json`).
 - `event-editor.js`: the **event editor**, shared by the admin and editor pages. Tabs: details, photos & music,
   events, contacts, design, links, wishes. Builds its markup into `#editorView` **when the module is imported**, so the
   host page must already contain `#editorView`. `#editorView[data-admin]` turns on the admin-only parts (back link,
@@ -150,7 +165,9 @@ link previews are always the generic card.
 ### Firestore data model
 
 ```
-site/settings              { defaultWedding, legacyImported }        read: anyone · write: admin
+site/settings              { legacyImported, businessName, price, upiId, whatsapp, email, address }
+                           read: anyone (the sales details are public by design) · write: admin
+orders/<slug>              { customer, phone, amount, method, ref, note, status, createdAt, paidAt, deleted }  admin only
 site/config                the pre-multi-event invitation (only used by the import)
 categories/<id>            { name, order }                           admin only
 templates/<id>             { name, categoryId, description, html, v, createdAt, updatedAt }
@@ -174,6 +191,8 @@ Event fields (`weddings/<slug>`):
 - `events[]`: `{ id, icon: { type: "emoji"|"image", emoji, imageId }, …bilingual fields, mapQuery, mapUrl }`.
 - `coordinators[]`: `{ name: { en, ta }, phones: [] }`.
 - `images`: `{ <imageId>: <version timestamp> }`. `music`: `{ v, chunks, size, type, name }` or `null`. `updatedAt`.
+- `paid` (admin only): `false` for a sold invitation until its payment is recorded; missing means paid (events made
+  before selling). The customer's details live in `orders/<slug>`, never here: anyone with the link can read this doc.
 - When guests can open it (admin only): `active` (missing = `true`), `startDate` / `endDate` (`"YYYY-MM-DD"`, India
   time, both inclusive, `""` = none). With no `endDate` the link closes 15 days after the date in `weddingDateTimeISO`.
 - `hiddenSections`: part ids from `SECTIONS` in `defaults.js` that this link doesn't show (admin and editor).
@@ -193,17 +212,18 @@ Event fields (`weddings/<slug>`):
 - **Editor**: signs in anonymously, then writes `editors/<uid> = { pin, slug }`. The rules accept that only if
   `pins/<pin>.slug == slug`. `isEditorOf(slug)` checks again on every write that the pin doc still exists, so deleting
   the pin doc (Change or Revoke) cuts access immediately. An editor may update their event but not its `category`,
-  `active`, `startDate` or `endDate`, and may change `templateId` only to a template in the same category (or `""` for
+  `paid`, `active`, `startDate` or `endDate`, and may change `templateId` only to a template in the same category (or `""` for
   weddings). They may write its images and music, and hide, unhide or delete its wishes, but not rewrite them.
   They may create extra links (switched on, no dates, the event's category, recorded in `links` in the same batch,
   at most 2: `linksChangeOk`), change an extra link's `templateId` and `hiddenSections`, and delete one.
-- **Guest**: may `get` an event or link by slug (not list them) while it is open (`isLive`: switched on, between its
-  dates, and before the 15-day auto end, all in India time), read visible wishes of an open event, and create a wish
+- **Guest**: may `get` an event or link by slug (not list them) while it is open (`isLive`: paid, switched on, between
+  its dates, and before the 15-day auto end, all in India time), read visible wishes of an open event, and create a wish
   of exactly `{ name (1–60), message (1–500), hidden: false, createdAt: request.time }` on an open event (not on an
   extra link's path). An extra link needs its parent to be open too, since that is where its details are read.
   Images and music stay readable by id, as before.
 - `isLive` compares dates as numbers (`"2027-02-12"` → `20270212`) against `request.time` shifted to India time, so
   the rules never parse dates. `get` allows `resource == null`, so looking up a free slug isn't refused.
+- `orders/*` is admin only. `site/settings` is readable by anyone, so it holds only public sales details.
 - To change who can do what, change the rules first, then the UI, then deploy the rules.
 
 ## Conventions
@@ -271,6 +291,9 @@ Without a build step there is no shared config, so these are duplicated on purpo
 | No-cache headers for html/js/css | `vercel.json` `headers` (Vercel) · `public/.htaccess` (local Apache, so edits show on a normal reload) |
 | Starter templates | `public/templates/starters.json` · the starter count in `README.md` and `SETUP.md` ("Add 27 starter templates") · the catalog in `PRODUCT.md` §6 |
 | Site credit | the `.site-credit` footer in `admin.html` and `editor.html` |
+| Sales settings (businessName, price, upiId, whatsapp, email, address) | `SALES_DEFAULTS` in `defaults.js` · `FIELDS` in `admin-sales.js` and the Settings form in `admin.html` · `data-site` hooks in `site.js` and the sales/info pages |
+| Bare address → sales page | `vercel.json` rewrite of `/` (its `missing` list must name every query the invite page takes: `w`, `template`, `template-file`, `editor-preview`) · the `home.html` redirect in `invite.js` `boot()` |
+| Design screenshots | `public/assets/templates/<id>.webp`, one per entry in `starters.json` plus `classic` |
 | Wish limits (60 / 500) | `firestore.rules` (both wish blocks) · `maxlength` in templates and `index.html` · `sendWish()` in `invite.js` |
 | Size limits | Images: `image-utils.js` (900K-char data URL). Music: `MUSIC_*` in `event-editor.js` (900 KB chunks, 10 MB saved, 60 MB source). Template: `MAX_HTML` in `admin-templates.js` (900 KB) |
 | Setup steps | `SETUP.md`, whenever rules, Firebase console steps or admin buttons change |
@@ -320,6 +343,11 @@ Without a build step there is no shared config, so these are duplicated on purpo
   then can't read the details, so guests see the "not open" message.
 - **The 15-day rule applies to old events too.** An event without an `endDate` closes 15 days after its main date
   as soon as the rules are deployed. To keep one open, set an end date in its Links tab.
+- **`/` is the sales page.** `useTemplate("")` fetches Classic as `./index.html`, never `./`. A new query parameter for
+  the invite page must also go in the `missing` list of the `/` rewrite in `vercel.json`, or `/?that=…` shows the sales page.
+- **Selling data**: customer names, phones and payment references go in `orders/<slug>` only. `weddings/<slug>` and
+  `site/settings` are readable by anyone. A new starter design needs a screenshot in `public/assets/templates/`
+  (390×780 WebP of the opened intro with sample details, as in the existing ones) for the sales page.
 - **Secrets**: `.env.local` and `.vercel/` hold the Vercel CLI link and token. They are gitignored. Never commit or
   print them. The Firebase web `apiKey` in `firebase-config.js` is public by design; the rules protect the data.
 - **HEIC photos** can't be decoded by browsers. The upload shows an error asking for JPG, PNG or WebP.

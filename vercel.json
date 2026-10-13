@@ -7,6 +7,16 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
+    {
+      "source": "/",
+      "missing": [
+        { "type": "query", "key": "w" },
+        { "type": "query", "key": "template" },
+        { "type": "query", "key": "template-file" },
+        { "type": "query", "key": "editor-preview" }
+      ],
+      "destination": "/home.html"
+    },
     { "source": "/:slug([a-z0-9-]+)", "destination": "/api/invite?slug=:slug" }
   ],
   "functions": {

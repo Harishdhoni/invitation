@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#4a0f1c">
+<title>Invitations · Contact</title>
+<link rel="icon" href="assets/emblem.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Noto+Sans+Tamil:wght@400;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/home.css">
+</head>
+<body>
+<header class="site-head"><div class="wrap">
+  <a class="brand" href="home.html"><img src="assets/emblem.svg" alt=""><span data-site="businessName" data-fallback="Invitations">Invitations</span></a>
+</div></header>
+
+<main class="page">
+  <h1>Contact us</h1>
+  <p class="updated">We reply on WhatsApp, usually within a few hours, 9 am – 9 pm.</p>
+
+  <div class="box">
+    <p><b data-site="businessName" data-fallback="Invitations">Invitations</b></p>
+    <p data-site-if="whatsapp">WhatsApp: <a data-whatsapp="Hi! I'd like an invitation website."><span data-site="whatsapp"></span></a></p>
+    <p data-site-if="email">Email: <a data-mailto><span data-site="email"></span></a></p>
+    <p data-site-if="address" data-site="address" style="white-space:pre-line"></p>
+  </div>
+  <p data-site-if="whatsapp" style="margin-top:20px"><a class="btn primary" data-whatsapp="Hi! I'd like an invitation website (₹{price}).">Order on WhatsApp</a></p>
+
+  <h2>Already have an invitation?</h2>
+  <p>Open your editor link, or go to <a href="editor.html">the editor</a> and type your PIN. The <a href="help.html">help page</a>
+    walks you through every step.</p>
+
+  <h2>Questions about your data</h2>
+  <p>To correct or delete your details, or to raise a concern about how we handle them, contact us using the details
+    above. See our <a href="privacy.html">privacy policy</a>.</p>
+</main>
+
+<footer class="site-foot"><div class="wrap">
+  <span>© <span data-year>2026</span> <span data-site="businessName" data-fallback="Invitations">Invitations</span></span>
+  <nav aria-label="Information"><a href="home.html">Home</a><a href="help.html">Help</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refund.html">Refunds</a><a href="contact.html">Contact</a></nav>
+</div></footer>
+<script type="module" src="js/site.js"></script>
+</body>
+</html>

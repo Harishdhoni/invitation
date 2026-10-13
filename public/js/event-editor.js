@@ -3,7 +3,7 @@
 // Which pages may write what is decided by firestore.rules, not by this file.
 import {
   clone, withDefaults, newId, tr, isWedding, isValidSlug, SECTIONS, MAX_LINKS, AUTO_END_DAYS,
-  linkState, openState, lastDay, mainDay, addDays
+  linkState, openState, lastDay, mainDay, addDays, salesSettings, upiLink, whatsappLink
 } from "./defaults.js";
 import { SITE_URL } from "./firebase-config.js";
 import { compressImage, compressPreviewImage, kb } from "./image-utils.js";
@@ -22,6 +22,7 @@ const editorMarkup = admin => `
     </div>
   </div>
 
+  <div class="banner pay" id="payBanner" hidden></div>
   <div class="banner info" id="firstRunBanner" hidden>Sample events and contacts are filled in to start from. Replace them with your own details, use <b>அ Fill missing Tamil</b> for the names, and click <b>Save changes</b>.</div>
 
   <nav class="tabs" role="tablist">
@@ -588,7 +589,12 @@ let savedCategory = "";      // the category as saved, so a change can be copied
 let newLinkTemplate = "";
 const siteHost = () => SITE_URL.replace(/^https?:\/\//, "");
 const linkRef = id => fb.doc(fb.db, "weddings", id);
-const ADMIN_ONLY = ["active", "startDate", "endDate"];
+// Fields only the admin may change (the rules refuse them from an editor): on the event, and on an extra link.
+const ADMIN_ONLY = ["paid", "active", "startDate", "endDate"];
+const LINK_ADMIN_ONLY = ["active", "startDate", "endDate"];
+// The editor page's View site and Open links show the customer's own preview, which works while the link
+// is closed to guests (unpaid, switched off or outside its dates). The admin reads closed links anyway.
+const viewLink = id => isAdminPage ? previewLink(id) : `./?w=${id}&editor-preview=1`;
 
 const linkData = d => ({
   parent: d.parent, category: d.category || "wedding", templateId: d.templateId || "",
@@ -597,8 +603,8 @@ const linkData = d => ({
 // The designs other links of this event use; each link needs its own.
 const usedTemplates = except => [state.templateId, ...links.map(l => l.data.templateId)].filter((id, i) => i !== except);
 
-export const STATE_LABELS = { live: "Open", off: "Off", scheduled: "Not open yet", ended: "Ended" };
-const STATE_BADGE = { live: "ok", off: "off", scheduled: "wait", ended: "off" };
+export const STATE_LABELS = { live: "Open", unpaid: "Unpaid", off: "Off", scheduled: "Not open yet", ended: "Ended" };
+const STATE_BADGE = { live: "ok", unpaid: "wait", off: "off", scheduled: "wait", ended: "off" };
 export const stateBadge = state => el("span", "badge " + STATE_BADGE[state], STATE_LABELS[state]);
 const fmtDay = d => new Date(d + "T12:00:00Z").toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 
@@ -616,6 +622,7 @@ function closing(cfg, main){
 export function linkStatus(cfg, main = null){
   const state = openState(cfg, main);
   const viaMain = !!main && linkState(cfg) === "live" && state !== "live";
+  if(state === "unpaid") return { state, text: viaMain ? "Closed until the invitation is paid." : "Waiting for payment. Guests can open it once it's paid." };
   if(state === "off") return { state, text: viaMain ? "Closed, because the event link is switched off." : "Switched off. Guests see “This invitation isn't open right now”." };
   if(state === "scheduled") return { state, text: `Opens to guests on ${fmtDay((viaMain ? main : cfg).startDate)}.` };
   const end = closing(cfg, main);
@@ -643,7 +650,7 @@ function linkCard(link){
   const title = el("h3", "", `${siteHost()}/${id}`);
   const tools = el("div", "item-tools");
   const open = el("a", "btn ghost small", "Open ↗");
-  Object.assign(open, { href: previewLink(id), target: "_blank", rel: "noopener" });
+  Object.assign(open, { href: viewLink(id), target: "_blank", rel: "noopener" });
   const copy = el("button", "btn ghost small", "Copy link");
   copy.type = "button";
   copy.addEventListener("click", () => copyText(shareLink(id)));
@@ -772,7 +779,7 @@ $("createLinkBtn").addEventListener("click", async () => {
   const error = $("newLinkError");
   error.textContent = "";
   if(!isValidSlug(id)) return void (error.textContent = "Use 3–40 lowercase letters, numbers and dashes, like " +
-    `${weddingId}-friends`.slice(0, 40) + ". admin, api, assets, css, editor, js, index and templates are used by the site itself.");
+    `${weddingId}-friends`.slice(0, 40) + ". Some names (admin, editor, help, terms, …) are used by the site itself.");
   if(usedTemplates().includes(newLinkTemplate)) return void (error.textContent = "Pick a design that no other link of this event uses.");
 
   const btn = $("createLinkBtn");
@@ -1073,7 +1080,7 @@ async function save(){
       const fields = { templateId: l.data.templateId, hiddenSections: l.data.hiddenSections, updatedAt: fb.serverTimestamp() };
       if(isAdminPage){
         fields.category = state.category;
-        ADMIN_ONLY.forEach(k => { fields[k] = l.data[k]; });
+        LINK_ADMIN_ONLY.forEach(k => { fields[k] = l.data[k]; });
       }
       batch.update(linkRef(l.id), fields);
     }
@@ -1181,6 +1188,52 @@ $("copyLinkBtn").addEventListener("click", () => copyText(shareLink(weddingId)))
 // Loads the event into the editor and shows it. `mod` is the Firebase module (firebase.js or
 // editor-firebase.js); the page must have signed in already. Rejects with a readable message.
 // `backHref` (admin only) is the link back to the events list. `onAccessDenied` is called when a save is refused.
+
+// Editor page: how to pay while the invitation is unpaid, and the business name in the footer. Both come
+// from the admin's Settings (site/settings); the page works without them.
+async function loadSales(){
+  let s;
+  try {
+    const snap = await fb.getDoc(fb.doc(fb.db, "site", "settings"));
+    s = salesSettings(snap.exists() ? snap.data() : {});
+  } catch(e){
+    console.warn("Couldn't load the site settings.", e);
+    s = salesSettings();
+  }
+  if(s.businessName) document.querySelectorAll(".site-credit").forEach(f => f.replaceChildren(
+    el("span", "", "© " + new Date().getFullYear()), el("span", "sep", "✦"), el("b", "", s.businessName)));
+  if(state.paid !== false) return show("payBanner", false);
+
+  const box = $("payBanner");
+  const acts = el("div", "row");
+  const pay = upiLink(s.upiId, s.businessName, s.price, `Invitation ${weddingId}`);
+  if(pay){
+    const a = el("a", "btn primary small", `Pay ₹${s.price} by UPI`);
+    a.href = pay;
+    acts.append(a);
+  }
+  const chat = whatsappLink(s.whatsapp, `I have paid ₹${s.price} for the invitation ${siteHost()}/${weddingId}. Here is the screenshot.`);
+  if(chat){
+    const a = el("a", "btn ghost small", "Send the payment screenshot on WhatsApp");
+    Object.assign(a, { href: chat, target: "_blank", rel: "noopener" });
+    acts.append(a);
+  }
+  box.replaceChildren(
+    el("b", "", "Your invitation is ready to fill in. "),
+    `Guests can open it once ₹${s.price} is paid. Until then, View site shows it only to you.`
+  );
+  if(s.upiId){
+    const upi = el("p", "muted", "UPI ID: ");
+    const id = el("code", "", s.upiId);
+    const copy = el("button", "linkish", "copy");
+    copy.type = "button";
+    copy.addEventListener("click", () => copyText(s.upiId, "UPI ID copied."));
+    upi.append(id, " ", copy);
+    box.append(upi);
+  }
+  if(acts.children.length) box.append(acts);
+  show("payBanner");
+}
 export async function openEditor({ mod, id, backHref = "", firstRun = false, onAccessDenied = null }){
   fb = mod;
   weddingId = id;
@@ -1219,8 +1272,9 @@ export async function openEditor({ mod, id, backHref = "", firstRun = false, onA
   $("editorTitle").textContent = coupleNames(state, weddingId);
   document.title = coupleNames(state, weddingId) + (isAdminPage ? " · Invitation Admin" : " · Invitation Editor");
   if(isAdminPage) $("backLink").href = backHref;
-  $("viewSiteLink").href = previewLink(weddingId);
+  $("viewSiteLink").href = viewLink(weddingId);
   show("firstRunBanner", firstRun);
+  if(!isAdminPage) loadSales();
 
   renderDetails();
   renderHelp();

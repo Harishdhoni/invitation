@@ -42,9 +42,9 @@ service cloud.firestore {
       return s is string && s.size() >= 3 && s.size() <= 40 && s.matches('[a-z0-9]+(-[a-z0-9]+)*');
     }
 
-    // Whether guests may open an event or extra link now: it is switched on, and today in India is on or after
-    // its start date and on or before its end date. With no end date it stays open until 15 days after the
-    // event's main date. Dates are "YYYY-MM-DD" strings, compared as numbers like 20270212 so no date parsing
+    // Whether guests may open an event or extra link now: it is paid for (a missing `paid` counts as paid),
+    // switched on, and today in India is on or after its start date and on or before its end date. With no
+    // end date it stays open until 15 days after the event's main date. Dates are "YYYY-MM-DD" strings, compared as numbers like 20270212 so no date parsing
     // is needed. Same check as linkState() in js/defaults.js. An extra link has no main date; its details
     // come from its event, which guests can read only while that event is open.
     function isDay(s) {
@@ -62,7 +62,8 @@ service cloud.firestore {
       let main = (iso is string && iso.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}T.*')) ? iso.split('T')[0] : '';
       let start = d.get('startDate', '');
       let end = d.get('endDate', '');
-      return d.get('active', true) != false
+      return d.get('paid', true) != false
+        && d.get('active', true) != false
         && (!isDay(start) || indiaDayNumber(request.time) >= dayNumber(start))
         && (isDay(end)
           ? indiaDayNumber(request.time) <= dayNumber(end)
@@ -117,6 +118,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Who bought each invitation and how they paid ({ customer, phone, amount, method, ref, ... }).
+    // Kept apart from weddings/<slug>, which anyone with the link can read. Admin only.
+    match /orders/{slug} {
+      allow read, write: if isAdmin();
+    }
+
     // Event categories (weddings, housewarmings, birthdays…), managed on the admin page.
     match /categories/{categoryId} {
       allow read, write: if isAdmin();
@@ -143,9 +150,11 @@ service cloud.firestore {
       allow list, write: if isAdmin();
 
       // An editor can change the details of their event, which parts it shows, and pick another design
-      // from the event's own category. They cannot change its category, switch it on or off, or set its dates.
+      // from the event's own category. They cannot change its category, mark it paid, switch it on or off,
+      // or set its dates.
       allow update: if isEditorOf(weddingId)
         && request.resource.data.get('category', 'wedding') == resource.data.get('category', 'wedding')
+        && request.resource.data.get('paid', true) == resource.data.get('paid', true)
         && request.resource.data.get('active', true) == resource.data.get('active', true)
         && request.resource.data.get('startDate', '') == resource.data.get('startDate', '')
         && request.resource.data.get('endDate', '') == resource.data.get('endDate', '')

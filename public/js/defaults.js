@@ -61,6 +61,9 @@ export const DEFAULT_CONFIG = {
   // Optional heading for the invitation and its link preview, e.g. "Aarav turns 1!".
   title: { en: "", ta: "" },
   // When guests can open the link (see linkState below). Only the admin changes these.
+  // `paid` is false for a sold invitation until its payment is received; missing means paid
+  // (events made before selling). The customer's details are in orders/<slug>, which only the admin can read.
+  paid: true,
   active: true,
   startDate: "",   // "YYYY-MM-DD", the first day guests can open it; "" = straight away
   endDate: "",     // "YYYY-MM-DD", the last day; "" = 15 days after the main date
@@ -100,8 +103,9 @@ export const mainDay = cfg => /^\d{4}-\d{2}-\d{2}T/.test(cfg?.weddingDateTimeISO
 // The last day guests can open the link, or "" when it has no end.
 export const lastDay = cfg => isDay(cfg?.endDate) ? cfg.endDate : mainDay(cfg) ? addDays(mainDay(cfg), AUTO_END_DAYS) : "";
 
-// "live", "off" (switched off), "scheduled" (before its start date) or "ended".
+// "live", "unpaid" (waiting for payment), "off" (switched off), "scheduled" (before its start date) or "ended".
 export function linkState(cfg, today = indiaToday()){
+  if(cfg?.paid === false) return "unpaid";
   if(cfg?.active === false) return "off";
   if(isDay(cfg?.startDate) && today < cfg.startDate) return "scheduled";
   const last = lastDay(cfg);
@@ -112,6 +116,22 @@ export const openState = (link, main) => {
   const own = linkState(link);
   return own === "live" && main ? linkState(main) : own;
 };
+
+/* ------------------------------ selling ------------------------------ */
+// What customers see about buying an invitation, set on the admin's Settings page (site/settings, which
+// anyone can read, so only put public details here). businessName also signs every invitation.
+export const SALES_DEFAULTS = { businessName: "", price: 200, upiId: "", whatsapp: "", email: "", address: "" };
+export const salesSettings = s => ({ ...SALES_DEFAULTS, ...(s || {}) });
+// wa.me wants the number with its country code and no symbols; a 10-digit number is taken as Indian.
+export function whatsappLink(number, text = ""){
+  let digits = String(number || "").replace(/\D/g, "");
+  if(digits.length === 10) digits = "91" + digits;
+  return digits ? `https://wa.me/${digits}` + (text ? "?text=" + encodeURIComponent(text) : "") : "";
+}
+// Opens GPay, PhonePe or any UPI app on a phone with the amount and a note filled in.
+export const upiLink = (upiId, name, amount, note) => upiId
+  ? `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(name || "Invitation")}&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`
+  : "";
 
 /* ------------------------------ categories ------------------------------ */
 // Created in Firestore the first time the admin opens the Templates page; more can be added there.
@@ -246,7 +266,10 @@ export const TRANSLATIONS = {
     notFound: "This invitation link isn't valid. Please check the link you received.",
     unavailable: "This invitation isn't open right now. Please check with the person who sent you the link.",
     closedForGuests: "Guests can't open this link right now — it is switched off or outside its dates. You see it because you're signed in as the admin.",
-    previewWish: "This is a preview — wishes aren't saved."
+    previewWish: "This is a preview — wishes aren't saved.",
+    editorPreview: "Your preview — this is what your guests see.",
+    editorPreviewClosed: "Your preview — only you can see it. Guests can open the link once it is paid and open.",
+    madeWith: "Made with"
   },
   ta: {
     shareBtn: "⧉ இணைப்பை நகலெடு",
@@ -272,7 +295,10 @@ export const TRANSLATIONS = {
     notFound: "இந்த அழைப்பிதழ் இணைப்பு செல்லுபடியாகவில்லை. நீங்கள் பெற்ற இணைப்பைச் சரிபார்க்கவும்.",
     unavailable: "இந்த அழைப்பிதழ் தற்போது திறக்கப்படவில்லை. இணைப்பை அனுப்பியவரிடம் கேட்டுத் தெரிந்துகொள்ளவும்.",
     closedForGuests: "இந்த இணைப்பை விருந்தினர்கள் இப்போது திறக்க முடியாது — இது அணைக்கப்பட்டுள்ளது அல்லது அதன் தேதிகளுக்கு வெளியே உள்ளது. நீங்கள் நிர்வாகியாக உள்நுழைந்திருப்பதால் இதைப் பார்க்கிறீர்கள்.",
-    previewWish: "இது முன்னோட்டம் — வாழ்த்துகள் சேமிக்கப்படாது."
+    previewWish: "இது முன்னோட்டம் — வாழ்த்துகள் சேமிக்கப்படாது.",
+    editorPreview: "உங்கள் முன்னோட்டம் — உங்கள் விருந்தினர்கள் இதையே பார்ப்பார்கள்.",
+    editorPreviewClosed: "உங்கள் முன்னோட்டம் — இதை நீங்கள் மட்டுமே பார்க்க முடியும். பணம் செலுத்தி இணைப்பு திறக்கப்பட்டதும் விருந்தினர்கள் பார்க்கலாம்.",
+    madeWith: "உருவாக்கம்"
   }
 };
 
@@ -299,7 +325,8 @@ export const newId = () => Math.random().toString(36).slice(2, 10);
 /* ------------------------- wedding link names (slugs) ------------------------- */
 // Each wedding lives at weddings/<slug> and is shared as SITE_URL/<slug>.
 // Names that are real paths on the site can't be used.
-const RESERVED_SLUGS = new Set(["admin", "api", "assets", "css", "js", "index", "templates", "editor"]);
+const RESERVED_SLUGS = new Set(["admin", "api", "assets", "css", "js", "index", "templates", "editor",
+  "home", "terms", "privacy", "refund", "contact", "help"]);
 
 export const slugify = s => (s || "").toLowerCase()
   .normalize("NFKD").replace(/[̀-ͯ]/g, "")

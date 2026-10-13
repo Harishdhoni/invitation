@@ -58,11 +58,11 @@ h1{font-family:'Cinzel Decorative',serif;color:var(--maroon-dark);font-size:1.45
 .field{display:block;margin-bottom:1.1rem;}
 .field > span,.field > .label{display:block;font-weight:600;font-size:.86rem;margin-bottom:.35rem;color:var(--maroon-dark);}
 .field .hint{display:block;color:var(--muted);font-size:.78rem;margin-top:.3rem;}
-input[type=text],input[type=email],input[type=password],input[type=datetime-local],input[type=date],input[type=tel],textarea{
+input[type=text],input[type=email],input[type=password],input[type=datetime-local],input[type=date],input[type=tel],input[type=number],input[type=search],textarea{
   width:100%;border:1px solid var(--line);border-radius:8px;padding:.55rem .7rem;
   font:400 .95rem/1.5 var(--sans);color:var(--ink);background:#fffdfa;
 }
-input[type=text],input[type=email],input[type=password],input[type=tel]{height:2.6rem;}
+input[type=text],input[type=email],input[type=password],input[type=tel],input[type=number],input[type=search]{height:2.6rem;}
 textarea{min-height:84px;resize:vertical;}
 input:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,.2);}
 .bi{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;}
@@ -290,6 +290,28 @@ main.wide,.list-main.wide,.editor-head.wide{max-width:1240px;}
 .extra-links{list-style:none;display:grid;gap:.35rem;padding:.5rem .7rem;margin:.1rem 0;border:1px dashed var(--line);border-radius:10px;font-size:.84rem;}
 .extra-links li{display:flex;align-items:center;gap:.3rem .6rem;flex-wrap:wrap;}
 .extra-links .wedding-link{margin:0;}
+
+/* ---------- selling: orders, summary, settings, the editor's payment banner ---------- */
+.sales-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:.8rem;margin-bottom:1rem;}
+.sales-summary .tile{display:flex;flex-direction:column;gap:.1rem;padding:.8rem 1rem;background:#fff;border:1px solid var(--line);border-radius:12px;}
+.sales-summary .tile b{font-size:1.35rem;color:var(--maroon-dark);}
+.sales-summary .tile span{font-size:.82rem;color:var(--muted);}
+.list-tools{display:flex;align-items:center;gap:.6rem 1rem;flex-wrap:wrap;margin-bottom:.6rem;}
+.list-tools input[type=search]{flex:1 1 240px;max-width:380px;}
+.list-tools .chips{margin:0;}
+.order{display:grid;gap:.4rem;padding:.55rem .7rem;margin:.1rem 0;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:.84rem;}
+.order-who{overflow-wrap:anywhere;}
+.order-line{display:flex;align-items:center;gap:.4rem .6rem;flex-wrap:wrap;}
+.order-line .btn{margin-left:auto;}
+.paid-form{padding-top:.4rem;border-top:1px dashed var(--line);}
+.paid-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(140px,100%),1fr));gap:0 .7rem;}
+.paid-form .field{margin-bottom:.6rem;}
+.paid-form .field > span{font-size:.78rem;}
+.new-paid{margin-bottom:.2rem;font-weight:600;}
+.new-paid-hint{display:block;color:var(--muted);font-size:.78rem;margin-bottom:1rem;}
+.settings-form{max-width:820px;}
+.banner.pay{background:#fff4e0;border:1px solid #f0c98a;display:grid;gap:.5rem;}
+.banner.pay .row{margin-top:.1rem;}
 
 /* ---------- template editor ---------- */
 .tpl-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1rem;align-items:start;}
