@@ -232,6 +232,10 @@ An event has one PIN at a time. Deleting an event removes its PIN.
 7. Every month or so click **Clean up ended**: it deletes the photos, music and wishes of invitations that closed
    more than 90 days ago, as the privacy page promises.
 
+**Sharing your site:** click **Share** in the top bar. Pick **Home page** or **Showcase** (optionally the designs for
+one kind of event), check the message, then **Send on WhatsApp** (type a customer's number, or leave it empty to pick
+the chat), **More apps…** on a phone, or **Copy link** / **Copy message**.
+
 ## Notes
 
 - **Free plan limits (Spark):** 50,000 Firestore reads/day, shared by all weddings. A guest visit costs about 1 read for details,

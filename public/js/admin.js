@@ -10,7 +10,7 @@ import {
   useFirebase as useAccessFirebase, loadPins, revokePin, accessPanel, issuePin, customerMessage, sendOnWhatsApp
 } from "./admin-access.js";
 import {
-  useFirebase as useSalesFirebase, loadOrders, newOrder, markOrderDeleted, orderPanel, salesSummary, downloadCsv, enterSettings
+  useFirebase as useSalesFirebase, loadOrders, newOrder, markOrderDeleted, orderPanel, salesSummary, downloadCsv, enterSettings, openShare
 } from "./admin-sales.js";
 import {
   openEditor, normalize, coupleNames, shareLink, previewLink, musicChunkId, hasUnsavedChanges, discardChanges,
@@ -572,6 +572,9 @@ $("loginForm").addEventListener("submit", async e => {
     $("loginBtn").disabled = false;
   }
 });
+
+// The top bar's Share button: the home page or showcase link for customers.
+$("shareOpenBtn").addEventListener("click", openShare);
 
 $("logoutBtn").addEventListener("click", async () => {
   if(hasUnsavedChanges() && !confirm("You have unsaved changes. Log out anyway?")) return;

@@ -93,6 +93,10 @@ see: **Home page ↗** (the sales page) and **Showcase ↗** (every design, the 
 - **Export CSV**: every invitation with its customer and payment, for the accounts.
 - **Clean up ended**: deletes the photos, music and wishes of invitations that closed more than 90 days ago.
 
+**Share** (top bar, every admin page): the link to the home page or to the showcase (all designs, or one kind of
+event) in a ready-written message with the price and business name, to send on WhatsApp (to a number or any
+chat), through the phone's share menu, or to copy.
+
 **Settings** (`?view=settings`): business name (also signs every invitation), price, UPI ID, GPay / PhonePe number,
 WhatsApp number, support email, business address, and the wording of the WhatsApp message to new customers (with
 placeholders such as `{customer}`, `{editorLink}` and `{payment}`, and a preview). Customers see these on the sales
