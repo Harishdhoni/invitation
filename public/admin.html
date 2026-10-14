@@ -269,31 +269,6 @@
 
 <footer class="site-credit"><span>© 2026</span><span class="sep" aria-hidden="true">✦</span><span>Powered by <b>Harish S</b></span></footer>
 
-<!-- SHARE (the top bar's Share button): the home page or showcase link, with a message, for customers. js/admin-sales.js -->
-<dialog class="share-dialog" id="shareDialog" aria-labelledby="shareTitle">
-  <h2 id="shareTitle">Share your site</h2>
-  <p class="muted">Send customers the link to your home page, or to the showcase of every design.</p>
-  <div class="seg share-pages" role="group" aria-label="Page to share">
-    <button type="button" data-page="home" aria-pressed="true">Home page</button>
-    <button type="button" data-page="showcase" aria-pressed="false">Showcase</button>
-  </div>
-  <label class="field" id="shareCategoryRow" hidden><span>Designs for</span><select id="shareCategory"></select></label>
-  <div class="share-link">
-    <input type="text" id="shareLink" readonly aria-label="Link">
-    <button type="button" class="btn ghost small" id="shareCopyLink">Copy link</button>
-  </div>
-  <label class="field"><span>Message</span><textarea id="shareMessage" class="share-message"></textarea>
-    <small class="hint">Change it as you like; the link stays in it.</small></label>
-  <label class="field"><span>Customer's WhatsApp number (optional)</span><input type="tel" id="sharePhone" placeholder="+91 90000 00000">
-    <small class="hint">Leave it empty to pick the chat in WhatsApp.</small></label>
-  <div class="row share-actions">
-    <a class="btn primary" id="shareWhatsApp" target="_blank" rel="noopener">Send on WhatsApp</a>
-    <button type="button" class="btn ghost" id="shareNative" hidden>More apps…</button>
-    <button type="button" class="btn ghost" id="shareCopyMessage">Copy message</button>
-    <button type="button" class="btn ghost" id="shareClose">Close</button>
-  </div>
-</dialog>
-
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script type="module" src="js/admin.js"></script>

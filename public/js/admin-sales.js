@@ -4,9 +4,8 @@
 //
 // weddings/<slug>.paid is what firestore.rules check (isLive); the order only records the sale. Customer names,
 // phone numbers and payment references stay out of weddings/<slug>, because anyone with the link can read it.
-import { SALES_DEFAULTS, salesSettings, whatsappLink, tr, indiaToday, DEFAULT_CATEGORIES } from "./defaults.js";
-import { SITE_URL } from "./firebase-config.js";
-import { $, show, el, toast, actionBtn, copyText, permissionHint } from "./admin-ui.js";
+import { SALES_DEFAULTS, salesSettings, whatsappLink, tr, indiaToday } from "./defaults.js";
+import { $, show, el, toast, actionBtn, permissionHint } from "./admin-ui.js";
 import { DEFAULT_MESSAGE, customerMessage } from "./admin-access.js";
 
 let fb = null;
@@ -220,78 +219,4 @@ export async function enterSettings(){
     }
     $("settingsSaveBtn").disabled = false;
   });
-}
-
-/* ---------------------------------- share ---------------------------------- */
-// The top bar's Share button: the link to the home page (the sales page at the bare address) or the showcase of
-// every design (optionally for one kind of event, ?category=), in a message to send on WhatsApp (to a number, or
-// picking the chat), through the phone's share menu, or to copy. The wording uses the price and business name.
-const SHARE_MESSAGES = {
-  home: "Hi! 🙏 We make invitation websites in Tamil and English for weddings, housewarmings, birthdays and baby showers: " +
-    "one link to share on WhatsApp, with your photos, music, directions and a guest book.\n\n" +
-    "₹{price} per invitation. See the designs and order here: {link}",
-  showcase: "Hi! 🙏 Here are all our invitation designs{for}. Tap any one to see it live: {link}\n\n" +
-    "Each invitation is ₹{price}, in Tamil and English. Reply here to order yours."
-};
-const share = { page: "home", category: "", link: "", edited: false, sales: salesSettings(), wired: false };
-
-const shareLinkFor = (page, category) => page === "home" ? SITE_URL
-  : `${SITE_URL}/showcase` + (category ? `?category=${encodeURIComponent(category)}` : "");
-
-function shareMessageFor(){
-  const cat = DEFAULT_CATEGORIES.find(c => c.id === share.category);
-  const text = SHARE_MESSAGES[share.page]
-    .replace("{for}", cat ? ` for ${cat.name.toLowerCase()}` : "")
-    .replace("{price}", share.sales.price)
-    .replace("{link}", share.link);
-  return share.sales.businessName ? `${text}\n\n— ${share.sales.businessName}` : text;
-}
-
-// A wa.me link: to the customer's number when one is typed, otherwise WhatsApp asks which chat.
-const shareWhatsApp = text => whatsappLink($("sharePhone").value, text) || "https://wa.me/?text=" + encodeURIComponent(text);
-
-function refreshShare(){
-  const before = share.link;
-  share.link = shareLinkFor(share.page, share.category);
-  $("shareLink").value = share.link;
-  document.querySelectorAll(".share-pages button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.page === share.page)));
-  show("shareCategoryRow", share.page === "showcase");
-  // Keep the admin's own wording; only swap the link inside it.
-  const box = $("shareMessage");
-  if(!share.edited) box.value = shareMessageFor();
-  else if(before && before !== share.link) box.value = box.value.split(before).join(share.link);
-  $("shareWhatsApp").href = shareWhatsApp(box.value);
-}
-
-function wireShare(){
-  if(share.wired) return;
-  share.wired = true;
-  $("shareCategory").replaceChildren(Object.assign(el("option", "", "All kinds of events"), { value: "" }),
-    ...DEFAULT_CATEGORIES.map(c => Object.assign(el("option", "", c.name), { value: c.id })));
-  document.querySelectorAll(".share-pages button").forEach(b => b.addEventListener("click", () => { share.page = b.dataset.page; refreshShare(); }));
-  $("shareCategory").addEventListener("change", e => { share.category = e.target.value; refreshShare(); });
-  $("shareMessage").addEventListener("input", () => { share.edited = true; $("shareWhatsApp").href = shareWhatsApp($("shareMessage").value); });
-  $("sharePhone").addEventListener("input", () => { $("shareWhatsApp").href = shareWhatsApp($("shareMessage").value); });
-  $("shareCopyLink").addEventListener("click", () => copyText(share.link, "Link copied."));
-  $("shareCopyMessage").addEventListener("click", () => copyText($("shareMessage").value, "Message copied."));
-  $("shareClose").addEventListener("click", () => $("shareDialog").close());
-  // The phone's own share menu (WhatsApp, Instagram, SMS…), where the browser has one.
-  if(navigator.share){
-    show("shareNative");
-    $("shareNative").addEventListener("click", () =>
-      navigator.share({ title: share.sales.businessName || "Invitations", text: $("shareMessage").value }).catch(() => {}));
-  }
-}
-
-export async function openShare(){
-  wireShare();
-  try {
-    const snap = await fb.getDoc(settingsRef());
-    share.sales = salesSettings(snap.exists() ? snap.data() : {});
-  } catch(e){
-    console.warn("Couldn't load the settings for the share message.", e);
-  }
-  share.edited = false;
-  refreshShare();
-  $("shareDialog").showModal();
 }

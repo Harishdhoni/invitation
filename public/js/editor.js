@@ -10,6 +10,7 @@ import { isFirebaseConfigured } from "./firebase-config.js";
 import { $, show, toast } from "./admin-ui.js";
 import { normalizePin, isValidPin, formatPin } from "./pin.js";
 import { openEditor, hasUnsavedChanges, discardChanges } from "./event-editor.js";
+import { openShare } from "./share.js";
 
 let fb = null;
 let editorOpened = false;
@@ -93,6 +94,9 @@ $("pinForm").addEventListener("submit", async e => {
     $("pinBtn").disabled = false;
   }
 });
+
+// The top bar's Share button: the home page or showcase link, worded for passing on to a friend.
+$("shareOpenBtn").addEventListener("click", () => openShare(fb, "friend"));
 
 $("leaveBtn").addEventListener("click", async () => {
   if(hasUnsavedChanges() && !confirm("You have unsaved changes. Leave anyway?")) return;

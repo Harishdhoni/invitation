@@ -96,8 +96,14 @@ input:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 
 .site-links .share-open{font:600 .85rem var(--sans);white-space:nowrap;padding:.3rem .8rem;border-radius:999px;cursor:pointer;
   background:var(--gold);color:var(--maroon-dark);border:1px solid var(--gold);}
 .site-links .share-open:hover{background:var(--gold-light);}
-/* On phones the signed-in email gives way, so the links and Log out share one row. */
-@media(max-width:480px){.topbar .who{display:none;}}
+/* On phones the signed-in email gives way, Log out / Leave editor joins the name, and the customer pages get a row
+   of their own, so the sticky bar stays short. */
+@media(max-width:480px){
+  .topbar{padding:.6rem 1rem;gap:.6rem;}
+  .topbar .who{display:none;}
+  .topbar .top-actions{display:contents;}
+  .topbar .site-links{order:3;width:100%;}
+}
 .banner{margin:1rem auto 0;max-width:980px;padding:.75rem 1rem;border-radius:10px;font-size:.9rem;width:calc(100% - 2rem);overflow-wrap:anywhere;}
 .banner.info{background:#fff7e0;border:1px solid #f0dca0;}
 .banner.warn{background:#fdecea;border:1px solid #f3c2bd;color:#6b1d17;}

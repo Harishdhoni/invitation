@@ -117,9 +117,12 @@ the starter designs for the sales page's gallery and the showcase.
   tap from a website; fully automatic sending would need Meta's WhatsApp Business API and a server function.
 - `admin-sales.js`: selling. Orders (`loadOrders`, `newOrder`, `markOrderDeleted`), the order panel with **Mark as
   paid** / **Mark unpaid** (one batch: `weddings/<slug>.paid` + `orders/<slug>`), `salesSummary`, `downloadCsv`, and
-  the Settings view (`?view=settings`, `site/settings`). `openShare()` is the top bar's **Share** window
-  (`#shareDialog` in `admin.html`): the home page or showcase link (`?category=`) in a message for WhatsApp, the
-  phone's share menu (`navigator.share`) or copying.
+  the Settings view (`?view=settings`, `site/settings`).
+- `share.js`: `openShare(mod, voice)`, the **Share** window in the top bar of the admin and editor pages. It shows the
+  home page or showcase link (`?category=`) in a message for WhatsApp, the phone's share menu (`navigator.share`) or
+  copying. It builds `#shareDialog` into the page on first open and reads `site/settings` through the page's own
+  Firebase module. `"business"` (admin) writes to customers and signs with the business name; `"friend"` (editor) is
+  a customer passing it on.
 - `site.js`: the sales and information pages. Reads `site/settings` through the Firestore REST API (no SDK) and fills
   `data-site`, `data-site-if`, `a[data-whatsapp]`, `a[data-mailto]` and the `#gallery` (from `starters.json`). On the
   showcase it also builds `#showcase` (category chips, a **Preview** and a **Choose** WhatsApp button per design), the

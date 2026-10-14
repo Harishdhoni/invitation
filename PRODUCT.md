@@ -151,6 +151,8 @@ wording of the WhatsApp message to new customers (with placeholders such as `{cu
   their dates. The Design tab offers only templates from the event's own category.
 - In **Links** the editor can add extra links up to three in all, each with a different design, choose what each
   link shows, and delete extra links. New links start open, until the event's own end.
+- The top bar has **Home page ↗** and **Showcase ↗** (in a new tab) and **Share**: the admin's Share window, worded
+  for a customer telling a friend ("I made my invitation as a website with …"), without the business's sign-off.
 - The browser remembers the PIN until the admin changes or revokes it, or the editor clicks **Leave editor**.
 - When the admin changes or revokes the PIN, the editor's next save is refused and they are asked for the new PIN.
 

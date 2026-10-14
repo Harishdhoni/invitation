@@ -185,7 +185,8 @@ On **Events**, every event card has an **Editor PIN** row:
    wishes (hide / unhide / delete). In **Links** they can add extra links — up to **3 links in all**, each with a
    different design — choose what each link shows, and delete the extra links. They can't switch links on or off or
    change their dates (only you can), change the category, see other events, or reach the admin page.
-   Their browser remembers the PIN until you change it or they click **Leave editor**.
+   Their browser remembers the PIN until you change it or they click **Leave editor**. Their top bar also has
+   **Home page ↗**, **Showcase ↗** and **Share**, so they can send friends your site.
 4. **Change** gives the event a new PIN; **Revoke** removes access. Either takes effect immediately — the editor's next
    save is refused and they are asked for the PIN again.
 
