@@ -25,6 +25,11 @@ Start **Apache** in the XAMPP Control Panel, then open:
 
 Until Firebase is connected the invite shows sample data and the admin page shows "Connect Firebase first".
 
+**Skip the admin login on localhost**: put your admin email and password in `local-admin.js` in this folder
+(`export default { email: "…", password: "…" };`). The admin page then signs itself in on `localhost` only. The
+file is gitignored and sits outside `public/`, so it is never deployed, and the folder's `.htaccess` lets only this
+computer load it. After **Log out** that tab shows the login form again; a new tab signs in by itself.
+
 Local pages save to the **live** Firestore database. To try changes without touching it — and to try new
 `firestore.rules` before deploying them — use the Firebase emulator instead:
 
@@ -37,7 +42,7 @@ Local pages save to the **live** Firestore database. To try changes without touc
      -H "Authorization: Bearer owner" -H "Content-Type: application/json" \
      -d '{"localId":"<admin UID>","email":"admin@test.local","password":"test1234"}'
    ```
-3. Open `admin.html?emulator=1` and log in with that test account. The browser stays on the emulator — for the
+3. Open `admin.html?emulator=1`. It signs in with that test account by itself. The browser stays on the emulator — for the
    admin, the editor and invites — until you open any page with `?emulator=0`. A "Running in emulator mode" bar shows
    at the bottom. The emulator starts empty: click **Add 27 starter templates**, then create an event.
    See the data at http://127.0.0.1:4000. Auto-translate doesn't work against the emulator.

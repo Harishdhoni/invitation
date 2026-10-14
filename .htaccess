@@ -1,0 +1,6 @@
+# Local Apache (XAMPP) only; nothing outside public/ is deployed. local-admin.js holds the admin password
+# for signing in automatically on localhost, and .env.local the Vercel token, so only this computer may
+# load them, not other devices on the network.
+<FilesMatch "^(local-admin\.js|\.env.*)$">
+  Require local
+</FilesMatch>

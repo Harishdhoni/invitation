@@ -63,6 +63,10 @@ Important:
 - **`api/` functions run only on Vercel.** XAMPP serves `public/` as static files. To check an `api/` change, use a
   Vercel deployment (with the GitHub integration, a pushed branch gets a preview URL).
 - On an office network that inspects HTTPS, set `NODE_OPTIONS=--use-system-ca` before running the firebase or vercel CLI.
+- **Local admin sign-in**: on `localhost`, `admin.js` `autoLogin()` signs the admin in with the email and password in
+  `local-admin.js` at the project root (gitignored, outside `public/` so never deployed, and limited to this computer by
+  the root `.htaccess`), or with the emulator's test admin (`admin@test.local` / `test1234`). A real sign-in is still
+  needed because the rules check the admin UID. **Log out** sets `sessionStorage` `wi:noAutoLogin` so that tab shows the form.
 - **Local caching**: `public/.htaccess` makes Apache send `Cache-Control: no-cache` for html/js/css/json, as
   `vercel.json` does on Vercel, so a normal reload shows your edits. If a page still mixes old and new files (new
   markup, old script), hard-refresh with Ctrl+Shift+R.

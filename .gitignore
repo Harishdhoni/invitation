@@ -4,6 +4,9 @@ firebase-debug.log*
 firestore-debug.log*
 ui-debug.log*
 
+# The admin password for signing in automatically on localhost (see SETUP.md §1)
+local-admin.js
+
 # Vercel CLI project link and its local token file
 .vercel/
 .env*

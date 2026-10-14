@@ -1,5 +1,5 @@
 import { tr, slugify, isValidSlug, sampleFor, clone, salesSettings, lastDay, addDays, indiaToday, whatsappLink } from "./defaults.js";
-import { isFirebaseConfigured, ADMIN_UID, SITE_URL } from "./firebase-config.js";
+import { isFirebaseConfigured, ADMIN_UID, SITE_URL, useEmulator } from "./firebase-config.js";
 import { compressPreviewImage } from "./image-utils.js";
 import { $, show, el, toast, actionBtn, copyText, permissionHint } from "./admin-ui.js";
 import {
@@ -580,9 +580,40 @@ $("shareOpenBtn").addEventListener("click", () => openShare(fb));
 $("logoutBtn").addEventListener("click", async () => {
   if(hasUnsavedChanges() && !confirm("You have unsaved changes. Log out anyway?")) return;
   discardChanges();
+  // Show the login form after logging out on localhost instead of signing straight back in (this tab only).
+  try { sessionStorage.setItem(NO_AUTO_LOGIN, "1"); } catch(e){}
   await fb.signOut(fb.auth);
   location.reload();
 });
+
+// On localhost the admin page signs itself in, so local testing doesn't start at the login form. The
+// rules only accept the admin's account, so it still has to be a real sign-in. The live email and
+// password come from local-admin.js in the project folder, which is gitignored, outside public/ (so
+// Vercel and Firebase Hosting never serve it) and limited to this computer by the folder's .htaccess.
+// On the emulator it uses the test admin from SETUP.md §1.
+const IS_LOCALHOST = ["localhost", "127.0.0.1"].includes(location.hostname);
+const NO_AUTO_LOGIN = "wi:noAutoLogin";
+const EMULATOR_ADMIN = { email: "admin@test.local", password: "test1234" };
+
+async function autoLogin(){
+  if(!IS_LOCALHOST) return false;
+  try { if(sessionStorage.getItem(NO_AUTO_LOGIN)) return false; } catch(e){}
+  let account = EMULATOR_ADMIN;
+  if(!useEmulator){
+    try { account = (await import("../../local-admin.js")).default; }
+    catch(e){ return false; } // no local-admin.js: use the login form
+  }
+  if(!account?.email || !account?.password) return false;
+  try {
+    await fb.signInWithEmailAndPassword(fb.auth, account.email, account.password);
+    return true;
+  } catch(err){
+    console.warn("Local auto sign-in failed", err);
+    $("loginError").textContent = "Automatic sign-in failed: " + (AUTH_ERRORS[err.code] || err.message) +
+      (useEmulator ? " Create the test admin (SETUP.md §1)." : " Check local-admin.js.");
+    return false;
+  }
+}
 
 async function enterApp(user){
   if(appStarted) return;
@@ -639,9 +670,15 @@ if(!isFirebaseConfigured){
     useFirebase(mod);
     useAccessFirebase(mod);
     useSalesFirebase(mod);
-    fb.onAuthStateChanged(fb.auth, user => {
-      if(user) enterApp(user);
-      else { show("appView", false); show("loginView"); }
+    let triedAutoLogin = false;
+    fb.onAuthStateChanged(fb.auth, async user => {
+      if(user) return enterApp(user);
+      show("appView", false);
+      if(!triedAutoLogin){
+        triedAutoLogin = true;
+        if(await autoLogin()) return; // the next auth change enters the app
+      }
+      show("loginView");
     });
   }).catch(e => {
     console.error(e);
