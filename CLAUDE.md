@@ -127,7 +127,9 @@ the starter designs for the sales page's gallery and the showcase.
   `data-site`, `data-site-if`, `a[data-whatsapp]`, `a[data-mailto]` and the `#gallery` (from `starters.json`). On the
   showcase it also builds `#showcase` (category chips, a **Preview** and a **Choose** WhatsApp button per design), the
   hero's `#designReel` strip and the `#designPreview` dialog, which shows `./?template=<id>` in a scaled phone frame on
-  wide screens (phones open the design in a new tab, so the intro and music play).
+  wide screens (phones open the design in a new tab, so the intro and music play). A visitor whose referrer is the
+  admin or editor page gets a **← Back to admin / editor** bar in the header, kept for the tab in `sessionStorage`
+  `wi:back`; on the tab's first page it closes the tab (back to the unsaved edits), otherwise it goes to that address.
 - `event-editor.js`: the **event editor**, shared by the admin and editor pages. Tabs: details, photos & music,
   events, contacts, design, links, wishes. Builds its markup into `#editorView` **when the module is imported**, so the
   host page must already contain `#editorView`. `#editorView[data-admin]` turns on the admin-only parts (back link,

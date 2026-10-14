@@ -25,6 +25,15 @@ a{color:var(--maroon);}
 .site-nav a{color:var(--gold-light);text-decoration:none;font-size:.92rem;padding:6px 10px;border-radius:8px;opacity:.85;white-space:nowrap;}
 .site-nav a:hover{opacity:1;background:rgba(255,255,255,.08);}
 @media(max-width:760px){.site-nav .optional{display:none;}}
+/* "Back to admin / editor", for someone who opened these pages from there (js/site.js). It sits in the sticky header,
+   so whatever sticks below the header moves down by its 40px. */
+.back-bar{display:flex;align-items:center;gap:12px;height:40px;padding:0 max(16px,calc((100% - 1080px) / 2 + 16px));
+  background:var(--maroon);border-bottom:1px solid rgba(243,223,160,.2);font-size:.85rem;white-space:nowrap;}
+.back-link{flex:none;color:var(--maroon-dark);background:var(--gold-light);text-decoration:none;font-weight:600;padding:3px 14px;border-radius:999px;}
+.back-link:hover{background:#fff;}
+.back-note{color:rgba(243,223,160,.75);overflow:hidden;text-overflow:ellipsis;}
+body:has(.back-bar) #showcase{scroll-margin-top:100px;}
+body:has(.back-bar) .chips{top:100px;}
 @media(max-width:400px){
   .brand{gap:8px;font-size:.92rem;}
   .brand img{width:28px;height:28px;}

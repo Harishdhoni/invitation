@@ -234,7 +234,37 @@ async function showcase(){
   render();
 }
 
+/* ------------------------------ back to admin / editor ------------------------------ */
+// The admin's and the editor's top bars open the home page and the showcase in a new tab. For someone who came from
+// there, a bar in the header leads back. Where they came from is read from the referrer (so the links people share
+// stay clean) and kept for the tab, so the bar stays while they go from page to page.
+const BACK_LABELS = { admin: "← Back to admin", editor: "← Back to editor" };
+function backBar(){
+  let back = null;
+  try {
+    const from = document.referrer ? new URL(document.referrer) : null;
+    const page = from?.origin === location.origin && from.pathname.match(/\/(admin|editor)(\.html)?$/)?.[1];
+    if(page) sessionStorage.setItem("wi:back", JSON.stringify({ page, url: from.href }));
+    back = JSON.parse(sessionStorage.getItem("wi:back") || "null");
+  } catch {}
+  const head = document.querySelector(".site-head");
+  if(!head || !BACK_LABELS[back?.page] || new URL(back.url, location.href).origin !== location.origin) return;
+  const link = Object.assign(el("a", "back-link", BACK_LABELS[back.page]), { href: back.url });
+  // Still on the tab's first page: closing the tab shows the admin or editor just as it was, unsaved changes and all.
+  // Browsers that won't close it go to the page instead.
+  link.addEventListener("click", e => {
+    if(history.length > 1) return;
+    e.preventDefault();
+    window.close();
+    setTimeout(() => { if(!window.closed) location.href = back.url; }, 200);
+  });
+  const bar = el("div", "back-bar");
+  bar.append(link, el("span", "back-note", "Only you see this."));
+  head.prepend(bar);
+}
+
 $$("[data-site-host]").forEach(n => { n.textContent = new URL(SITE_URL).host; });
+backBar();
 gallery();
 showcase();
 loadSettings().then(fill);
