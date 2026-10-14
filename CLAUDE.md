@@ -91,7 +91,8 @@ the starter designs for the sales page's gallery and the showcase.
   countdown, music, language switch, reveal-on-scroll and guest book. Fires `invite:render` after every render.
   With no event to show it sends the visitor to `home.html`. `?editor-preview=1` reads with `editor-firebase.js` (the
   customer's session) and shows a preview note. `addCredit()` appends "Made with <businessName>" once Settings has one.
-- `defaults.js`: `DEFAULT_CONFIG` (sample wedding), per-category `SAMPLES` / `sampleFor()`, `DEFAULT_CATEGORIES`,
+- `defaults.js`: `DEFAULT_CONFIG` (sample wedding), per-category `SAMPLES` / `sampleFor()`, `samplePhoto()` and
+  `SAMPLE_MUSIC` (the sample previews' cover photo and song), `DEFAULT_CATEGORIES`,
   `TRANSLATIONS` (guest UI strings in EN + TA), `SAMPLE_WISHES`. Also the helpers `tr`, `withDefaults`, `clone`,
   `newId`, `slugify`, `isValidSlug`, `isValidId` and `RESERVED_SLUGS`.
 - `firebase-config.js`: `firebaseConfig`, `ADMIN_UID`, `SITE_URL`, `isFirebaseConfigured`.
@@ -316,8 +317,8 @@ Without a build step there is no shared config, so these are duplicated on purpo
   To update a live template, save it through the admin template editor. To add a starter, add the file and an entry
   in `public/templates/starters.json` (`id`, `file`, `name`, `category`, `description`). Importing a starter whose
   category is missing creates the category, named from `DEFAULT_CATEGORIES` in `defaults.js` (or its id). Give a new
-  category a sample in `SAMPLES` there too, so previews and new events start with fitting details. Reserved template
-  ids: `classic`, `new`, `blank`.
+  category a sample in `SAMPLES` there too, so previews and new events start with fitting details, and a photo in
+  `SAMPLE_PHOTOS` (a file in `public/assets/samples/`) so its previews show one. Reserved template ids: `classic`, `new`, `blank`.
 - **Template pages replace the whole document.** Template scripts must not wait for `DOMContentLoaded` or `load`, must
   not include `js/invite.js`, and should skip the intro inside iframes (`window.self !== window.top`). See
   TEMPLATES.md.
@@ -341,6 +342,10 @@ Without a build step there is no shared config, so these are duplicated on purpo
   for ~5 minutes. WhatsApp keeps old previews in messages that were already sent.
 - **Previews never write.** Template-editor iframes (`<meta name="invite-preview">`), `?template=` and
   `?template-file=` don't save wishes or touch the caches.
+- **Sample photo and song**: while `invite.js` shows sample details (`sample`), the cover slot gets the category's
+  photo from `public/assets/samples/` and the music is `SAMPLE_MUSIC`, played from its URL (`preload="none"`, so admin
+  thumbnails don't each download it) instead of Firestore chunks. Neither is ever put in a config, so `sampleFor()` and
+  new events stay without a photo or song. The baby shower photo is cropped from the original to drop its empty top.
 - **Everything is India time.** `datetime-local` input is stored with `+05:30`, and dates are displayed with
   `timeZone: "Asia/Kolkata"`. Event dates are free text; `parseEventDate()` pulls the day, month and year out of the
   English for template date hooks.

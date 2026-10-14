@@ -3,7 +3,7 @@
 // follows the hooks described in TEMPLATES.md; every hook is optional.
 import {
   DEFAULT_CONFIG, TRANSLATIONS, SAMPLE_WISHES, SECTIONS, tr, withDefaults, clone, isValidSlug, isValidId, isWedding, sampleFor,
-  linkState
+  samplePhoto, SAMPLE_MUSIC, linkState
 } from "./defaults.js";
 import { isFirebaseConfigured, SITE_URL, ADMIN_UID } from "./firebase-config.js";
 
@@ -91,6 +91,8 @@ const images = {};   // imageId -> data URL currently known
 let fb = null;       // Firebase module, once loaded
 let wishes = [];
 let started = false;
+// Sample details are showing (a preview with no event): they come with the sample photo and song.
+let sample = false;
 const weddingDoc = (...path) => fb.doc(fb.db, "weddings", dataSlug(), ...path);
 
 // Whether guests may open this link now. The rules decide (a closed link can't be read); this is for
@@ -425,6 +427,7 @@ function neededImageIds(){
 
 function loadImagesFromCache(){
   for(const id of Object.keys(images)) delete images[id];
+  if(sample && samplePhoto(config.category)) images.cover = samplePhoto(config.category);
   if(preview) return;
   neededImageIds().forEach(id => { const d = cachedImage(id); if(d) images[id] = d; });
 }
@@ -693,7 +696,7 @@ async function sendWish(e){
 const MUSIC_CACHE = "wi-music";
 let musicBtn = null, bgMusic = null;
 let musicPlaying = false, musicReady = false, wantMusic = false, musicV = null;
-const song = () => hidden("music") ? null : config.music;
+const song = () => hidden("music") ? null : config.music || (sample ? SAMPLE_MUSIC : null);
 
 // Templates may leave the music button out; add a plain one when there's a song.
 function ensureMusicControls(){
@@ -766,6 +769,15 @@ async function loadMusic(){
   if(!m || musicV === m.v) return;
   musicV = m.v;
   musicReady = false;
+  // The sample song is a file on the site. It downloads only once played, so a page of admin thumbnails
+  // doesn't fetch it once per frame, and play() from the intro tap starts it on iOS too.
+  if(m.url){
+    bgMusic.preload = "none";
+    bgMusic.src = m.url;
+    musicReady = true;
+    if(wantMusic) startMusic();
+    return;
+  }
   const prefix = `music-cache/${dataSlug()}/`, key = prefix + m.v;
   let blob = null;
   try {
@@ -942,17 +954,21 @@ function start(){
   renderAll();
   renderImages();
   setInterval(updateCountdown, 1000);
+  // An event's song loads with its details (applyConfig); the sample song is known now.
+  if(sample) loadMusic();
 }
 
 async function boot(){
   // Template editor preview: sample details, nothing loaded from Firestore.
   if(draftCategory != null){
     config = sampleFor(draftCategory);
+    sample = true;
     wishes = clone(SAMPLE_WISHES);
     return start();
   }
   if(!isFirebaseConfigured){
     config = clone(DEFAULT_CONFIG);
+    sample = true;
     start();
     return loadLocalWishes();
   }
@@ -962,6 +978,7 @@ async function boot(){
   if(previewFile){
     const html = await (await fetch(previewFile, { cache: "no-cache" })).text();
     config = sampleFor(params.get("category") || "wedding");
+    sample = true;
     wishes = clone(SAMPLE_WISHES);
     await swapDocument(html);
     return start();
@@ -984,6 +1001,7 @@ async function boot(){
     const t = previewTemplate === "classic" ? null : await fetchTemplate(previewTemplate).catch(() => null);
     const cfg = slug ? await fetchConfig().catch(() => null) : null;
     config = cfg || sampleFor(t?.categoryId);
+    sample = !cfg;
     if(!slug) wishes = clone(SAMPLE_WISHES);
     if(t?.html) await swapDocument(t.html);
     start();

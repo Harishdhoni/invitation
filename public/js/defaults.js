@@ -236,6 +236,18 @@ const GENERIC_SAMPLE = {
 export const sampleFor = (category = "wedding") => ({
   ...clone(DEFAULT_CONFIG), ...clone(SAMPLES[category || "wedding"] || GENERIC_SAMPLE), category: category || "wedding"
 });
+// A cover photo per category and one song for previews with sample details, so a design shows how it looks with
+// a real photo and music. They are files in assets/samples/, used only by invite.js while sample details show:
+// never copied into a new event, so an event without its own photo or song never shows these.
+// Categories the admin adds later get the song but no photo.
+const SAMPLE_PHOTOS = {
+  wedding: "assets/samples/wedding.jpg",
+  housewarming: "assets/samples/housewarming.jpg",
+  birthday: "assets/samples/birthday.jpg",
+  "baby-shower": "assets/samples/baby-shower.jpg"
+};
+export const samplePhoto = category => SAMPLE_PHOTOS[category || "wedding"] || "";
+export const SAMPLE_MUSIC = { v: "sample", url: "assets/samples/the-rose-instrumental.mp3", type: "audio/mpeg", name: "The Rose (instrumental)" };
 export const SAMPLE_WISHES = [
   { name: "Priya", message: "Wishing you all the joy in the world! Can't wait to celebrate with you." },
   { name: "Karthik & Family", message: "Congratulations! May this new beginning bring you happiness and blessings." },

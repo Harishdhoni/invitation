@@ -108,3 +108,6 @@ Links to those sections (`<a href="#events">` in a menu or a scroll cue) hide wi
 - **Admin → Templates → Preview** opens `/?template=<id>`, the template with sample details for its category.
 - `/?template=<id>&w=<event>` shows an event's details in another template (nothing is saved; wishes aren't sent).
 - `/?template-file=templates/<file>.html&category=<id>` previews a starter file from `public/templates/` before it's added.
+- Previews with sample details also get a sample photo for the category in the cover slot and a sample song, from
+  `public/assets/samples/`. So check that your cover slot crops a tall photo well, and that your music button shows.
+  Real events never get them: an event without a photo keeps your stand-in picture.
