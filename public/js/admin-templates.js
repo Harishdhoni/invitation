@@ -1,9 +1,11 @@
 // Admin: categories and invitation templates — the Templates page, the template editor,
 // and the template picker used when creating or editing an event.
 // Templates are whole HTML pages in templates/<id>; see TEMPLATES.md for the hooks they use.
+// On the admin page the categories, templates and events come from js/admin-data.js, which keeps them current.
 import { DEFAULT_CATEGORIES, slugify, isValidId } from "./defaults.js";
 import { SITE_URL } from "./firebase-config.js";
-import { $, show, el, toast, actionBtn, linkBtn, copyText, permissionHint } from "./admin-ui.js";
+import { $, show, el, toast, actionBtn, linkBtn, copyText, permissionHint, go } from "./admin-ui.js";
+import { data, loaded, failed, whenLoaded } from "./admin-data.js";
 
 let fb = null;
 export const useFirebase = mod => { fb = mod; };
@@ -22,25 +24,7 @@ export const templateLiveLink = id => `${SITE_URL}/?template=${id || "classic"}`
 export const eventInTemplateLink = (slug, id) => `./?w=${slug}&template=${id || "classic"}`;
 const siteHost = () => SITE_URL.replace(/^https?:\/\//, "");
 
-/* --------------------------------- data --------------------------------- */
-// Categories, oldest first. The first visit after setup creates Weddings, Housewarmings and Birthdays.
-export async function loadCategories(){
-  const snap = await fb.getDocs(fb.collection(fb.db, "categories"));
-  let cats = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  if(!cats.length){
-    const batch = fb.writeBatch(fb.db);
-    DEFAULT_CATEGORIES.forEach(({ id, ...c }) => batch.set(fb.doc(fb.db, "categories", id), c));
-    await batch.commit();
-    cats = DEFAULT_CATEGORIES.map(c => ({ ...c }));
-  }
-  return cats.sort((a, b) => (a.order ?? 99) - (b.order ?? 99) || a.name.localeCompare(b.name));
-}
-
-export async function loadTemplates(){
-  const snap = await fb.getDocs(fb.collection(fb.db, "templates"));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.name.localeCompare(b.name));
-}
-
+/* --------------------------------- lookups --------------------------------- */
 // The templates an event of this category can use (Classic is for weddings only).
 export const templatesIn = (templates, category) =>
   [...(category === "wedding" ? [CLASSIC] : []), ...templates.filter(t => t.categoryId === category)];
@@ -60,29 +44,54 @@ export function previewDoc(html, category){
   return end < 0 ? page + script : page.slice(0, end) + script + page.slice(end);
 }
 
-// Frames load only once they scroll into view; a page of 12 live previews is heavy otherwise.
-const pendingFrames = new WeakMap();
+// The starter designs have phone screenshots with sample details (public/assets/templates/<id>.webp, made for the
+// sales page). A picture shows at once, while a live preview runs the whole design in a frame, which makes a page of
+// them slow to open and to come back to. So a starter that is still exactly as it was added (never saved since,
+// so its createdAt and updatedAt are the same) and Classic show their screenshot; every other template gets a live
+// preview. starters.json says which ids have one; `startersReady` resolves once it has been read.
+const shotIds = new Set(["classic"]);
+export const startersReady = fetch("templates/starters.json", { cache: "no-cache" }).then(r => r.json())
+  .then(list => { list.forEach(s => shotIds.add(s.id)); return list; }).catch(() => []);
+const millis = ts => ts?.toMillis?.() ?? null;
+const showsShot = t => t.builtIn || (shotIds.has(t.id) && millis(t.createdAt) !== null && millis(t.createdAt) === millis(t.updatedAt));
+const shotSrc = t => `assets/templates/${t.id || "classic"}.webp`;
+
+// Live previews load when they scroll into view, so a page of them never starts all at once.
 const frameLoader = "IntersectionObserver" in window ? new IntersectionObserver(entries => entries.forEach(e => {
   if(!e.isIntersecting) return;
-  pendingFrames.get(e.target)?.();
-  pendingFrames.delete(e.target);
   frameLoader.unobserve(e.target);
+  e.target.dispatchEvent(new Event("inview"));
 }), { rootMargin: "200px" }) : null;
 
-// A small live view of a template with sample details, scaled from a phone-sized page.
+// A small view of a template with sample details, scaled from a phone-sized page: its screenshot, or a live preview.
 export function thumbnail(t, { width = 390, height = 600 } = {}){
   const box = el("div", "thumb");
   box.style.aspectRatio = `${width} / ${height}`;
-  const frame = el("iframe");
-  frame.title = `${t.name} preview`;
-  frame.tabIndex = -1;
-  frame.setAttribute("aria-hidden", "true");
-  Object.assign(frame.style, { width: width + "px", height: height + "px" });
-  const load = () => { if(t.builtIn) frame.src = templatePreviewLink(""); else frame.srcdoc = previewDoc(t.html || "", t.categoryId); };
-  if(frameLoader){ pendingFrames.set(frame, load); frameLoader.observe(frame); } else load();
-  box.append(frame);
-  new ResizeObserver(() => { frame.style.transform = `scale(${box.clientWidth / width})`; }).observe(box);
+  const live = () => {
+    const frame = el("iframe");
+    frame.title = `${t.name} preview`;
+    frame.tabIndex = -1;
+    frame.setAttribute("aria-hidden", "true");
+    Object.assign(frame.style, { width: width + "px", height: height + "px" });
+    const load = () => { if(t.builtIn) frame.src = templatePreviewLink(""); else frame.srcdoc = previewDoc(t.html || "", t.categoryId); };
+    if(frameLoader){ frame.addEventListener("inview", load, { once: true }); frameLoader.observe(frame); } else load();
+    box.replaceChildren(frame);
+    new ResizeObserver(() => { frame.style.transform = `scale(${box.clientWidth / width})`; }).observe(box);
+  };
+  if(showsShot(t)){
+    const img = Object.assign(el("img"), { src: shotSrc(t), alt: "", loading: "lazy", decoding: "async" });
+    img.addEventListener("error", live, { once: true });   // no screenshot after all: the live preview instead
+    box.append(img);
+  } else live();
   return box;
+}
+
+// Puts exactly these nodes into `parent`, in this order, moving as few as possible: a preview frame that is
+// taken out of the page and put back loads all over again.
+function placeChildren(parent, nodes){
+  const wanted = new Set(nodes);
+  [...parent.children].forEach(c => { if(!wanted.has(c)) c.remove(); });
+  nodes.forEach((n, i) => { if(parent.children[i] !== n) parent.insertBefore(n, parent.children[i] || null); });
 }
 
 /* ----------------------------- template picker ----------------------------- */
@@ -114,22 +123,18 @@ export function templatePicker({ templates, category, selected, onChange, name =
 }
 
 /* ------------------------------ Templates page ------------------------------ */
-let categories = [];
-let templates = [];
-let events = [];          // [{ id, cfg }] — to show and check which events use a template or category
-
 // The category the Templates page shows ("all" or a category id). Kept for the browser tab, so it
-// survives a trip to the template editor and back.
+// survives a reload.
 const CATEGORY_KEY = "wi:templatesCategory";
 let shownCategory = "all";
 try { shownCategory = sessionStorage.getItem(CATEGORY_KEY) || "all"; } catch(e){}
 
-export async function enterTemplates(){
-  show("templatesView");
+// Wires the Templates page and the template editor once, when the admin page starts.
+export function initTemplates(){
   $("templateCategory").addEventListener("change", e => {
     shownCategory = e.target.value;
     try { sessionStorage.setItem(CATEGORY_KEY, shownCategory); } catch(err){}
-    renderTemplateGroups();
+    showGroups();
   });
   $("newCategoryBtn").addEventListener("click", () => {
     $("newCategoryForm").reset();
@@ -140,46 +145,50 @@ export async function enterTemplates(){
   $("cancelCategoryBtn").addEventListener("click", () => show("newCategoryForm", false));
   $("newCategoryForm").addEventListener("submit", addCategory);
   $("startersBtn").addEventListener("click", addStarters);
-  await refreshTemplates();
-}
-
-async function refreshTemplates(){
-  const status = $("templatesStatus");
-  status.textContent = "Loading templates…";
-  show("templatesStatus");
-  try {
-    const [cats, tpls, evs] = await Promise.all([
-      loadCategories(), loadTemplates(), fb.getDocs(fb.collection(fb.db, "weddings"))
-    ]);
-    categories = cats;
-    templates = tpls;
-    events = evs.docs.map(d => ({ id: d.id, cfg: d.data() }));
-  } catch(e){
-    status.textContent = "Couldn't load templates: " + permissionHint(e);
-    return;
-  }
-  show("templatesStatus", false);
-  renderTemplateGroups();
-  checkStarters();
+  initTemplateEditor();
+  startersReady.then(renderTemplates);   // starters' cards switch to their screenshots
 }
 
 const eventName = e => [e.cfg.groomName?.en, e.cfg.brideName?.en].filter(Boolean).join(" & ") || e.id;
-const usedBy = id => events.filter(e => (e.cfg.templateId || "") === id);
-const eventsIn = catId => events.filter(e => (e.cfg.category || "wedding") === catId);
+const usedBy = id => data.events.filter(e => (e.cfg.templateId || "") === id);
+const eventsIn = catId => data.events.filter(e => (e.cfg.category || "wedding") === catId);
 
-function renderTemplateGroups(){
-  const known = new Set(categories.map(c => c.id));
-  const groups = categories.map(c => ({ cat: c, list: templatesIn(templates, c.id) }));
-  const orphans = templates.filter(t => !known.has(t.categoryId));
+const sections = new Map();   // category id -> its <section>, kept from one drawing to the next
+let cards = new Map();        // cardKey -> card, so a template that didn't change keeps its loaded preview
+let groups = [];              // [{ cat, list }] as last drawn
+const cardKey = t => [t.id, t.v || "", t.name, t.description || "", showsShot(t)].join("|");
+
+// Draws the Templates page from js/admin-data.js. admin.js calls it whenever categories, templates or events
+// change, whether or not the page is showing, so it is ready when the admin opens it.
+export function renderTemplates(){
+  const status = $("templatesStatus");
+  if(!["categories", "templates", "events"].every(k => loaded.has(k))){
+    status.textContent = "Loading templates…";
+    return show("templatesStatus");
+  }
+  const error = failed.get("templates") || failed.get("categories");
+  if(error){
+    status.textContent = "Couldn't load templates: " + permissionHint(error);
+    return show("templatesStatus");
+  }
+  show("templatesStatus", false);
+
+  const known = new Set(data.categories.map(c => c.id));
+  groups = data.categories.map(c => ({ cat: c, list: templatesIn(data.templates, c.id) }));
+  const orphans = data.templates.filter(t => !known.has(t.categoryId));
   if(orphans.length) groups.push({ cat: { id: "", name: "No category" }, list: orphans });
-  renderCategorySelect(groups);
-  const shown = shownCategory === "all" ? groups : groups.filter(g => g.cat.id === shownCategory);
-  $("templateGroups").replaceChildren(...shown.map(g => templateGroup(g.cat, g.list)));
+
+  const kept = new Map();
+  placeChildren($("templateGroups"), groups.map(g => templateGroup(g.cat, g.list, kept)));
+  cards = kept;
+  for(const id of sections.keys()) if(!groups.some(g => g.cat.id === id)) sections.delete(id);
+  showGroups();
+  checkStarters();
 }
 
-// The category dropdown lists every category with its template count. If the chosen category
-// is gone (deleted or renamed away), the page goes back to showing all of them.
-function renderCategorySelect(groups){
+// The category dropdown lists every category with its template count, and only the chosen one's group shows.
+// If the chosen category is gone (deleted or renamed away), the page goes back to showing all of them.
+function showGroups(){
   if(shownCategory !== "all" && !groups.some(g => g.cat.id === shownCategory)) shownCategory = "all";
   const option = (value, label) => Object.assign(el("option", "", label), { value });
   const total = groups.reduce((n, g) => n + g.list.length, 0);
@@ -189,11 +198,16 @@ function renderCategorySelect(groups){
   const picked = groups.find(g => g.cat.id === shownCategory);
   const n = picked ? picked.list.length : total;
   $("templateCount").textContent = `Showing ${n} template${n === 1 ? "" : "s"}` + (picked ? ` in ${picked.cat.name}` : " in all categories");
+  sections.forEach((s, id) => { s.hidden = shownCategory !== "all" && id !== shownCategory; });
 }
 
-function templateGroup(cat, list){
-  const section = el("section", "tpl-group");
-  const head = el("div", "group-head");
+function templateGroup(cat, list, kept){
+  let section = sections.get(cat.id);
+  if(!section){
+    section = el("section", "tpl-group");
+    section.append(el("div", "group-head"), el("div", "tpl-grid"));
+    sections.set(cat.id, section);
+  }
   const title = el("h2", "", cat.name);
   title.append(el("span", "count", String(list.length)));
   const acts = el("div", "row");
@@ -202,11 +216,17 @@ function templateGroup(cat, list){
     acts.append(actionBtn("Rename", "ghost", () => renameCategory(cat)));
     if(cat.id !== "wedding") acts.append(actionBtn("Delete", "danger", () => deleteCategory(cat, list)));
   }
-  head.append(title, acts);
-  const grid = el("div", "tpl-grid");
-  if(list.length) grid.append(...list.map(templateCard));
-  else grid.append(el("p", "muted", "No templates in this category yet."));
-  section.append(head, grid);
+  section.firstElementChild.replaceChildren(title, acts);
+  const items = list.map(t => {
+    const card = cards.get(cardKey(t)) || templateCard(t);
+    kept.set(cardKey(t), card);
+    const users = usedBy(t.id);
+    card.querySelector(".used").textContent = users.length
+      ? `Used by ${users.length} event${users.length === 1 ? "" : "s"}: ${users.slice(0, 3).map(eventName).join(", ")}${users.length > 3 ? "…" : ""}`
+      : "Not used by any event yet";
+    return card;
+  });
+  placeChildren(section.lastElementChild, items.length ? items : [el("p", "muted", "No templates in this category yet.")]);
   return section;
 }
 
@@ -218,11 +238,7 @@ function templateCard(t){
   if(t.builtIn) head.append(el("span", "badge main", "Built-in"));
   body.append(head);
   if(t.description) body.append(el("p", "muted", t.description));
-
-  const users = usedBy(t.id);
-  body.append(el("p", "used", users.length
-    ? `Used by ${users.length} event${users.length === 1 ? "" : "s"}: ${users.slice(0, 3).map(eventName).join(", ")}${users.length > 3 ? "…" : ""}`
-    : "Not used by any event yet"));
+  body.append(el("p", "used"));   // filled in by templateGroup, which follows the events
 
   const link = el("a", "wedding-link", `${siteHost()}/?template=${t.id || "classic"}`);
   link.href = templatePreviewLink(t.id);
@@ -250,7 +266,7 @@ async function freeTemplateId(name){
   if(!isValidId(base) || RESERVED_IDS.has(base)) base = "template";
   for(let i = 1; ; i++){
     const id = i === 1 ? base : `${base}-${i}`;
-    if(RESERVED_IDS.has(id) || templates.some(t => t.id === id)) continue;
+    if(RESERVED_IDS.has(id) || data.templates.some(t => t.id === id)) continue;
     if(!(await fb.getDoc(fb.doc(fb.db, "templates", id))).exists()) return id;
   }
 }
@@ -262,13 +278,14 @@ async function duplicateTemplate(t){
       name: "Copy of " + t.name, categoryId: t.categoryId, description: t.description || "", html: t.html,
       v: Date.now(), createdAt: fb.serverTimestamp(), updatedAt: fb.serverTimestamp()
     });
-    location.href = "?template=" + id;
+    go("?template=" + id);
   } catch(e){
     toast("Couldn't duplicate: " + permissionHint(e));
   }
 }
 
-async function deleteTemplate(t, onDeleted = refreshTemplates){
+// The page itself follows the delete through js/admin-data.js; `onDeleted` is for the template editor.
+async function deleteTemplate(t, onDeleted = () => {}){
   try {
     // Checked again here, in case an event picked it since the page loaded.
     const using = await fb.getDocs(fb.query(fb.collection(fb.db, "weddings"), fb.where("templateId", "==", t.id)));
@@ -293,13 +310,12 @@ async function addCategory(e){
   error.textContent = "";
   const id = slugify(name).slice(0, 40).replace(/-+$/, "");
   if(!name || !isValidId(id)) return void (error.textContent = "Type a name with at least two letters or numbers, like Engagement.");
-  if(categories.some(c => c.id === id || c.name.toLowerCase() === name.toLowerCase()))
+  if(data.categories.some(c => c.id === id || c.name.toLowerCase() === name.toLowerCase()))
     return void (error.textContent = `There's already a category called "${name}".`);
   try {
-    await fb.setDoc(fb.doc(fb.db, "categories", id), { name, order: Math.max(0, ...categories.map(c => c.order || 0)) + 1 });
+    await fb.setDoc(fb.doc(fb.db, "categories", id), { name, order: Math.max(0, ...data.categories.map(c => c.order || 0)) + 1 });
     show("newCategoryForm", false);
     toast(`Added "${name}". Add a template to it so events can use it.`);
-    refreshTemplates();
   } catch(err){
     error.textContent = permissionHint(err);
   }
@@ -310,7 +326,6 @@ async function renameCategory(cat){
   if(!name || name === cat.name) return;
   try {
     await fb.updateDoc(fb.doc(fb.db, "categories", cat.id), { name });
-    refreshTemplates();
   } catch(e){
     toast("Rename failed: " + permissionHint(e));
   }
@@ -327,7 +342,6 @@ async function deleteCategory(cat, list){
   if(!confirm(`Delete the category "${cat.name}"?`)) return;
   try {
     await fb.deleteDoc(fb.doc(fb.db, "categories", cat.id));
-    refreshTemplates();
   } catch(e){
     toast("Delete failed: " + permissionHint(e));
   }
@@ -335,29 +349,29 @@ async function deleteCategory(cat, list){
 
 /* ---------------------------- starter templates ---------------------------- */
 // The designs shipped in public/templates/ (listed in starters.json), added to Firestore on request.
-let starters = [];
+let addingStarters = false;   // the button shows the progress meanwhile
+const missingStarters = async () => (await startersReady).filter(s => !data.templates.some(t => t.id === s.id));
 
 async function checkStarters(){
-  try {
-    starters = await (await fetch("templates/starters.json", { cache: "no-cache" })).json();
-  } catch { starters = []; }
-  const missing = starters.filter(s => !templates.some(t => t.id === s.id));
+  const missing = await missingStarters();
+  if(addingStarters) return;
   $("startersBtn").textContent = `Add ${missing.length} starter template${missing.length === 1 ? "" : "s"}`;
   show("startersBtn", missing.length > 0);
 }
 
 async function addStarters(){
   const btn = $("startersBtn");
-  const missing = starters.filter(s => !templates.some(t => t.id === s.id));
+  const missing = await missingStarters();
+  const cats = new Set(data.categories.map(c => c.id));
   btn.disabled = true;
+  addingStarters = true;
   try {
     for(const [i, s] of missing.entries()){
       btn.textContent = `Adding ${i + 1}/${missing.length}…`;
-      if(!categories.some(c => c.id === s.category)){
+      if(!cats.has(s.category)){
         const def = DEFAULT_CATEGORIES.find(c => c.id === s.category);
-        const cat = { name: def?.name || s.category, order: def?.order ?? categories.length + 1 };
-        await fb.setDoc(fb.doc(fb.db, "categories", s.category), cat);
-        categories.push({ id: s.category, ...cat });
+        await fb.setDoc(fb.doc(fb.db, "categories", s.category), { name: def?.name || s.category, order: def?.order ?? cats.size + 1 });
+        cats.add(s.category);
       }
       const res = await fetch("templates/" + s.file, { cache: "no-cache" });
       if(!res.ok) throw new Error(`templates/${s.file} is missing`);
@@ -371,7 +385,8 @@ async function addStarters(){
     toast("Couldn't add the starter templates: " + permissionHint(e));
   }
   btn.disabled = false;
-  refreshTemplates();
+  addingStarters = false;
+  checkStarters();
 }
 
 /* ----------------------------- template editor ----------------------------- */
@@ -380,6 +395,7 @@ let tplDirty = false;
 let previewTimer = null;
 let device = "phone";
 const DEVICES = { phone: [390, 844], desktop: [1280, 800] };
+let blankHtml = null;     // a promise of templates/blank.html, the start of a new template
 
 function setTplDirty(on = true){
   tplDirty = on;
@@ -388,22 +404,26 @@ function setTplDirty(on = true){
   s.textContent = on ? "Unsaved changes" : "All changes saved";
   s.classList.toggle("dirty", on);
 }
+export const templateHasUnsavedChanges = () => tplDirty;
+export const discardTemplateChanges = () => { if(tplDirty) setTplDirty(false); };
 
-export async function enterTemplateEditor(id, presetCategory){
-  addEventListener("beforeunload", e => { if(tplDirty){ e.preventDefault(); e.returnValue = ""; } });
-  try {
-    [categories, templates] = await Promise.all([loadCategories(), loadTemplates()]);
-  } catch(e){
-    return backToTemplates("Couldn't load templates: " + permissionHint(e));
-  }
+// Opens the template editor on a saved template, or on a new one (id "new") in presetCategory.
+// `isCurrent` says whether the admin is still on this view, in case they moved on while it loaded.
+export async function enterTemplateEditor(id, presetCategory, isCurrent = () => true){
+  await whenLoaded("categories", "templates");
+  if(!isCurrent()) return;
+  const error = failed.get("templates") || failed.get("categories");
+  if(error) return backToTemplates("Couldn't load templates: " + permissionHint(error));
+  const categories = data.categories;
 
   if(id === "new"){
-    let html = "";
-    try { html = await (await fetch("templates/blank.html", { cache: "no-cache" })).text(); } catch {}
+    blankHtml ||= fetch("templates/blank.html", { cache: "no-cache" }).then(r => r.text()).catch(() => "");
+    const html = await blankHtml;
+    if(!isCurrent()) return;
     const cat = categories.some(c => c.id === presetCategory) ? presetCategory : categories[0]?.id || "wedding";
     current = { id: "", name: "", categoryId: cat, description: "", html };
   } else {
-    const t = templates.find(x => x.id === id);
+    const t = data.templates.find(x => x.id === id);
     if(!t) return backToTemplates(`There's no template "${id}".`);
     current = { ...t };
   }
@@ -420,7 +440,10 @@ export async function enterTemplateEditor(id, presetCategory){
   updateSize();
   renderPreview();
   setTplDirty(id === "new");
+}
 
+function initTemplateEditor(){
+  addEventListener("beforeunload", e => { if(tplDirty){ e.preventDefault(); e.returnValue = ""; } });
   $("tplName").addEventListener("input", () => { current.name = $("tplName").value; refreshEditorHead(); setTplDirty(); });
   $("tplDesc").addEventListener("input", () => { current.description = $("tplDesc").value; setTplDirty(); });
   $("tplCategory").addEventListener("change", () => { current.categoryId = $("tplCategory").value; setTplDirty(); renderPreview(); });
@@ -443,7 +466,7 @@ export async function enterTemplateEditor(id, presetCategory){
     document.querySelectorAll("#tplDevice button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
     renderPreview();
   }));
-  new ResizeObserver(fitPreview).observe($("tplStage"));
+  new ResizeObserver(() => { if(current) fitPreview(); }).observe($("tplStage"));
 
   $("tplUpload").addEventListener("change", async () => {
     const f = $("tplUpload").files[0];
@@ -465,12 +488,13 @@ export async function enterTemplateEditor(id, presetCategory){
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   });
   $("tplSaveBtn").addEventListener("click", saveTemplate);
+  // A new template's button is Cancel: back to the list, dropping it.
   $("tplDeleteBtn").addEventListener("click", async () => {
-    if(!current.id) return backToTemplates();
-    await deleteTemplate(current, () => { tplDirty = false; location.href = "?view=templates"; });
+    if(!current.id){ discardTemplateChanges(); return go("?view=templates"); }
+    await deleteTemplate(current, () => { discardTemplateChanges(); go("?view=templates", { replace: true }); });
   });
   addEventListener("keydown", e => {
-    if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s"){ e.preventDefault(); saveTemplate(); }
+    if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s" && !$("templateEditorView").hidden){ e.preventDefault(); saveTemplate(); }
   });
 }
 
@@ -520,7 +544,7 @@ async function saveTemplate(){
   if(!current.html.trim()) return toast("Paste or upload the template's HTML first.");
   if(new Blob([current.html]).size > MAX_HTML) return toast("The HTML is too big (over 900 KB). Move large images out of it — photos come from the event anyway.");
 
-  const original = templates.find(t => t.id === current.id);
+  const original = data.templates.find(t => t.id === current.id);
   $("tplSaveBtn").disabled = true;
   $("tplSaveStatus").textContent = "Saving…";
   try {
@@ -532,18 +556,16 @@ async function saveTemplate(){
         return setTplDirty(true);
       }
     }
-    const data = {
+    const fields = {
       name, categoryId: current.categoryId, description: current.description.trim(), html: current.html,
       v: Date.now(), updatedAt: fb.serverTimestamp()
     };
     if(!current.id){
       current.id = await freeTemplateId(name);
-      await fb.setDoc(fb.doc(fb.db, "templates", current.id), { ...data, createdAt: fb.serverTimestamp() });
-      templates.push({ ...current, ...data });
+      await fb.setDoc(fb.doc(fb.db, "templates", current.id), { ...fields, createdAt: fb.serverTimestamp() });
       history.replaceState(null, "", "?template=" + current.id);
     } else {
-      await fb.updateDoc(fb.doc(fb.db, "templates", current.id), data);
-      if(original) Object.assign(original, data);
+      await fb.updateDoc(fb.doc(fb.db, "templates", current.id), fields);
     }
     refreshEditorHead();
     setTplDirty(false);
@@ -556,7 +578,6 @@ async function saveTemplate(){
 }
 
 function backToTemplates(msg){
-  history.replaceState(null, "", "?view=templates");
   if(msg) toast(msg);
-  enterTemplates();
+  go("?view=templates", { replace: true });
 }

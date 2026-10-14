@@ -1,4 +1,4 @@
-# Product: Invitations
+# Product: Online Invitations
 
 An invitation website, in Tamil and English, for each family event: weddings, housewarmings, birthdays, baby showers, or any other
 category the admin adds. Guests get one link, usually over WhatsApp. It opens a designed page on their phone with
@@ -95,7 +95,7 @@ see: **Home page ↗** (the sales page) and **Showcase ↗** (every design, the 
 - **Export CSV**: every invitation with its customer and payment, for the accounts.
 - **Clean up ended**: deletes the photos, music and wishes of invitations that closed more than 90 days ago.
 
-**Share** (top bar, every admin page): the link to the home page or to the showcase (all designs, or one kind of
+**Share** (sidebar, every admin page): the link to the home page or to the showcase (all designs, or one kind of
 event) in a ready-written message with the price and business name, to send on WhatsApp (to a number or any
 chat), through the phone's share menu, or to copy.
 
@@ -151,7 +151,7 @@ wording of the WhatsApp message to new customers (with placeholders such as `{cu
   their dates. The Design tab offers only templates from the event's own category.
 - In **Links** the editor can add extra links up to three in all, each with a different design, choose what each
   link shows, and delete extra links. New links start open, until the event's own end.
-- The top bar has **Home page ↗** and **Showcase ↗** (in a new tab) and **Share**: the admin's Share window, worded
+- The sidebar has **Home page ↗** and **Showcase ↗** (in a new tab) and **Share**: the admin's Share window, worded
   for a customer telling a friend ("I made my invitation as a website with …"), without the business's sign-off.
 - The browser remembers the PIN until the admin changes or revokes it, or the editor clicks **Leave editor**.
 - When the admin changes or revokes the PIN, the editor's next save is refused and they are asked for the new PIN.

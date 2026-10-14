@@ -6,6 +6,7 @@ import {
   samplePhoto, SAMPLE_MUSIC, linkState, whatsappLink
 } from "./defaults.js";
 import { isFirebaseConfigured, SITE_URL, ADMIN_UID } from "./firebase-config.js";
+import { smoothScroll } from "./smooth-scroll.js";
 
 /* ---------------------------- small helpers ---------------------------- */
 const $ = id => document.getElementById(id);
@@ -986,6 +987,8 @@ function start(){
   if(bgMusic) bgMusic.volume = 0.45;
   wirePage();
   classicExtras();
+  // Started here, after any template swap, which replaces the <html> and <body> it watches for scroll locks.
+  smoothScroll();
   // Admin thumbnails and previews in a frame show the page without the intro.
   if(preview && window.self !== window.top){
     $("curtain-overlay")?.classList.add("open", "hidden");

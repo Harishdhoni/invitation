@@ -2,7 +2,7 @@
 trigger: always_on
 ---
 
-# Cascade rules: Invitations (wedding-invite)
+# Cascade rules: Online Invitations (wedding-invite)
 
 Tamil / English invitation websites (weddings, housewarmings, birthdays, baby showers, custom categories). There are many events,
 each at `/<slug>` with its own details, photos, music, guest book and template. One admin manages everything, and
@@ -43,8 +43,10 @@ in `invite.js`.
 - `public/admin.html` + `js/admin.js` (events list, new/delete event, main link, legacy import, routing by
   `?w=` / `?view=templates` / `?template=`), `js/admin-templates.js` (categories, templates page with a category
   dropdown kept in `sessionStorage` `wi:templatesCategory`, template editor, picker, thumbnails, starters),
-  `js/admin-access.js` (editor PINs). `admin.html` and `editor.html` share `css/admin.css` and end with the
-  `.site-credit` footer ("© 2026 · Powered by Harish S").
+  `js/admin-access.js` (editor PINs). `admin.html` and `editor.html` share `css/admin.css` and the sidebar
+  (no fixed header; folds to an icon rail on wide screens, a slide-in menu below 1024px). The credit
+  ("© 2026 ✦ Developed by Harish S") is at the foot of the sidebar; the `.site-credit` page footer shows only under
+  the login, PIN and setup screens.
 - `public/editor.html` + `js/editor.js`: PIN entry. `js/editor-firebase.js` is a separate named app `"editor"` with
   anonymous auth, so it never replaces an admin session. Keep it separate.
 - `js/event-editor.js`: the event editor shared by admin and editor. It writes its markup into `#editorView` on
@@ -53,7 +55,8 @@ in `invite.js`.
   `isValidSlug`, `isValidId`, `RESERVED_SLUGS`. `js/firebase-config.js`: config, `ADMIN_UID`, `SITE_URL`.
 - `js/translate.js` (EN → TA with Gemini), `js/audio-trim.js` (song cutter, lamejs MP3), `js/image-utils.js`
   (browser compression), `js/pin.js`, `js/admin-ui.js` (DOM helpers `$`, `el`, `show`, `toast`, `copyText`,
-  `permissionHint`).
+  `permissionHint`, and `wireSidebar`), `js/smooth-scroll.js` (Lenis from jsDelivr for mouse and trackpad scrolling on
+  every page; paused while `<html>`/`<body>` is `overflow:hidden`).
 - `api/` (Vercel, CommonJS): `invite.js` serves `/<slug>` with per-event OG tags between `<!-- og:start -->` and
   `<!-- og:end -->` and adds `meta wedding-id` / `template-id` and the runtime script. `og-image.js` serves the
   preview image. `_firestore.js` is a credential-less REST reader.
@@ -123,8 +126,8 @@ exactly `{name 1–60, message 1–500, hidden:false, createdAt:request.time}`.
 - Templates on phones: decorations wider than the screen widen the page even with `body{overflow-x:hidden}`; put
   `overflow-x:clip` on their section. Pixel/monospace fonts need a Tamil font for `html[lang="ta"] [data-ta]`.
   Old-style figures (Playfair Display, Cormorant Garamond) need `font-variant-numeric:lining-nums`.
-- `admin.css` makes `<body>` a full-height flex column so the `.site-credit` footer sits at the bottom; a new direct
-  child of `<body>` becomes a flex item.
+- `admin.css` makes `<body>` a full-height flex column so the `.site-credit` footer sits at the bottom of the login,
+  PIN and setup screens (it is hidden once the app shows); a new direct child of `<body>` becomes a flex item.
 - Firestore has a 1 MiB document limit. Music chunks are written one at a time **before** the config batch, and old
   chunks are deleted **after** it commits. Keep that order.
 - Guests cache by version (`wi:config:<slug>` and `wi:img:<slug>:<id>` in localStorage, `wi-music` in the Cache

@@ -1,4 +1,4 @@
-# Invitations
+# Online Invitations
 
 Tamil-friendly invitation websites — weddings, housewarmings, birthdays, baby showers and any other kind of event — with an admin page.
 

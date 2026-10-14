@@ -16,9 +16,10 @@ and payment, and an invitation stays closed to guests until it is marked **paid*
   Plain HTML, CSS and ES-module JavaScript, served as-is from `public/`.
 - **Firebase from the CDN**: Firestore (data), Auth (admin email/password, editor anonymous), AI Logic (Gemini
   translation). It is imported from `https://www.gstatic.com/firebasejs/12.19.0/…`.
-- **Hosting**: Vercel (primary, live at `https://invitation-five-mu.vercel.app`, auto-deploys on push to `main`
-  from `github.com/Harishdhoni/invitation`) or Firebase Hosting. On Vercel, two functions in `api/` add per-event
-  link previews.
+- **Hosting**: Vercel (primary: project `online-invitation`, live at `https://invitation-five-mu.vercel.app`,
+  auto-deploys on push to `main` from `github.com/Harishdhoni/online-invitation`) or Firebase Hosting. On Vercel, two
+  functions in `api/` add per-event link previews. The site's name is "Online Invitations" (page titles, and the
+  fallback for the business name from Settings).
 
 ## Commands
 
@@ -83,10 +84,14 @@ Important:
 | `public/templates/*.html`: 31 starter designs (10 wedding, 5 housewarming, 11 birthday, 5 baby shower) listed in `starters.json`, copied into Firestore on request | none (the runtime is injected) | n/a |
 | `public/home.html` (the sales page, served at `/`), `showcase.html` (the tour with every design) and `help`, `terms`, `privacy`, `refund`, `contact` `.html` | `js/site.js` | Customers |
 
-`admin.html` and `editor.html` share `css/admin.css` and end with the same `.site-credit` footer
-("© 2026 · Powered by Harish S"). On the editor page `event-editor.js` swaps in the business name from Settings.
+`admin.html` and `editor.html` share `css/admin.css` and the same sidebar (no fixed header). On wide screens its toggle
+folds it to a rail of icons and back; on phones and tablets a menu button slides it in. The credit ("© 2026 ✦ Developed
+by Harish S") sits at the foot of the sidebar (`.site-credit.side-credit`); the page's own `.site-credit` footer shows
+only under the login, PIN and setup screens. On the editor page `event-editor.js` puts the business name from Settings
+beside the year in both.
 The sales and information pages share `css/home.css`. `public/assets/templates/<id>.webp` are phone screenshots of
-the starter designs for the sales page's gallery and the showcase.
+the starter designs for the sales page's gallery and the showcase, and the thumbnails of unchanged starters in the
+admin and editor.
 
 ### Modules in `public/js/`
 
@@ -105,30 +110,42 @@ the starter designs for the sales page's gallery and the showcase.
 - `firebase.js`: the default Firebase app, re-exporting the Firestore and Auth functions the pages use (admin and guests).
 - `editor-firebase.js`: a separate **named app (`"editor"`)** with anonymous auth. This keeps an editor session and an
   admin session in the same browser from replacing each other. Keep the two apps separate.
-- `admin.js`: admin boot, login and routing by URL params, the events list (category filter chips, upcoming before
+- `admin.js`: admin boot, login and the router, the events list (category filter chips, upcoming before
   past, each event's open/closed status and its extra links, **Switch off / on**), new event, delete (with its extra
   links) and the one-time legacy import. Above the list: a takings summary, status chips, search, **Export CSV**
-  and **Clean up ended**.
+  and **Clean up ended**. The admin page is **one page**: its views (events, templates, settings, event editor,
+  template editor) switch in place with `history.pushState`, keeping the `?w=` / `?view=` / `?template=` addresses,
+  so reload, Back / Forward and bookmarks still work. It catches clicks on same-page links (`<a href="?…">`) and
+  `go()`, asks before leaving unsaved changes, keeps each list's scroll spot, and redraws every view from
+  `admin-data.js` whenever its data changes, whether it is showing or not.
+- `admin-data.js`: the admin page's data (every `weddings/` doc, orders, PINs, categories, templates and
+  `site/settings`), read once after sign-in with Firestore `onSnapshot` listeners and kept current, so views show at
+  once and follow changes made in other tabs or by customers. `onData(fn)` hears every change; `loaded` / `failed`
+  say what has arrived. Admin views read from here instead of fetching.
 - `admin-templates.js`: categories, the Templates page (grouped by category, with a category dropdown that is
   remembered for the tab in `sessionStorage` `wi:templatesCategory`), the template editor (HTML textarea,
-  upload/download, live iframe preview), `templatePicker`, lazy iframe `thumbnail`s and the starter import. Exports
-  `CLASSIC` (id `""`).
+  upload/download, live iframe preview), `templatePicker`, `thumbnail`s and the starter import. Exports
+  `CLASSIC` (id `""`). A thumbnail is the starter's screenshot (`assets/templates/<id>.webp`) while the template is
+  unchanged since it was added (`createdAt` equals `updatedAt`), and Classic's; any other template gets a live
+  iframe that loads when it scrolls into view. `initTemplates()` wires the Templates page and template editor once;
+  `renderTemplates()` redraws from `admin-data.js`, keeping the cards of templates that didn't change.
 - `admin-access.js`: the editor PIN panel on each event card (create, change, revoke, copy details, and **Send on
   WhatsApp** when the order has a number). `customerMessage()` builds the customer message from Settings'
   `welcomeMessage` (or `DEFAULT_MESSAGE`): a one-tap `editor?pin=` link, the PIN, the invitation link and, while
   unpaid, how to pay. `issuePin()` and `sendOnWhatsApp()` are also used by **Create event** in `admin.js`, which makes
   the PIN and opens WhatsApp when a customer number is given (`welcomeCustomer`). WhatsApp can't be sent without a
   tap from a website; fully automatic sending would need Meta's WhatsApp Business API and a server function.
-- `admin-sales.js`: selling. Orders (`loadOrders`, `newOrder`, `markOrderDeleted`), the order panel with **Mark as
+- `admin-sales.js`: selling. Orders (`newOrder`, `markOrderDeleted`), the order panel with **Mark as
   paid** / **Mark unpaid** (one batch: `weddings/<slug>.paid` + `orders/<slug>`), `salesSummary`, `downloadCsv`, and
-  the Settings view (`?view=settings`, `site/settings`).
-- `share.js`: `openShare(mod, voice)`, the **Share** window in the top bar of the admin and editor pages. It shows the
+  the Settings view (`?view=settings`, `site/settings`), which follows the saved settings until something is typed.
+- `share.js`: `openShare(mod, voice)`, the **Share** window in the sidebar of the admin and editor pages. It shows the
   home page or showcase link (`?category=`) in a message for WhatsApp, the phone's share menu (`navigator.share`) or
   copying. It builds `#shareDialog` into the page on first open and reads `site/settings` through the page's own
   Firebase module. `"business"` (admin) writes to customers and signs with the business name; `"friend"` (editor) is
   a customer passing it on.
 - `site.js`: the sales and information pages. Reads `site/settings` through the Firestore REST API (no SDK) and fills
-  `data-site`, `data-site-if`, `a[data-whatsapp]`, `a[data-mailto]` and the `#gallery` (from `starters.json`). On the
+  `data-site`, `data-site-if`, `a[data-whatsapp]`, `a[data-mailto]` and the home page's `#gallery` (from `starters.json`, with the same category chips as the
+  showcase: `categoryChips()`, `?category=<id>`). On the
   showcase it also builds `#showcase` (category chips, a **Preview** and a **Choose** WhatsApp button per design), the
   hero's `#designReel` strip and the `#designPreview` dialog, which shows `./?template=<id>` in a scaled phone frame on
   wide screens (phones open the design in a new tab, so the intro and music play). A visitor whose referrer is the
@@ -138,7 +155,11 @@ the starter designs for the sales page's gallery and the showcase.
   events, contacts, design, links, wishes. Builds its markup into `#editorView` **when the module is imported**, so the
   host page must already contain `#editorView`. `#editorView[data-admin]` turns on the admin-only parts (back link,
   category select, "create template" links, each link's on/off switch and dates). The Links tab lists the event link
-  and the extra links; it also exports `linkStatus`/`stateBadge`, which the events list uses.
+  and the extra links; it also exports `linkStatus`/`stateBadge`, which the events list uses. `openEditor()` can be
+  called again for another event (`closeEditor()` clears the state and stops the listeners). While open it follows
+  the event, its extra links and wishes, and on the editor page its category's templates and `site/settings`, with
+  listeners: a change made elsewhere shows when nothing is unsaved here; otherwise only the fields this page never
+  edits are taken (`lockedFields`). The admin passes its categories and templates in (`catalog`, `setCatalog`).
 - `audio-trim.js`: an in-browser song cutter. It decodes with Web Audio, draws a waveform with draggable handles and
   optional fades, and encodes MP3 with lamejs (loaded from cdnjs on first use; WAV if that fails).
 - `image-utils.js`: resizes and compresses photos in the browser into data URLs under a character budget
@@ -150,7 +171,15 @@ the starter designs for the sales page's gallery and the showcase.
 - `pin.js`: PIN generation (8 chars from a 32-letter alphabet with no 0/O/1/I), formatting (`ABCD-EFGH`),
   normalising and validation.
 - `admin-ui.js`: DOM helpers for admin and editor (`$`, `el`, `show`, `toast`, `actionBtn`, `linkBtn`, `copyText`,
-  `permissionHint`).
+  `permissionHint`), `go(url)` (another view: in place on the admin page, whose router `useRouter` sets; a page load
+  elsewhere), and `wireSidebar()`: from 1024px the `#sideToggle` button folds the sidebar to an icon rail
+  (`html.side-collapsed`, remembered in `localStorage` `wi:sideCollapsed`, shared by both pages); below that it is a
+  slide-in menu (`html.nav-open` locks the page and makes everything else `inert`; the close button, backdrop, Escape
+  or choosing an item closes it).
+- `smooth-scroll.js`: `smoothScroll()`, called by every page (in `invite.js` from `start()`, after any template swap).
+  On a mouse or trackpad (`(hover: hover) and (pointer: fine)`, no reduced motion, not in a frame) it loads Lenis from
+  jsDelivr and glides the wheel; touch screens keep native scrolling. Boxes that scroll by themselves and open
+  `<dialog>`s keep their own scrolling. It pauses while `<html>` or `<body>` has `overflow:hidden` (intros, the menu).
 
 ### Serverless functions in `api/` (Vercel only, CommonJS)
 
@@ -260,8 +289,8 @@ Event fields (`weddings/<slug>`):
 - **Comments**: plain English sentences that explain *why* or name a constraint, placed above the code. Match the
   existing density: most functions have a one- or two-line lead comment.
 - **Dependencies**: avoid new ones. If you really need one, load it from a CDN at runtime (see `loadLame` in
-  `audio-trim.js`). The Firebase SDK version `12.19.0` is pinned in `firebase.js`, `editor-firebase.js` and
-  `translate.js`. Bump all three together.
+  `audio-trim.js`, and Lenis `1.3.26` from jsDelivr in `smooth-scroll.js`). The Firebase SDK version `12.19.0` is
+  pinned in `firebase.js`, `editor-firebase.js` and `translate.js`. Bump all three together.
 - **Old data must keep working**: read configs through `withDefaults()` / `normalize()`, and never assume a newly
   added field exists. Don't rename stored fields or collections.
 - **Bilingual content**: store it as `{ en, ta }` and read it with `tr(field, lang)`, which falls back to English. In
@@ -313,17 +342,25 @@ Without a build step there is no shared config, so these are duplicated on purpo
 | Links per event (3 in all for editors) | `firestore.rules` `linksChangeOk` (`after.size() <= 2`) · `MAX_LINKS` in `defaults.js` |
 | No-cache headers for html/js/css | `vercel.json` `headers` (Vercel) · `public/.htaccess` (local Apache, so edits show on a normal reload) |
 | Starter templates | `public/templates/starters.json` · the starter count in `README.md` and `SETUP.md` ("Add 31 starter templates") · the catalog in `PRODUCT.md` §6 |
-| Site credit | the `.site-credit` footer in `admin.html` and `editor.html` |
+| Site credit | two copies in each of `admin.html` and `editor.html` ("Developed by Harish S"): the `.side-credit` in the sidebar and the page's `.site-credit` footer · `loadSales()` in `event-editor.js`, which adds the business name to their first part |
+| Sidebar breakpoint (1024px) | the `min-width:1024px` / `max-width:1023.98px` queries in `admin.css` · `matchMedia` in `wireSidebar()` (`admin-ui.js`) |
 | Sales settings (businessName, price, upiId, payNumber, whatsapp, email, address, welcomeMessage) | `SALES_DEFAULTS` in `defaults.js` · `FIELDS` in `admin-sales.js` and the Settings form in `admin.html` · `data-site` hooks in `site.js` and the sales/info pages |
 | Bare address → sales page | `vercel.json` redirect of `/` to `/home` (a redirect, because Vercel serves `index.html` before any rewrite; its `missing` list must name every query the invite page takes: `w`, `template`, `template-file`, `editor-preview`) · the `home.html` redirect in `invite.js` `boot()` |
 | Customer message placeholders | `customerMessage()` / `MESSAGE_PLACEHOLDERS` in `admin-access.js` · the hint under the message box in `admin.html` |
-| Design screenshots | `public/assets/templates/<id>.webp`, one per entry in `starters.json` plus `classic` |
+| Design screenshots | `public/assets/templates/<id>.webp`, one per entry in `starters.json` plus `classic` (also the admin and editor thumbnails of unchanged starters) |
+| Brand logo and favicon | `public/favicon.ico` and `public/assets/brand/` (`mark.png` for `.brand`, `logo.png` for `.logo`, `apple-touch-icon.png`, `og-card.jpg` for the `og:image` of `home.html` and `showcase.html`), all cut from one logo image · the icon `<link>`s in every page in `public/`. Templates have none and get `/favicon.ico`. `assets/emblem.svg` is Classic's default deity image, not the logo |
 | Wish limits (60 / 500) | `firestore.rules` (both wish blocks) · `maxlength` in templates and `index.html` · `sendWish()` in `invite.js` |
 | Size limits | Images: `image-utils.js` (900K-char data URL). Music: `MUSIC_*` in `event-editor.js` (900 KB chunks, 10 MB saved, 60 MB source). Template: `MAX_HTML` in `admin-templates.js` (900 KB) |
 | Setup steps | `SETUP.md`, whenever rules, Firebase console steps or admin buttons change |
 
 ## Gotchas
 
+- **The admin page doesn't reload between views.** Wire event listeners once (module top level, `initTemplates`,
+  `initSettings`), never in code that runs each time a view opens. Render functions run on every data change, shown
+  or not, so they must be safe to repeat and must not wipe what is being typed (the events list waits while a
+  **Mark as paid** form is open). Move between views with `go()` or an `<a href="?…">`, not `location.href`. State
+  that belongs to one event is reset in `closeEditor()`. A redrawn preview `<iframe>` loads all over again, so keep
+  existing cards when nothing about them changed.
 - **Starter files are only seeds.** "Add starter templates" copies `public/templates/<file>.html` into
   `templates/<id>` in Firestore. After that, events use the Firestore copy, and editing the file changes nothing live.
   To update a live template, save it through the admin template editor. To add a starter, add the file and an entry
@@ -340,8 +377,19 @@ Without a build step there is no shared config, so these are duplicated on purpo
   runtime sets `<html lang>`). Fonts with old-style figures (Playfair Display, Cormorant Garamond) turn "1" into "ı";
   use `font-variant-numeric:lining-nums`.
 - **Admin and editor layout**: `admin.css` makes `<body>` a full-height flex column (`#appView` and `.center-view`
-  grow) so the `.site-credit` footer sits at the bottom. A new direct child of `<body>` becomes a flex item. While an
-  editor's fixed `.savebar` is showing, the footer gets a bottom margin (`body:has(…)`) so the bar doesn't cover it.
+  grow) so the `.site-credit` footer sits at the bottom of the login, PIN and setup screens; it is hidden
+  (`#appView:not([hidden]) ~ .site-credit`) once the app shows, since the sidebar has the credit. A new direct child
+  of `<body>` becomes a flex item. From 1024px the `.sidebar` is fixed on the left: `#appView` gets
+  `padding-left: var(--side-w)` (252px, or 76px folded), and the toast and the `.savebar` move over by the same width.
+  Folded, the labels (`.side-text`, `.brand-name`) are visually hidden but still read by screen readers, so put a new
+  item's label in a `.side-text` span and give it a `title` for the tooltip. Below 1024px, `.mobilebar` (not sticky)
+  holds the menu button. There is no fixed header, so sticky things (`.tpl-preview`) stick at `top:1rem`.
+- **Smooth scrolling and scroll locks**: Lenis scrolls from script, which `overflow:hidden` doesn't stop, so
+  `smooth-scroll.js` pauses it whenever `<html>` or `<body>` is `overflow:hidden`/`clip` (watched through their `class`
+  and `style`). Lock scrolling by toggling a class or style on `<html>`/`<body>` (`html.intro-open`, `body.locked`,
+  `html.nav-open`): a lock that only a `:has()` rule turns on isn't noticed, so wheels would still move the page on
+  desktop (inside a modal `<dialog>` that doesn't matter: Lenis leaves dialogs alone). A box scrolls by itself only
+  when it has `overflow:auto|scroll` and more content than fits.
 - **The 1 MiB Firestore document limit shapes the storage.** Photos are compressed data URLs. Music is split into
   ~900 KB `Bytes` chunks, each written with its own `setDoc` before the config batch, because a batch can't carry
   several MB. Old chunks are deleted only after the new config commits. Keep that order.

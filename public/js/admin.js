@@ -1,39 +1,39 @@
 import { tr, slugify, isValidSlug, sampleFor, clone, salesSettings, lastDay, addDays, indiaToday, whatsappLink } from "./defaults.js";
 import { isFirebaseConfigured, ADMIN_UID, SITE_URL, useEmulator } from "./firebase-config.js";
 import { compressPreviewImage } from "./image-utils.js";
-import { $, show, el, toast, actionBtn, copyText, permissionHint } from "./admin-ui.js";
+import { $, show, el, toast, actionBtn, copyText, permissionHint, wireSidebar, go, useRouter } from "./admin-ui.js";
+import { smoothScroll } from "./smooth-scroll.js";
+import { data, loaded, failed, onData, startData } from "./admin-data.js";
 import {
-  useFirebase, loadCategories, loadTemplates, templatesIn, templateName, categoryName, templatePicker,
-  enterTemplates, enterTemplateEditor
+  useFirebase, templatesIn, templateName, categoryName, templatePicker,
+  initTemplates, renderTemplates, enterTemplateEditor, templateHasUnsavedChanges, discardTemplateChanges
 } from "./admin-templates.js";
 import {
-  useFirebase as useAccessFirebase, loadPins, revokePin, accessPanel, issuePin, customerMessage, sendOnWhatsApp
+  useFirebase as useAccessFirebase, revokePin, accessPanel, issuePin, customerMessage, sendOnWhatsApp
 } from "./admin-access.js";
 import {
-  useFirebase as useSalesFirebase, loadOrders, newOrder, markOrderDeleted, orderPanel, salesSummary, downloadCsv, enterSettings
+  useFirebase as useSalesFirebase, newOrder, markOrderDeleted, orderPanel, salesSummary, downloadCsv, initSettings, renderSettings
 } from "./admin-sales.js";
 import { openShare } from "./share.js";
 import {
-  openEditor, normalize, coupleNames, shareLink, previewLink, musicChunkId, hasUnsavedChanges, discardChanges,
-  linkStatus, stateBadge
+  openEditor, closeEditor, setCatalog, normalize, coupleNames, shareLink, previewLink, musicChunkId,
+  hasUnsavedChanges, discardChanges, isSaving, linkStatus, stateBadge
 } from "./event-editor.js";
 
 let fb = null;
-const params = new URLSearchParams(location.search);
-// admin?w=<event> edits that event (other views are routed in enterApp).
-const weddingId = params.get("w") || "";
 const settingsDoc = () => fb.doc(fb.db, "site", "settings");
 let appStarted = false;
+
+/* ------------------------------ weddings list ------------------------------ */
+// Copies of the data in js/admin-data.js, taken each time it changes (takeData).
+let settings = {};           // site/settings: { legacyImported, and the sales settings (price, upiId, …) }
+let orders = new Map();      // event id -> orders/<id>: who bought it and how they paid
 let pins = new Map();        // slug -> { pin }: events that someone else may edit with a PIN
 let pinsReady = false;       // false until the rules that allow reading pins/ are deployed
 let categories = [];         // [{ id, name, order }]
 let templates = [];          // [{ id, name, categoryId, html, … }]
-
-/* ------------------------------ weddings list ------------------------------ */
-let settings = {};           // site/settings: { legacyImported, and the sales settings (price, upiId, …) }
 let weddings = [];           // [{ id, cfg }]: events, without their extra links
 let extraLinks = new Map();  // event id -> [{ id, cfg }]: its extra links ({ parent } docs in weddings/)
-let orders = new Map();      // event id -> orders/<id>: who bought it and how they paid
 let legacyConfig = null;     // site/config from before multi-wedding, until it's imported
 
 const SLUG_RULES = "Use 3–40 lowercase letters, numbers and dashes, like arjun-meera. " +
@@ -56,73 +56,63 @@ async function inBatches(items, write){
   }
 }
 
-function enterList(){
-  show("weddingsView");
-  document.querySelectorAll(".slug-prefix").forEach(s => { s.textContent = siteHost() + "/"; });
-  loadWeddings();
-}
-
 let categoryFilter = "all";
 const eventCategory = cfg => cfg.category || "wedding";
 
-async function loadWeddings(){
+// Draws the list from js/admin-data.js. It runs whenever any of that data changes (see onData under "views"),
+// whether or not the list is showing, so it is ready the moment it is opened.
+function refreshList(){
   const status = $("weddingsStatus");
-  status.textContent = "Loading events…";
-  show("weddingsStatus");
-  try {
-    const [list, settingsSnap] = await Promise.all([
-      fb.getDocs(fb.collection(fb.db, "weddings")),
-      fb.getDoc(settingsDoc())
-    ]);
-    settings = settingsSnap.exists() ? settingsSnap.data() : {};
-    const all = list.docs.map(d => ({ id: d.id, cfg: d.data() }));
-    const ids = new Set(all.filter(w => !w.cfg.parent).map(w => w.id));
-    // An extra link whose event is gone is listed on its own, so it can be deleted.
-    weddings = all.filter(w => !w.cfg.parent || !ids.has(w.cfg.parent));
-    extraLinks = new Map();
-    all.filter(w => w.cfg.parent && ids.has(w.cfg.parent))
-      .forEach(l => extraLinks.set(l.cfg.parent, [...(extraLinks.get(l.cfg.parent) || []), l]));
-    legacyConfig = null;
-    if(!settings.legacyImported){
-      const legacy = await fb.getDoc(fb.doc(fb.db, "site", "config"));
-      if(legacy.exists()) legacyConfig = legacy.data();
-    }
-  } catch(e){
-    status.textContent = e.code === "permission-denied"
+  if(!loaded.has("events") || !loaded.has("settings")){
+    status.textContent = "Loading events…";
+    return show("weddingsStatus");
+  }
+  const error = failed.get("events") || failed.get("settings");
+  if(error){
+    status.textContent = error.code === "permission-denied"
       ? "Permission denied — check the admin UID in firestore.rules and deploy the rules."
-      : "Couldn't load events: " + e.message;
-    return;
+      : "Couldn't load events: " + error.message;
+    return show("weddingsStatus");
   }
-  // Categories and templates only add labels here, so the list still works if they fail
-  // (e.g. before the new rules are deployed).
-  try {
-    [categories, templates] = await Promise.all([loadCategories(), loadTemplates()]);
-  } catch(e){
-    console.warn("categories/templates unavailable", e);
-    toast("Couldn't load templates — deploy the latest firestore.rules (see SETUP.md).");
-  }
-  try {
-    pins = await loadPins();
-    pinsReady = true;
-  } catch(e){
-    console.warn("editor PINs unavailable", e);
-    pinsReady = false;
-    toast("Couldn't load editor PINs — deploy the latest firestore.rules (see SETUP.md).");
-  }
-  try {
-    orders = await loadOrders();
-  } catch(e){
-    console.warn("orders unavailable", e);
-    orders = new Map();
-    toast("Couldn't load orders — deploy the latest firestore.rules (see SETUP.md).");
-  }
+  takeData();
+  checkLegacy();
+  renderWeddings();
+}
 
-  if(legacyConfig && $("importForm").hidden){
+// Categories, templates, PINs and orders only add to the list, so it still works without them
+// (e.g. before the new rules are deployed).
+function takeData(){
+  settings = data.settings;
+  orders = failed.has("orders") ? new Map() : data.orders;
+  pinsReady = loaded.has("pins") && !failed.has("pins");
+  pins = pinsReady ? data.pins : new Map();
+  categories = data.categories;
+  templates = data.templates;
+  const all = data.events;
+  const ids = new Set(all.filter(w => !w.cfg.parent).map(w => w.id));
+  // An extra link whose event is gone is listed on its own, so it can be deleted.
+  weddings = all.filter(w => !w.cfg.parent || !ids.has(w.cfg.parent));
+  extraLinks = new Map();
+  all.filter(w => w.cfg.parent && ids.has(w.cfg.parent))
+    .forEach(l => extraLinks.set(l.cfg.parent, [...(extraLinks.get(l.cfg.parent) || []), l]));
+}
+
+// The invitation from before events had their own links (site/config) is offered for import until it is imported.
+let legacyChecked = false;
+async function checkLegacy(){
+  if(settings.legacyImported){ legacyConfig = null; return show("importForm", false); }
+  if(legacyChecked) return;
+  legacyChecked = true;
+  try {
+    const legacy = await fb.getDoc(fb.doc(fb.db, "site", "config"));
+    if(legacy.exists()) legacyConfig = legacy.data();
+  } catch(e){
+    console.warn("couldn't check for the old invitation", e);
+  }
+  if(legacyConfig && !settings.legacyImported && $("importForm").hidden){
     $("importSlug").value = slugify(`${tr(legacyConfig.groomName, "en")}-${tr(legacyConfig.brideName, "en")}`);
     show("importForm");
   }
-  if(!legacyConfig) show("importForm", false);
-  renderWeddings();
 }
 
 function renderCategoryFilter(){
@@ -177,7 +167,14 @@ function matchesSearch(w){
 }
 $("eventSearch").addEventListener("input", e => { searchText = e.target.value; renderWeddings(); });
 
-function renderWeddings(){
+// A payment being typed into a card's Mark as paid form would be lost by redrawing the list, so a change that
+// arrives meanwhile waits until the form is saved (which redraws with `force`) or cancelled.
+let listWaiting = false;
+$("weddingsList").addEventListener("reset", () => { if(listWaiting) setTimeout(renderWeddings); });
+
+function renderWeddings(force = false){
+  if(!force && $("weddingsList").querySelector(".paid-form:not([hidden])")){ listWaiting = true; return; }
+  listWaiting = false;
   renderCategoryFilter();
   renderStatusFilter();
   $("salesSummary").replaceChildren(salesSummary(weddings, orders));
@@ -239,7 +236,7 @@ function weddingCard(w, isPast){
 
   card.append(head, when, design, linkAnchor(w.id), el("p", "link-status", status.text));
   if(extras.length) card.append(more);
-  const sale = orderPanel({ w, orders, sales: salesSettings(settings), onChange: renderWeddings });
+  const sale = orderPanel({ w, orders, sales: salesSettings(settings), onChange: () => renderWeddings(true) });
   if(sale) card.append(sale);
   const order = orders.get(w.id) || {};
   if(pinsReady) card.append(accessPanel({ slug: w.id, name: coupleNames(w.cfg, w.id), pins, paid: w.cfg.paid !== false,
@@ -258,7 +255,6 @@ function orphanLinkCard(w){
     if(!confirm(`Delete the link ${siteHost()}/${w.id}? Its event “${w.cfg.parent}” no longer exists, so it shows nothing.`)) return;
     try { await fb.deleteDoc(fb.doc(fb.db, "weddings", w.id)); toast(`Deleted ${siteHost()}/${w.id}.`); }
     catch(e){ toast("Delete failed: " + permissionHint(e)); }
-    loadWeddings();
   }));
   card.append(head, el("p", "muted", `An extra link of “${w.cfg.parent}”, which no longer exists.`), acts);
   return card;
@@ -269,9 +265,7 @@ async function setActive(w, on){
   const name = coupleNames(w.cfg, w.id);
   try {
     await fb.updateDoc(fb.doc(fb.db, "weddings", w.id), { active: on });
-    w.cfg.active = on;
-    renderWeddings();
-    const after = linkStatus(w.cfg);
+    const after = linkStatus({ ...w.cfg, active: on });
     toast(on
       ? `${name} is switched on.` + (after.state === "live" ? " Guests can open it." : " " + after.text + " Change its dates in the Links tab.")
       : `${name} is switched off. Guests opening its link${(extraLinks.get(w.id) || []).length ? "s" : ""} see that it isn't open.`);
@@ -314,7 +308,6 @@ async function cleanupEnded(){
   }
   btn.disabled = false;
   btn.textContent = "Clean up ended";
-  loadWeddings();
 }
 $("cleanupBtn").addEventListener("click", cleanupEnded);
 $("exportCsvBtn").addEventListener("click", () => downloadCsv(weddings, orders, w => linkStatus(w.cfg).state));
@@ -343,7 +336,7 @@ async function deleteWedding(w){
     console.error(e);
     toast("Delete failed: " + e.message);
   }
-  loadWeddings();
+  renderWeddings();   // clears the "Deleting…" line
 }
 
 /* ------------------------------ new event ------------------------------ */
@@ -425,7 +418,11 @@ $("newWeddingForm").addEventListener("submit", async e => {
     newOrder(batch, id, { customer, phone, paid: cfg.paid, price: salesSettings(settings).price });
     await batch.commit();
     // Without a customer's number this is the admin's own event: straight to its editor.
-    if(!whatsappLink(phone)){ location.href = `?w=${id}&new=1`; return; }
+    if(!whatsappLink(phone)){
+      show("newWeddingForm", false);
+      $("createWeddingBtn").disabled = false;
+      return go(`?w=${id}&new=1`);
+    }
     await welcomeCustomer({ id, name: [groom, bride].filter(Boolean).join(" & "), customer, phone, paid: cfg.paid });
   } catch(e){
     error.textContent = e.message;
@@ -452,7 +449,6 @@ async function welcomeCustomer({ id, name, customer, phone, paid }){
   const message = pin && customerMessage({ name, slug: id, pin, paid, sales: salesSettings(settings), customer });
   const opened = !!message && sendOnWhatsApp(phone, message);
   showCreated({ id, name, customer: who, phone, message, opened });
-  loadWeddings();
 }
 
 function showCreated({ id, name, customer, phone, message, opened, waiting = false }){
@@ -543,7 +539,6 @@ $("importForm").addEventListener("submit", async e => {
     await importLegacy(id, text => { btn.textContent = text; });
     show("importForm", false);
     toast(`Imported ✓ ${siteHost()}/${id} is ready.`);
-    loadWeddings();
   } catch(e){
     console.error(e);
     error.textContent = "Import failed: " + e.message;
@@ -574,7 +569,10 @@ $("loginForm").addEventListener("submit", async e => {
   }
 });
 
-// The top bar's Share button: the home page or showcase link for customers.
+wireSidebar();
+smoothScroll();
+
+// The sidebar's Share button: the home page or showcase link for customers.
 $("shareOpenBtn").addEventListener("click", () => openShare(fb));
 
 $("logoutBtn").addEventListener("click", async () => {
@@ -634,33 +632,127 @@ async function enterApp(user){
     show("uidBanner");
   }
 
-  // admin?w=<event> edits an event, ?template=<id|new> edits a template, ?view=templates lists
-  // templates, ?view=settings is what customers see about buying, and plain admin lists events.
-  const templateParam = params.get("template");
-  const onTemplates = !!templateParam || params.get("view") === "templates";
-  const onSettings = params.get("view") === "settings";
-  $(onTemplates ? "navTemplates" : onSettings ? "navSettings" : "navEvents").classList.add("active");
-  if(weddingId) enterEditor();
-  else if(templateParam) enterTemplateEditor(templateParam, params.get("category"));
-  else if(onTemplates) enterTemplates();
-  else if(onSettings) enterSettings();
-  else enterList();
+  // Everything every view needs is read now and kept current, and every view is drawn as it arrives.
+  startData(fb);
+  route();
 }
 
-async function enterEditor(){
+/* ---------------------------------- views ---------------------------------- */
+// The admin page is one page. The sidebar, Edit buttons, back links and template links switch views in place,
+// with the address kept in step: ?w=<event> edits an event, ?template=<id|new> edits a template, ?view=templates
+// lists templates, ?view=settings is what customers see about buying, and plain admin lists events. So reloading,
+// Back and Forward, and bookmarks all still work. The views draw from js/admin-data.js, so they show at once.
+const VIEWS = ["weddingsView", "templatesView", "settingsView", "templateEditorView", "editorView"];
+const NAV = { weddingsView: "navEvents", editorView: "navEvents", templatesView: "navTemplates",
+  templateEditorView: "navTemplates", settingsView: "navSettings" };
+let routeSeq = 0;               // counts view changes, so a view still loading can tell it was left
+let shownAt = "";               // the address of the view showing
+const scrollSpots = new Map();  // address -> how far down a list was scrolled, for coming back to it
+
+function viewFor(params){
+  if(params.get("w")) return "editorView";
+  if(params.get("template")) return "templateEditorView";
+  if(params.get("view") === "templates") return "templatesView";
+  if(params.get("view") === "settings") return "settingsView";
+  return "weddingsView";
+}
+
+async function scrollToY(y){
+  const lenis = await smoothScroll();
+  if(lenis) lenis.scrollTo(y, { immediate: true, force: true });
+  else scrollTo(0, y);
+}
+
+// Shows the view for the address in the address bar.
+function route(){
+  const seq = ++routeSeq;
+  const isCurrent = () => seq === routeSeq;
+  const params = new URLSearchParams(location.search);
+  const view = viewFor(params);
+  shownAt = location.pathname + location.search;
+  Object.values(NAV).forEach(id => { $(id).classList.remove("active"); $(id).removeAttribute("aria-current"); });
+  $(NAV[view]).classList.add("active");
+  $(NAV[view]).setAttribute("aria-current", "page");
+  document.title = "Online Invitation Admin";
+  if(view !== "editorView") closeEditor();
+  // The two editors show themselves once their event or template is in.
+  VIEWS.forEach(v => show(v, v === view && v !== "editorView" && v !== "templateEditorView"));
+  if(view === "editorView") enterEditor(params, isCurrent);
+  else if(view === "templateEditorView") enterTemplateEditor(params.get("template"), params.get("category"), isCurrent);
+  scrollToY(view === "editorView" || view === "templateEditorView" ? 0 : scrollSpots.get(shownAt) || 0);
+}
+
+async function enterEditor(params, isCurrent){
+  const id = params.get("w");
   try {
-    await openEditor({ mod: fb, id: weddingId, backHref: location.pathname, firstRun: params.has("new") });
+    const opened = await openEditor({ mod: fb, id, backHref: location.pathname, firstRun: params.has("new"),
+      catalog: () => ({ categories: data.categories, templates: data.templates }) });
+    if(!opened || !isCurrent()) return;
   } catch(e){
-    return backToList(e.message);
+    if(!isCurrent()) return;
+    toast(e.message);
+    return go(location.pathname, { replace: true });
   }
-  if(params.has("new")) history.replaceState(null, "", "?w=" + weddingId); // don't show the banner again on reload
+  if(params.has("new")){   // don't show the banner again on reload
+    history.replaceState(null, "", "?w=" + id);
+    shownAt = location.pathname + location.search;
+  }
 }
 
-function backToList(msg){
-  history.replaceState(null, "", location.pathname);
-  toast(msg);
-  enterList();
+// Leaving an editor with unsaved changes asks first, and a save still writing is waited for. False means stay.
+function canLeave(){
+  if(isSaving()){ toast("Still saving — wait a moment, then try again."); return false; }
+  if(!hasUnsavedChanges() && !templateHasUnsavedChanges()) return true;
+  if(!confirm("You have unsaved changes. Leave without saving them?")) return false;
+  discardChanges();
+  discardTemplateChanges();
+  return true;
 }
+
+// go() in js/admin-ui.js: another view of this page switches in place; any other page loads as usual.
+function navigate(url, { replace = false } = {}){
+  const target = new URL(url, location.href);
+  if(target.origin !== location.origin || target.pathname !== location.pathname){ location.href = target.href; return; }
+  if(!replace && target.search === location.search) return scrollToY(0);   // already here
+  if(!canLeave()) return;
+  scrollSpots.set(shownAt, scrollY);
+  history[replace ? "replaceState" : "pushState"](null, "", target.pathname + target.search);
+  route();
+}
+useRouter(navigate);
+history.scrollRestoration = "manual";   // each view's place is kept in scrollSpots instead
+
+addEventListener("popstate", () => {
+  if(!appStarted) return;
+  if(!canLeave()){ history.pushState(null, "", shownAt); return; }
+  scrollSpots.set(shownAt, scrollY);
+  route();
+});
+
+// Links to the admin's own views switch in place; links to new tabs or other pages work as usual.
+document.addEventListener("click", e => {
+  const a = e.target.closest?.("a[href]");
+  if(!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  if((a.target && a.target !== "_self") || a.hasAttribute("download")) return;
+  const url = new URL(a.href, location.href);
+  if(url.origin !== location.origin || url.pathname !== location.pathname) return;
+  e.preventDefault();
+  go(url.href);
+});
+
+// Each view is redrawn as its data arrives or changes, whether it is showing or not.
+const LATE = { categories: "templates", templates: "templates", pins: "editor PINs", orders: "orders" };
+const warned = new Set();
+onData(kind => {
+  refreshList();
+  if(kind === "categories" || kind === "templates" || kind === "events") renderTemplates();
+  if(kind === "categories" || kind === "templates") setCatalog(data.categories, data.templates);
+  if(kind === "settings") renderSettings();
+  if(failed.has(kind) && LATE[kind] && !warned.has(LATE[kind])){
+    warned.add(LATE[kind]);
+    toast(`Couldn't load ${LATE[kind]} — deploy the latest firestore.rules (see SETUP.md).`);
+  }
+});
 
 if(!isFirebaseConfigured){
   show("setupView");
@@ -670,6 +762,9 @@ if(!isFirebaseConfigured){
     useFirebase(mod);
     useAccessFirebase(mod);
     useSalesFirebase(mod);
+    document.querySelectorAll(".slug-prefix").forEach(s => { s.textContent = siteHost() + "/"; });
+    initTemplates();
+    initSettings();
     let triedAutoLogin = false;
     fb.onAuthStateChanged(fb.auth, async user => {
       if(user) return enterApp(user);

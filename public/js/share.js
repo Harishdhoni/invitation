@@ -1,4 +1,4 @@
-// The Share window, opened from the top bar of the admin and editor pages: the link to the home page (the sales page
+// The Share window, opened from the sidebar of the admin and editor pages: the link to the home page (the sales page
 // at the bare address) or the showcase of every design (optionally for one kind of event, ?category=), in a message
 // to send on WhatsApp (to a number, or picking the chat), through the phone's share menu, or to copy. The wording
 // uses the price and business name from site/settings, which anyone may read.
@@ -115,7 +115,7 @@ function buildShare(voice){
   if(navigator.share){
     show("shareNative");
     $("shareNative").addEventListener("click", () =>
-      navigator.share({ title: share.sales.businessName || "Invitations", text: $("shareMessage").value }).catch(() => {}));
+      navigator.share({ title: share.sales.businessName || "Online Invitations", text: $("shareMessage").value }).catch(() => {}));
   }
 }
 

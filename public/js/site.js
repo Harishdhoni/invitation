@@ -6,12 +6,13 @@
 //   data-site-host                                                the live site's address (from SITE_URL)
 //   a[data-whatsapp="message"]                                    a wa.me link to the business number; {price} is replaced
 //   a[data-mailto]                                                a mailto: link to the support email
-//   #gallery                                                      the starter designs from templates/starters.json
+//   #gallery                                                      the home page's designs with category filters
 //   #showcase, #designReel, #designPreview, data-count="designs|occasions"
 //                                                                 the showcase page: every design with category filters
 //                                                                 and a live preview, a moving strip of them, and counts
 import { firebaseConfig, useEmulator, EMULATOR, SITE_URL } from "./firebase-config.js";
 import { salesSettings, whatsappLink, DEFAULT_CATEGORIES } from "./defaults.js";
+import { smoothScroll } from "./smooth-scroll.js";
 
 const $$ = sel => [...document.querySelectorAll(sel)];
 function el(tag, className, text){
@@ -55,8 +56,9 @@ function fill(s){
   $$("[data-site-if]").forEach(n => { n.hidden = !s[n.dataset.siteIf]; });
   $$("a[data-whatsapp]").forEach(a => pointToWhatsApp(a, a.dataset.whatsapp));
   $$("a[data-mailto]").forEach(a => { if(s.email) a.href = "mailto:" + s.email; });
-  // Page titles start with "Invitations" (what link previews show); swap in the business name once known.
-  if(s.businessName && document.title.startsWith("Invitations")) document.title = s.businessName + document.title.slice("Invitations".length);
+  // Page titles start with "Online Invitations" (what link previews show); swap in the business name once known.
+  const SITE_NAME = "Online Invitations";
+  if(s.businessName && document.title.startsWith(SITE_NAME)) document.title = s.businessName + document.title.slice(SITE_NAME.length);
   $$("[data-year]").forEach(n => { n.textContent = new Date().getFullYear(); });
 }
 
@@ -77,12 +79,48 @@ const previewLink = t => `./?template=${t.id}`;
 const screenshot = (t, alt) => Object.assign(el("img"), { src: `assets/templates/${t.id}.webp`, alt, width: 390, height: 780 });
 const chooseMessage = t => `Hi! I'd like an invitation in the "${t.name}" design (₹{price}).`;
 
-// The starter designs, by category, each opening a live preview with sample details.
+// The category chips above the designs on the home page and the showcase: "All designs" and one per category, with
+// their counts. The chosen one is kept in the address (?category=<id>), so a filtered page can be shared.
+// draw(groups) puts the chosen groups' designs on the page; it runs now and after every pick.
+function categoryChips(box, groups, draw){
+  let current = new URLSearchParams(location.search).get("category");
+  if(!groups.some(g => g.id === current)) current = "";
+  const chips = el("div", "chips");
+  chips.setAttribute("role", "group");
+  chips.setAttribute("aria-label", "Show designs for");
+  const pick = id => {
+    current = id;
+    chips.querySelectorAll(".chip").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.category === id)));
+    draw(id ? groups.filter(g => g.id === id) : groups);
+  };
+  const chip = (id, label, count) => {
+    const b = el("button", "chip");
+    b.type = "button";
+    b.dataset.category = id;
+    b.append(el("span", "", label), el("span", "chip-count", String(count)));
+    b.addEventListener("click", () => {
+      const url = new URL(location.href);
+      if(id) url.searchParams.set("category", id); else url.searchParams.delete("category");
+      history.replaceState(null, "", url);
+      pick(id);
+      // With the chips stuck to the top of the screen, start the new list from its beginning.
+      if(box.getBoundingClientRect().top < 0) box.scrollIntoView({ block: "start" });
+    });
+    return b;
+  };
+  chips.append(chip("", "All designs", groups.reduce((n, g) => n + g.list.length, 0)),
+    ...groups.map(g => chip(g.id, g.name, g.list.length)));
+  pick(current);
+  return chips;
+}
+
+// The home page: the designs by category, with the category chips, each opening a live preview with sample details.
 async function gallery(){
   const box = document.getElementById("gallery");
   if(!box) return;
   const groups = await designGroups();
-  box.replaceChildren(...groups.map(g => {
+  const results = el("div", "gallery-results");
+  const chips = categoryChips(box, groups, shown => results.replaceChildren(...shown.map(g => {
     const section = el("section", "gallery-group");
     section.append(el("h3", "", `${g.name} · ${g.list.length}`));
     const grid = el("div", "gallery-grid");
@@ -97,7 +135,8 @@ async function gallery(){
     }));
     section.append(grid);
     return section;
-  }));
+  })));
+  box.replaceChildren(chips, results);
 }
 
 /* ------------------------------ showcase ------------------------------ */
@@ -170,31 +209,6 @@ async function showcase(){
   $$("[data-count]").forEach(n => { n.textContent = n.dataset.count === "designs" ? all.length : groups.length; });
   reel(all);
   const openPreview = previewer();
-  let current = new URLSearchParams(location.search).get("category");
-  if(!groups.some(g => g.id === current)) current = "";
-
-  const chips = el("div", "chips");
-  chips.setAttribute("role", "group");
-  chips.setAttribute("aria-label", "Show designs for");
-  const chip = (id, label, count) => {
-    const b = el("button", "chip");
-    b.type = "button";
-    b.dataset.category = id;
-    b.append(el("span", "", label), el("span", "chip-count", String(count)));
-    b.addEventListener("click", () => {
-      current = id;
-      const url = new URL(location.href);
-      if(id) url.searchParams.set("category", id); else url.searchParams.delete("category");
-      history.replaceState(null, "", url);
-      render();
-      // With the chips stuck to the top of the screen, start the new list from its beginning.
-      if(box.getBoundingClientRect().top < 0) box.scrollIntoView({ block: "start" });
-    });
-    return b;
-  };
-  chips.append(chip("", "All designs", all.length), ...groups.map(g => chip(g.id, g.name, g.list.length)));
-  const results = el("div", "tour-results");
-  box.replaceChildren(chips, results);
 
   function card(t, shown){
     const item = el("article", "tour-card");
@@ -218,9 +232,8 @@ async function showcase(){
     return item;
   }
 
-  function render(){
-    chips.querySelectorAll(".chip").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.category === current)));
-    const visible = current ? groups.filter(g => g.id === current) : groups;
+  const results = el("div", "tour-results");
+  const chips = categoryChips(box, groups, visible => {
     const shown = visible.flatMap(g => g.list);
     results.replaceChildren(...visible.map(g => {
       const section = el("section", "tour-group");
@@ -230,8 +243,8 @@ async function showcase(){
       section.append(grid);
       return section;
     }));
-  }
-  render();
+  });
+  box.replaceChildren(chips, results);
 }
 
 /* ------------------------------ back to admin / editor ------------------------------ */
@@ -264,6 +277,7 @@ function backBar(){
 }
 
 $$("[data-site-host]").forEach(n => { n.textContent = new URL(SITE_URL).host; });
+smoothScroll();
 backBar();
 gallery();
 showcase();

@@ -168,13 +168,16 @@ const EVENT_BI_KEYS = ["name", "date", "time", "place", "venue", "desc"];
 const eventImageId = ev => "event-" + ev.id;
 
 /* -------------------------------- state -------------------------------- */
-// openEditor() loads one event. Switching event is a page load, so the state below always belongs to one event.
+// openEditor() loads one event; closeEditor() (or opening another) clears the state below and stops its listeners.
+// `session` counts the openings, so anything still loading for an event that was left is dropped.
 export const shareLink = id => `${SITE_URL}/${id}`;
 export const previewLink = id => `./?w=${id}`;   // works on XAMPP and Vercel alike
 const wdoc = (...path) => fb.doc(fb.db, "weddings", weddingId, ...path);
 
 let fb = null;
 let weddingId = "";
+let session = 0;
+let stops = [];              // stop functions of this event's listeners (event, wishes, designs, settings)
 let onDenied = null;         // editor page: called when a save is refused, in case the PIN was revoked
 let state = null;            // working copy of weddings/<weddingId>, bound to the form inputs
 let pendingImages = {};      // imageId -> { dataUrl, w, h } chosen but not yet saved
@@ -203,6 +206,9 @@ function setDirty(on = true){
 addEventListener("beforeunload", e => { if(dirty){ e.preventDefault(); e.returnValue = ""; } });
 export const hasUnsavedChanges = () => dirty;
 export const discardChanges = () => { dirty = false; };
+// A save writes photos and music piece by piece; the admin page waits for it to finish before leaving the event.
+let saving = false;
+export const isSaving = () => saving;
 
 export function coupleNames(cfg, fallback = ""){
   return [tr(cfg.groomName, "en"), tr(cfg.brideName, "en")].filter(Boolean).join(" & ") || fallback;
@@ -565,16 +571,25 @@ function renderDesign(){
   const offered = T.templatesIn(templates, state.category).some(t => t.id === state.templateId);
   $("designCurrent").textContent = "Now showing: " + T.templateName(templates, state.templateId) +
     (offered ? "" : ` (not a ${T.categoryName(categories, state.category)} template — pick one below)`);
-  $("designPicker").replaceChildren(T.templatePicker({
-    templates, category: state.category, selected: state.templateId, name: "designTemplate", canCreate: isAdminPage,
-    taken: links.map(l => l.data.templateId),
-    onChange: id => {
-      state.templateId = id;
-      $("designCurrent").textContent = "Now showing: " + T.templateName(templates, id);
-      $("designPreviewLink").href = T.eventInTemplateLink(weddingId, id);
-      setDirty();
-    }
-  }));
+  // The picker's previews load all over again when it is redrawn, so it is redrawn only when its choices change
+  // (another event of the same category keeps it, with its previews loaded).
+  const taken = links.map(l => l.data.templateId);
+  const key = JSON.stringify([state.category, taken, templates.map(t => [t.id, t.v || 0, t.name])]);
+  const box = $("designPicker");
+  if(box.dataset.key !== key){
+    box.dataset.key = key;
+    box.replaceChildren(T.templatePicker({
+      templates, category: state.category, selected: state.templateId, name: "designTemplate", canCreate: isAdminPage, taken,
+      onChange: id => {
+        state.templateId = id;
+        $("designCurrent").textContent = "Now showing: " + T.templateName(templates, id);
+        $("designPreviewLink").href = T.eventInTemplateLink(weddingId, id);
+        setDirty();
+      }
+    }));
+  } else {
+    box.querySelectorAll("input[type=radio]").forEach(r => { r.checked = r.value === state.templateId; });
+  }
   $("designPreviewLink").href = T.eventInTemplateLink(weddingId, state.templateId);
 }
 
@@ -815,7 +830,9 @@ $("createLinkBtn").addEventListener("click", async () => {
     batch.set(linkRef(id), { ...data, createdAt: fb.serverTimestamp(), updatedAt: fb.serverTimestamp() });
     batch.update(wdoc(), { links: fb.arrayUnion(id) });
     await batch.commit();
+    state.links = [...state.links, id];
     links.push({ id, data, dirty: false });
+    syncLinks();
     show("newLinkForm", false);
     renderLinks();
     renderDesign();
@@ -838,7 +855,8 @@ async function deleteLink(link){
     batch.delete(linkRef(link.id));
     batch.update(wdoc(), { links: fb.arrayRemove(link.id) });
     await batch.commit();
-    links = links.filter(l => l !== link);
+    state.links = state.links.filter(id => id !== link.id);
+    syncLinks();   // stops following it and takes it off the list
     renderLinks();
     renderDesign();
     toast(`Deleted ${siteHost()}/${link.id}.`);
@@ -848,17 +866,35 @@ async function deleteLink(link){
   }
 }
 
-async function loadLinks(ids){
-  const found = await Promise.all((ids || []).map(async id => {
-    try {
-      const snap = await fb.getDoc(linkRef(id));
-      return snap.exists() ? { id, data: linkData(snap.data()), dirty: false } : null;
-    } catch(e){
+// Each extra link in `state.links` is followed with a listener, so changes made elsewhere (the admin's switch and
+// dates, a link added on the other page) show here. A link with unsaved changes here keeps them.
+// Resolves once the links not followed before have been read.
+const linkWatch = new Map();   // link id -> stop function
+
+function syncLinks(){
+  const ids = state.links;
+  for(const [id, stop] of linkWatch) if(!ids.includes(id)){ stop(); linkWatch.delete(id); }
+  links = links.filter(l => ids.includes(l.id));
+  return Promise.all(ids.filter(id => !linkWatch.has(id)).map(watchLink));
+}
+
+function watchLink(id){
+  const my = session;
+  return new Promise(resolve => {
+    linkWatch.set(id, fb.onSnapshot(linkRef(id), snap => {
+      if(my !== session) return;
+      const i = links.findIndex(l => l.id === id);
+      if(!snap.exists()){ if(i >= 0) links.splice(i, 1); }
+      else if(i < 0) links.push({ id, data: linkData(snap.data()), dirty: false });
+      else if(!links[i].dirty && !snap.metadata.hasPendingWrites) links[i].data = linkData(snap.data());
+      links.sort((a, b) => state.links.indexOf(a.id) - state.links.indexOf(b.id));
+      resolve();
+      if(editorOpen){ renderLinks(); renderDesign(); }
+    }, e => {
       console.warn("couldn't load the link", id, e);
-      return null;
-    }
-  }));
-  links = found.filter(Boolean);
+      resolve();
+    }));
+  });
 }
 
 $("designCategory")?.addEventListener("change", () => {
@@ -1035,14 +1071,28 @@ function deleteMusicChunks(m){
     fb.deleteDoc(wdoc("music", musicChunkId(m.v, i))).catch(() => {})));
 }
 
+// Photos already read in this tab, by event, id and version, so going back to an event shows them at once.
+const imageCache = new Map();   // "<event>/<id>@<version>" -> data URL, oldest first
+const cacheImage = (id, version, dataUrl) => {
+  imageCache.set(`${weddingId}/${id}@${version}`, dataUrl);
+  if(imageCache.size > 24) imageCache.delete(imageCache.keys().next().value);
+};
+
 async function loadSavedImages(){
+  const my = session;
   const ids = Object.keys(state.images).filter(id => id !== "og"); // the preview copy isn't shown here
   await Promise.all(ids.map(async id => {
+    const version = state.images[id];
+    const cached = imageCache.get(`${weddingId}/${id}@${version}`);
+    if(cached){ loadedImages[id] = cached; return; }
     try {
       const snap = await fb.getDoc(wdoc("images", id));
-      if(snap.exists()) loadedImages[id] = snap.data().dataUrl;
+      if(!snap.exists() || my !== session) return;
+      loadedImages[id] = snap.data().dataUrl;
+      cacheImage(id, version, loadedImages[id]);
     } catch(e){ console.warn("image load failed", id, e); }
   }));
+  if(my !== session) return;
   refreshPhoto("cover");
   refreshPhoto("deity");
   document.querySelectorAll("img.icon-preview").forEach(img => {
@@ -1060,6 +1110,7 @@ async function save(){
   }
   $("saveBtn").disabled = true;
   $("saveStatus").textContent = "Saving…";
+  saving = true;
   const oldMusic = state.music;
   let music = removeMusic ? null : state.music;
   try {
@@ -1124,7 +1175,7 @@ async function save(){
     refreshMusic();
 
     state.images = images;
-    Object.entries(pendingImages).forEach(([id, img]) => { loadedImages[id] = img.dataUrl; });
+    Object.entries(pendingImages).forEach(([id, img]) => { loadedImages[id] = img.dataUrl; cacheImage(id, images[id], img.dataUrl); });
     pendingImages = {};
     removedImages.clear();
     setDirty(false);
@@ -1140,6 +1191,7 @@ async function save(){
     setDirty(true);
     if(e.code === "permission-denied") onDenied?.();
   }
+  saving = false;
 }
 $("saveBtn").addEventListener("click", save);
 addEventListener("keydown", e => {
@@ -1186,15 +1238,18 @@ function renderWishRows(docs){
 }
 
 function watchWishes(){
+  const my = session;
   const q = fb.query(fb.collection(wdoc(), "wishes"), fb.orderBy("createdAt", "desc"), fb.limit(500));
-  fb.onSnapshot(q, snap => renderWishRows(snap.docs),
-    e => { $("wishSummary").textContent = "Could not load wishes: " + e.message; });
+  stops.push(fb.onSnapshot(q, snap => { if(my === session) renderWishRows(snap.docs); },
+    e => { if(my === session) $("wishSummary").textContent = "Could not load wishes: " + e.message; }));
 }
 
 
 /* ---------------------------------- tabs ---------------------------------- */
 function openTab(name){
   document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === name));
+  // On a phone the tab row scrolls sideways; bring the chosen tab fully into view.
+  document.querySelector(".tab.active")?.scrollIntoView({ block: "nearest", inline: "nearest" });
   document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.dataset.panel === name));
   // The links' end dates follow the main date, which may have just changed.
   if(name === "links" && state) renderLinks();
@@ -1203,24 +1258,26 @@ document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", (
 
 $("copyLinkBtn").addEventListener("click", () => copyText(shareLink(weddingId)));
 
-/* ---------------------------------- open ---------------------------------- */
-// Loads the event into the editor and shows it. `mod` is the Firebase module (firebase.js or
-// editor-firebase.js); the page must have signed in already. Rejects with a readable message.
-// `backHref` (admin only) is the link back to the events list. `onAccessDenied` is called when a save is refused.
+/* ------------------------------ editor page extras ------------------------------ */
+// Editor page: how to pay while the invitation is unpaid, and the business name beside the year in the footer
+// ("Developed by Harish S" stays). Both come from the admin's Settings (site/settings), followed live, so a new
+// price or the admin marking the invitation paid shows straight away. The page works without them.
+let sales = null;
 
-// Editor page: how to pay while the invitation is unpaid, and the business name in the footer. Both come
-// from the admin's Settings (site/settings); the page works without them.
-async function loadSales(){
-  let s;
-  try {
-    const snap = await fb.getDoc(fb.doc(fb.db, "site", "settings"));
-    s = salesSettings(snap.exists() ? snap.data() : {});
-  } catch(e){
+function watchSales(){
+  const my = session;
+  const use = s => { if(my === session){ sales = s; renderSales(); } };
+  stops.push(fb.onSnapshot(fb.doc(fb.db, "site", "settings"), snap => use(salesSettings(snap.exists() ? snap.data() : {})), e => {
     console.warn("Couldn't load the site settings.", e);
-    s = salesSettings();
-  }
-  if(s.businessName) document.querySelectorAll(".site-credit").forEach(f => f.replaceChildren(
-    el("span", "", "© " + new Date().getFullYear()), el("span", "sep", "✦"), el("b", "", s.businessName)));
+    use(salesSettings());
+  }));
+}
+
+function renderSales(){
+  if(isAdminPage || !sales || !state) return;
+  const s = sales;
+  if(s.businessName) document.querySelectorAll(".site-credit > span:first-child").forEach(n => n.replaceChildren(
+    "© " + new Date().getFullYear() + " ", el("b", "", s.businessName)));
   if(state.paid !== false) return show("payBanner", false);
 
   const box = $("payBanner");
@@ -1255,48 +1312,94 @@ async function loadSales(){
   if(acts.children.length) box.append(acts);
   show("payBanner");
 }
-export async function openEditor({ mod, id, backHref = "", firstRun = false, onAccessDenied = null }){
-  fb = mod;
-  weddingId = id;
-  onDenied = onAccessDenied;
 
-  let snap = null;
-  try {
-    if(isValidSlug(weddingId)) snap = await fb.getDoc(wdoc());
-  } catch(e){
-    throw new Error("Couldn't load this event: " + e.message);
-  }
-  if(!snap?.exists()) throw new Error(`There's no event with the link name "${weddingId}".`);
-
-  const data = snap.data();
-  if(isValidSlug(data.parent)) throw new Error(`“${weddingId}” is an extra link of ${data.parent}. Open that event and use its Links tab.`);
-  delete data.updatedAt;
-  state = normalize(data);
-  savedCategory = state.category;
-  await loadLinks(state.links);
-  try {
-    T = await import("./admin-templates.js");
-    T.useFirebase(fb);
-    if(isAdminPage){
-      [categories, templates] = await Promise.all([T.loadCategories(), T.loadTemplates()]);
-    } else {
-      // Only the templates of this event's category.
-      const snap = await fb.getDocs(fb.query(fb.collection(fb.db, "templates"), fb.where("categoryId", "==", state.category || "wedding")));
+// Editor page: the designs of the event's category, followed live. Resolves once they have been read.
+let stopTemplates = null;
+let watchedCategory = null;
+function watchTemplates(){
+  const my = session;
+  stopTemplates?.();
+  watchedCategory = state.category || "wedding";
+  const q = fb.query(fb.collection(fb.db, "templates"), fb.where("categoryId", "==", watchedCategory));
+  return new Promise(resolve => {
+    stopTemplates = fb.onSnapshot(q, snap => {
+      if(my !== session) return;
       templates = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.name.localeCompare(b.name));
-    }
-  } catch(e){
-    console.warn("categories/templates unavailable", e);
-    toast(isAdminPage ? "Couldn't load templates — deploy the latest firestore.rules (see SETUP.md)." : "Couldn't load the designs right now.");
+      resolve();
+      if(editorOpen){ renderDesign(); renderLinks(); }
+    }, e => {
+      console.warn("designs unavailable", e);
+      if(my === session) toast("Couldn't load the designs right now.");
+      resolve();
+    });
+  });
+}
+
+// Admin page: the categories and templates for the Design and Links tabs, from js/admin-data.js.
+// admin.js calls this again whenever they change.
+export function setCatalog(cats, tpls){
+  categories = cats;
+  templates = tpls;
+  if(editorOpen){ renderDesign(); renderLinks(); }
+}
+
+/* ------------------------------- live changes ------------------------------- */
+// Fields this page never edits, so a change to them made elsewhere is always taken: the event's extra links and,
+// on the editor page, what only the admin can change (category, payment, switch and dates).
+const lockedFields = () => isAdminPage ? ["links"] : ["links", "category", ...ADMIN_ONLY];
+
+// The same data gives the same text, whatever order its fields come in.
+const canonical = v => JSON.stringify(v, (k, x) => x && typeof x === "object" && !Array.isArray(x)
+  ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) : x);
+
+let missed = null;   // a change that arrived while the event was still opening
+
+// Follows the event's document. Resolves with the first snapshot; later ones go to applyRemote.
+function watchEvent(){
+  const my = session;
+  return new Promise((resolve, reject) => {
+    let first = true;
+    stops.push(fb.onSnapshot(wdoc(), snap => {
+      if(my !== session) return;
+      if(first){ first = false; return resolve(snap); }
+      if(editorOpen) applyRemote(snap); else missed = snap;
+    }, e => {
+      if(first){ first = false; return reject(e); }
+      console.warn("stopped following the event", e);
+      if(my === session && e.code === "permission-denied") onDenied?.();
+    }));
+  });
+}
+
+// A change to the event saved somewhere else: another tab, the admin, or the customer's editor. Without unsaved
+// changes here the editor shows it; with them, only the fields this page never edits are taken, so nothing typed
+// here is lost.
+function applyRemote(snap){
+  if(snap.metadata.hasPendingWrites) return;   // this page's own save, on its way
+  if(!snap.exists()) return toast("This event has just been deleted somewhere else, so it can't be saved any more.");
+  const data = snap.data();
+  delete data.updatedAt;
+  const fresh = normalize(data);
+  if(canonical(fresh) === canonical(state)) return;   // nothing new, e.g. this page's own save coming back
+  const was = { category: state.category, paid: state.paid };
+  if(!dirty){
+    state = fresh;
+    savedCategory = state.category;
+    renderAll();
+    loadSavedImages();
+  } else {
+    lockedFields().forEach(k => { if(k in fresh) state[k] = fresh[k]; else delete state[k]; });
+    renderLinks();
+    if(state.category !== was.category){ renderDetails(); renderDesign(); }
   }
+  syncLinks();
+  if(state.paid !== was.paid) renderSales();
+  if(!isAdminPage && T && (state.category || "wedding") !== watchedCategory) watchTemplates();
+}
 
-  show("editorView");
+function renderAll(){
   $("editorTitle").textContent = coupleNames(state, weddingId);
-  document.title = coupleNames(state, weddingId) + (isAdminPage ? " · Invitation Admin" : " · Invitation Editor");
-  if(isAdminPage) $("backLink").href = backHref;
-  $("viewSiteLink").href = viewLink(weddingId);
-  show("firstRunBanner", firstRun);
-  if(!isAdminPage) loadSales();
-
+  document.title = coupleNames(state, weddingId) + (isAdminPage ? " · Online Invitation Admin" : " · Online Invitation Editor");
   renderDetails();
   renderHelp();
   renderEvents();
@@ -1306,8 +1409,95 @@ export async function openEditor({ mod, id, backHref = "", firstRun = false, onA
   refreshPhoto("cover");
   refreshPhoto("deity");
   refreshMusic();
+}
+
+/* ---------------------------------- open ---------------------------------- */
+// Stops following the open event and clears the editor, e.g. when the admin goes back to the list.
+// Unsaved changes are dropped: the pages ask before leaving with them.
+export function closeEditor(){
+  session++;
+  stops.forEach(stop => stop());
+  stops = [];
+  stopTemplates?.();
+  stopTemplates = null;
+  watchedCategory = null;
+  linkWatch.forEach(stop => stop());
+  linkWatch.clear();
+  editorOpen = false;
+  missed = null;
+  state = null;
+  links = [];
+  sales = null;
+  pendingImages = {};
+  removedImages.clear();
+  Object.keys(loadedImages).forEach(id => delete loadedImages[id]);
+  if(pendingMusic) URL.revokeObjectURL(pendingMusic.url);
+  pendingMusic = null;
+  removeMusic = false;
+  const preview = $("musicPreview");
+  preview.pause();
+  if(preview.src.startsWith("blob:")) URL.revokeObjectURL(preview.src);
+  preview.removeAttribute("src");
+  delete preview.dataset.loadedV;
+  if(dirty) setDirty(false);
+}
+
+// Loads the event into the editor and shows it, and keeps it current while it is open. `mod` is the Firebase
+// module (firebase.js or editor-firebase.js); the page must have signed in already. Rejects with a readable message.
+// `backHref` (admin only) is the link back to the events list. `onAccessDenied` is called when a save is refused.
+// `catalog` (admin only) returns the current { categories, templates } from js/admin-data.js, which may still be
+// arriving (setCatalog brings them in when they do); the editor page reads its own.
+// Resolves to true once open, or false if another event was opened (or the editor closed) meanwhile.
+export async function openEditor({ mod, id, backHref = "", firstRun = false, onAccessDenied = null, catalog = null }){
+  closeEditor();
+  const my = session;
+  fb = mod;
+  weddingId = id;
+  onDenied = onAccessDenied;
+  show("editorView", false);
+  const fail = message => { if(my === session) closeEditor(); throw new Error(message); };
+  if(!isValidSlug(weddingId)) fail(`There's no event with the link name "${weddingId}".`);
+
+  let snap;
+  try {
+    snap = await watchEvent();
+  } catch(e){
+    fail("Couldn't load this event: " + e.message);
+  }
+  if(my !== session) return false;
+  if(!snap.exists()) fail(`There's no event with the link name "${weddingId}".`);
+  const data = snap.data();
+  if(isValidSlug(data.parent)) fail(`“${weddingId}” is an extra link of ${data.parent}. Open that event and use its Links tab.`);
+  delete data.updatedAt;
+  state = normalize(data);
+  savedCategory = state.category;
+
+  try {
+    T = await import("./admin-templates.js");
+    T.useFirebase(fb);
+  } catch(e){
+    console.warn("designs unavailable", e);
+  }
+  if(catalog){ const c = catalog(); setCatalog(c.categories, c.templates); }
+  await Promise.all([syncLinks(), !catalog && T ? watchTemplates() : null, T?.startersReady]);
+  if(my !== session) return false;
+
+  if(isAdminPage) $("backLink").href = backHref;
+  $("viewSiteLink").href = viewLink(weddingId);
+  show("firstRunBanner", firstRun);
+  show("payBanner", false);
+  show("newLinkForm", false);
+  $("wishSummary").textContent = "Loading wishes…";
+  $("wishRows").replaceChildren();
+  $("wishCount").textContent = "";
+  openTab("details");
+  renderAll();
   setDirty(false);
   editorOpen = true;
+  show("editorView");
+  if(!isAdminPage) watchSales();
   loadSavedImages();
   watchWishes();
+  if(missed){ const later = missed; missed = null; applyRemote(later); }
+  return true;
 }

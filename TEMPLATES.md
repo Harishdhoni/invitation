@@ -83,6 +83,10 @@ Links to those sections (`<a href="#events">` in a menu or a scroll cue) hide wi
   The background music starts from this tap. The template's own script may play its animation on the same click.
 - **Reveal on scroll**: elements with class `reveal` get class `in` when they scroll into view, including list items rendered later.
   `<html>` gets class `js` first, so `.js .reveal{opacity:0}` is safe.
+- **Smooth scrolling**: with a mouse or trackpad the page glides (Lenis, from `js/smooth-scroll.js`); phones keep their own
+  scrolling. It pauses while `<html>` or `<body>` has `overflow:hidden`, so lock the page during the intro that way
+  (`html.intro-open,html.intro-open body{overflow:hidden}`, or `<body class="locked">` with a matching rule). A box that
+  should scroll by itself (a long wishes wall) needs `overflow:auto` and a height limit.
 - **Countdown**: `id="cdDays"`, `cdHours`, `cdMins`, `cdSecs`, updated every second.
 - **Guest book**: `id="wishForm"` with `id="wishName"` and `id="wishMessage"` saves wishes; optional `id="wishesMore"`
   (show more button) and `id="wishesEmpty"` (shown when there are no wishes).

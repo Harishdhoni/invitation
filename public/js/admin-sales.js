@@ -7,6 +7,7 @@
 import { SALES_DEFAULTS, salesSettings, whatsappLink, tr, indiaToday } from "./defaults.js";
 import { $, show, el, toast, actionBtn, permissionHint } from "./admin-ui.js";
 import { DEFAULT_MESSAGE, customerMessage } from "./admin-access.js";
+import { data, loaded, failed } from "./admin-data.js";
 
 let fb = null;
 export const useFirebase = mod => { fb = mod; };
@@ -20,11 +21,7 @@ const fmtDate = ms => new Date(ms).toLocaleDateString("en-IN", { day: "numeric",
 export const METHODS = ["UPI", "Cash", "Bank transfer", "Razorpay", "Other"];
 
 /* --------------------------------- orders --------------------------------- */
-// slug -> order, for every invitation sold through the admin (events made before selling have none).
-export async function loadOrders(){
-  const snap = await fb.getDocs(fb.collection(fb.db, "orders"));
-  return new Map(snap.docs.map(d => [d.id, d.data()]));
-}
+// The orders themselves (slug -> order) are read by js/admin-data.js.
 
 // The order written with a new event, in the same batch. `paid` is what the admin ticked.
 export function newOrder(batch, slug, { customer, phone, paid, price }){
@@ -179,27 +176,33 @@ export function downloadCsv(events, orders, statusOf){
 const FIELDS = { businessName: "setBusinessName", price: "setPrice", upiId: "setUpiId", payNumber: "setPayNumber",
   whatsapp: "setWhatsapp", email: "setEmail", address: "setAddress", welcomeMessage: "setWelcomeMessage" };
 const formValues = () => {
-  const data = {};
-  for(const [key, id] of Object.entries(FIELDS)) data[key] = $(id).value.trim();
-  data.price = Math.round(Number(data.price)) || SALES_DEFAULTS.price;
-  return data;
+  const values = {};
+  for(const [key, id] of Object.entries(FIELDS)) values[key] = $(id).value.trim();
+  values.price = Math.round(Number(values.price)) || SALES_DEFAULTS.price;
+  return values;
 };
 
-export async function enterSettings(){
-  show("settingsView");
-  let s;
-  try {
-    const snap = await fb.getDoc(settingsRef());
-    s = salesSettings(snap.exists() ? snap.data() : {});
-  } catch(e){
-    $("settingsError").textContent = "Couldn't load the settings: " + permissionHint(e);
-    s = salesSettings();
-  }
+// The form shows the saved settings and follows changes to them (js/admin-data.js), until something is typed
+// into it; from then on it keeps what was typed, even when the admin goes to another view and comes back.
+let settingsEdited = false;
+
+export function renderSettings(){
+  if(!loaded.has("settings")) return;
+  const error = failed.get("settings");
+  if(error) $("settingsError").textContent = "Couldn't load the settings: " + permissionHint(error);
+  if(settingsEdited) return;
+  const s = salesSettings(data.settings);
   for(const [key, id] of Object.entries(FIELDS)) $(id).value = s[key] ?? "";
+}
+
+// Wires the Settings view once, when the admin page starts.
+export function initSettings(){
+  $("settingsForm").addEventListener("input", () => { settingsEdited = true; });
   // The customer message: start from the standard wording, and see it with sample details (unpaid).
   $("setMessageDefault").addEventListener("click", () => {
     if($("setWelcomeMessage").value.trim() && !confirm("Replace your message with the standard one?")) return;
     $("setWelcomeMessage").value = DEFAULT_MESSAGE;
+    settingsEdited = true;
   });
   $("setMessagePreview").addEventListener("click", () => {
     $("setMessageSample").textContent = customerMessage({ name: "Arjun & Meera", slug: "arjun-meera", pin: "ABCDEFGH", paid: false,
@@ -208,11 +211,12 @@ export async function enterSettings(){
   });
   $("settingsForm").addEventListener("submit", async e => {
     e.preventDefault();
-    const data = formValues();
+    const values = formValues();
     $("settingsError").textContent = "";
     $("settingsSaveBtn").disabled = true;
     try {
-      await fb.setDoc(settingsRef(), data, { merge: true });
+      await fb.setDoc(settingsRef(), values, { merge: true });
+      settingsEdited = false;
       toast("Settings saved. The sales page, the editor page and new messages use them now.");
     } catch(err){
       $("settingsError").textContent = "Couldn't save: " + permissionHint(err);

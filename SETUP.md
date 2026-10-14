@@ -1,4 +1,4 @@
-# Invitations — Setup Guide
+# Online Invitations — Setup Guide
 
 Invitation websites for weddings, housewarmings, birthdays, baby showers and other events, with an admin page.
 Plain HTML/CSS/JS + Firebase (Firestore for data, Auth for the admin login, Hosting for the public link).
@@ -177,7 +177,8 @@ a link, and the wishes, take effect at once.)
 Use **Copy link** in the admin (or the invite's own Copy Invite Link button). On Vercel, WhatsApp and Facebook show
 the invitation title (or "Groom weds Bride"), the date line, and the cover photo — filled in automatically from the admin.
 A preview can take up to ~5 minutes to reflect a change, and WhatsApp keeps showing the old preview in messages
-already sent. The sales page `/` shows the generic card in `public/assets/og-cover.jpg`.
+already sent. The sales page `/` and the showcase show your logo card, `public/assets/brand/og-card.jpg`; an invitation
+with no cover photo shows the generic card in `public/assets/og-cover.jpg`.
 
 ## 9. Let someone else edit one invitation (PIN)
 
@@ -190,8 +191,8 @@ On **Events**, every event card has an **Editor PIN** row:
    wishes (hide / unhide / delete). In **Links** they can add extra links — up to **3 links in all**, each with a
    different design — choose what each link shows, and delete the extra links. They can't switch links on or off or
    change their dates (only you can), change the category, see other events, or reach the admin page.
-   Their browser remembers the PIN until you change it or they click **Leave editor**. Their top bar also has
-   **Home page ↗**, **Showcase ↗** and **Share**, so they can send friends your site.
+   Their browser remembers the PIN until you change it or they click **Leave editor**. Their sidebar (the ☰ menu on a
+   phone) also has **Home page ↗**, **Showcase ↗** and **Share**, so they can send friends your site.
 4. **Change** gives the event a new PIN; **Revoke** removes access. Either takes effect immediately — the editor's next
    save is refused and they are asked for the PIN again.
 
@@ -241,8 +242,8 @@ An event has one PIN at a time. Deleting an event removes its PIN.
 7. Every month or so click **Clean up ended**: it deletes the photos, music and wishes of invitations that closed
    more than 90 days ago, as the privacy page promises.
 
-**Sharing your site:** click **Share** in the top bar. Pick **Home page** or **Showcase** (optionally the designs for
-one kind of event), check the message, then **Send on WhatsApp** (type a customer's number, or leave it empty to pick
+**Sharing your site:** click **Share** in the sidebar (on a phone, open the ☰ menu first). Pick **Home page** or
+**Showcase** (optionally the designs for one kind of event), check the message, then **Send on WhatsApp** (type a customer's number, or leave it empty to pick
 the chat), **More apps…** on a phone, or **Copy link** / **Copy message**.
 
 ## Notes

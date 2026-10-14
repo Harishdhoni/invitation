@@ -7,7 +7,8 @@
 //    and then let this uid write that one event, its photos, music and wishes — and nothing else —
 //    for as long as the pin document exists. Changing or revoking the PIN in the admin deletes it.
 import { isFirebaseConfigured } from "./firebase-config.js";
-import { $, show, toast } from "./admin-ui.js";
+import { $, show, toast, wireSidebar } from "./admin-ui.js";
+import { smoothScroll } from "./smooth-scroll.js";
 import { normalizePin, isValidPin, formatPin } from "./pin.js";
 import { openEditor, hasUnsavedChanges, discardChanges } from "./event-editor.js";
 import { openShare } from "./share.js";
@@ -95,7 +96,10 @@ $("pinForm").addEventListener("submit", async e => {
   }
 });
 
-// The top bar's Share button: the home page or showcase link, worded for passing on to a friend.
+wireSidebar();
+smoothScroll();
+
+// The sidebar's Share button: the home page or showcase link, worded for passing on to a friend.
 $("shareOpenBtn").addEventListener("click", () => openShare(fb, "friend"));
 
 $("leaveBtn").addEventListener("click", async () => {

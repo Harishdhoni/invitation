@@ -6,7 +6,9 @@
   --sans:'Jost','Noto Sans Tamil',system-ui,sans-serif; --display:'Cinzel Decorative','Noto Sans Tamil',serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
+/* In-page links glide (and land below the sticky header); wheels and trackpads glide too (js/smooth-scroll.js). */
+html{scroll-behavior:smooth;scroll-padding-top:60px;-webkit-text-size-adjust:100%;scrollbar-color:#cdb27a #f6efe2;}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto;}}
 body{font-family:var(--sans);background:var(--bg);color:var(--ink);font-size:16px;line-height:1.6;overflow-x:hidden;}
 img{display:block;max-width:100%;}
 a{color:var(--maroon);}
@@ -32,7 +34,7 @@ a{color:var(--maroon);}
 .back-link{flex:none;color:var(--maroon-dark);background:var(--gold-light);text-decoration:none;font-weight:600;padding:3px 14px;border-radius:999px;}
 .back-link:hover{background:#fff;}
 .back-note{color:rgba(243,223,160,.75);overflow:hidden;text-overflow:ellipsis;}
-body:has(.back-bar) #showcase{scroll-margin-top:100px;}
+html:has(.back-bar){scroll-padding-top:100px;}
 body:has(.back-bar) .chips{top:100px;}
 @media(max-width:400px){
   .brand{gap:8px;font-size:.92rem;}
@@ -187,8 +189,7 @@ body:has(.back-bar) .chips{top:100px;}
 .pills li{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:.88rem;color:var(--maroon-dark);}
 
 /* The designs: category chips that stay in view, then one card per design. */
-#showcase{scroll-margin-top:60px;}
-.chips{position:sticky;top:60px;z-index:5;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;background:#fff;padding:10px 0;}
+.chips{position:sticky;top:60px;z-index:5;display:flex;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;background:#fff;padding:10px 0;}
 .chip{flex:none;display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--line);
   background:var(--bg);color:var(--maroon-dark);font:500 .92rem var(--sans);cursor:pointer;}
 .chip:hover{border-color:var(--gold);}

@@ -14,17 +14,7 @@ export const useFirebase = mod => { fb = mod; };
 
 export const editorPageLink = () => `${SITE_URL}/editor`;
 
-// slug -> { pin, createdAt } for every event that has a PIN.
-export async function loadPins(){
-  const snap = await fb.getDocs(fb.collection(fb.db, "pins"));
-  const pins = new Map();
-  snap.docs.forEach(d => {
-    const { slug, createdAt } = d.data();
-    const at = createdAt?.toMillis?.() ?? 0;
-    if(!pins.has(slug) || at > pins.get(slug).at) pins.set(slug, { pin: d.id, at });
-  });
-  return pins;
-}
+// The PINs themselves (slug -> { pin, at }) are read by js/admin-data.js.
 
 // Removes every PIN of this event, and the editors who signed in with them.
 async function clearPins(batch, slug){
