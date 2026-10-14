@@ -61,8 +61,10 @@ Every event's page has these parts. Each template decides which parts to show an
 - **Extra links**: an event can be shared at up to three links, each in its own design. Each link can leave parts
   out (cover photo, events, countdown, guest book, help message, contact numbers, music). Guests on every link
   see the same details and write in the same guest book.
-- **Signature**: once the admin sets a business name, every invitation ends with a small “Made with <name>” line
-  linking to the sales page.
+- **Signature and contact**: every invitation ends by asking guests “Would you like an invitation like this for your
+  celebration?” with a **Contact us on WhatsApp** button (a ready message naming the link they saw; the contact page
+  when no WhatsApp number is set), then a small “Made with <name>” line linking to the sales page. It shows once the
+  admin sets a business name or WhatsApp number, in English or Tamil with the page.
 - **Link previews**: on Vercel, each event link previews with its own title, date line and cover photo. The main
   link always shows the generic card.
 - **Repeat visits**: details, photos and music are cached on the device. If Firebase can't be reached, the last
@@ -98,9 +100,9 @@ event) in a ready-written message with the price and business name, to send on W
 chat), through the phone's share menu, or to copy.
 
 **Settings** (`?view=settings`): business name (also signs every invitation), price, UPI ID, GPay / PhonePe number,
-WhatsApp number, support email, business address, and the wording of the WhatsApp message to new customers (with
-placeholders such as `{customer}`, `{editorLink}` and `{payment}`, and a preview). Customers see these on the sales
-page, on the editor page and in that message.
+WhatsApp number (also the contact button at the end of every invitation), support email, business address, and the
+wording of the WhatsApp message to new customers (with placeholders such as `{customer}`, `{editorLink}` and
+`{payment}`, and a preview). Customers see these on the sales page, on the editor page and in that message.
 - **Import your current invitation**: shown once, for sites that started before multi-event support. It copies
   the old invitation into an event with its own link.
 

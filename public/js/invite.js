@@ -3,7 +3,7 @@
 // follows the hooks described in TEMPLATES.md; every hook is optional.
 import {
   DEFAULT_CONFIG, TRANSLATIONS, SAMPLE_WISHES, SECTIONS, tr, withDefaults, clone, isValidSlug, isValidId, isWedding, sampleFor,
-  samplePhoto, SAMPLE_MUSIC, linkState
+  samplePhoto, SAMPLE_MUSIC, linkState, whatsappLink
 } from "./defaults.js";
 import { isFirebaseConfigured, SITE_URL, ADMIN_UID } from "./firebase-config.js";
 
@@ -368,7 +368,7 @@ function renderAll(){
   renderWishes();
   updateCountdown();
   renderPreviewBar();
-  if(brandName) renderCredit(brandName);
+  if(brand) renderCredit(brand);
   document.dispatchEvent(new CustomEvent("invite:render", { detail: { config: clone(config), lang } }));
 }
 
@@ -514,36 +514,79 @@ async function refreshConfig(){
 }
 
 /* ----------------------------- signature + preview bar ----------------------------- */
-// "Made with <business name>" at the very end of the page, linking to the sales page. The name comes from
-// the admin's Settings (site/settings); there is no line until one is set. Not in admin thumbnails.
-let brandName = "";
+// The very end of the page asks guests whether they'd like an invitation like this, with a button to message the
+// business on WhatsApp (or its contact page), then "Made with <business name>" linking to the sales page. Guests
+// who liked an invitation are the next customers. The details come from the admin's Settings (site/settings);
+// nothing shows until a business name or WhatsApp number is set. Not in admin thumbnails.
+let brand = null;    // { name, whatsapp }
 async function addCredit(){
   if(window.self !== window.top || !fb) return;
-  renderCredit(store.get(BRAND_CACHE) || "");
+  renderCredit(cachedBrand());
   try {
     const snap = await fb.getDoc(fb.doc(fb.db, "site", "settings"));
-    const name = String((snap.exists() && snap.data().businessName) || "").trim();
-    if(name) store.set(BRAND_CACHE, name); else store.del(BRAND_CACHE);
-    renderCredit(name);
+    const s = snap.exists() ? snap.data() : {};
+    const b = { name: String(s.businessName || "").trim(), whatsapp: String(s.whatsapp || "").trim() };
+    if(b.name || b.whatsapp) store.set(BRAND_CACHE, JSON.stringify(b)); else store.del(BRAND_CACHE);
+    renderCredit(b);
   } catch(e){
     console.warn("Couldn't load the site settings for the signature.", e);
   }
 }
-function renderCredit(name){
-  brandName = name;
+// Earlier visits cached the business name alone, as plain text.
+function cachedBrand(){
+  const raw = store.get(BRAND_CACHE);
+  if(!raw) return null;
+  try { const b = JSON.parse(raw); if(b && typeof b === "object") return b; } catch {}
+  return { name: raw, whatsapp: "" };
+}
+// Inline styles, so every template's own rules for p and a can't restyle it; colours follow the template's text.
+function renderCredit(b){
+  brand = b;
   let box = $("madeWith");
-  if(!name) return box?.remove();
+  if(!b || !(b.name || b.whatsapp)) return box?.remove();
   if(!box){
-    box = el("p");
+    box = el("div");
     box.id = "madeWith";
     // Room underneath for the round music button, which sits at the bottom right.
-    Object.assign(box.style, { margin: "0", padding: "20px 16px 84px", textAlign: "center", fontSize: "12px", lineHeight: "1.5", opacity: ".7" });
+    Object.assign(box.style, { margin: "0", padding: "28px 16px 84px", textAlign: "center", fontSize: "13px", lineHeight: "1.5" });
     document.body.append(box);
+    box.style.color = creditColor();
   }
-  const a = el("a", "", name);
+  const ask = el("p", "", T().creditAsk);
+  ask.style.margin = "0";
+  // The message names this link, so the business can see which design the guest liked.
+  const page = slug ? `${SITE_URL}/${slug}` : location.href;
+  const contact = el("a", "", b.whatsapp ? "💬 " + T().creditWhatsApp : T().creditContact);
+  Object.assign(contact, { href: whatsappLink(b.whatsapp, `${T().creditMessage} ${page}`) || SITE_URL + "/contact",
+    target: "_blank", rel: "noopener" });
+  Object.assign(contact.style, { display: "inline-block", margin: "10px 0 0", padding: "9px 20px", border: "1px solid currentColor",
+    borderRadius: "999px", color: "inherit", textDecoration: "none", fontWeight: "600" });
+  box.replaceChildren(ask, contact);
+  if(!b.name) return;
+  const made = el("p", "", T().madeWith + " ");
+  Object.assign(made.style, { margin: "14px 0 0", fontSize: "12px", opacity: ".7" });
+  const a = el("a", "", b.name);
   Object.assign(a, { href: SITE_URL + "/", target: "_blank", rel: "noopener" });
   a.style.color = "inherit";
-  box.replaceChildren(T().madeWith + " ", a);
+  made.append(a);
+  box.append(made);
+}
+// Some designs set dark text on a dark page and colour each section themselves, so the page's own text colour can
+// vanish at the very end. Then use white or near-black, whichever stands out; "" keeps the design's colour.
+function creditColor(){
+  const rgba = n => (getComputedStyle(n).backgroundColor.match(/[\d.]+/g) || []).map(Number);
+  const lum = c => c.slice(0, 3).reduce((sum, v, i) => {
+    v /= 255;
+    return sum + [.2126, .7152, .0722][i] * (v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4);
+  }, 0);
+  let bg = rgba(document.body);
+  if(bg[3] === 0) bg = rgba(document.documentElement);
+  if(bg[3] === 0) bg = [255, 255, 255];
+  const fg = (getComputedStyle(document.body).color.match(/[\d.]+/g) || []).map(Number);
+  if(bg.length < 3 || fg.length < 3) return "";
+  const [hi, lo] = [lum(fg), lum(bg)].sort((x, y) => y - x);
+  if((hi + .05) / (lo + .05) >= 3) return "";
+  return lum(bg) > .18 ? "#1a1a1a" : "#fff";
 }
 
 // A small note on the customer's preview (?editor-preview=1) saying whether guests can see it yet.

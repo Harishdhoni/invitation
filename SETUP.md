@@ -208,7 +208,8 @@ An event has one PIN at a time. Deleting an event removes its PIN.
    `public/showcase.html`.
 4. **Admin → Settings**: business name, price, UPI ID, GPay / PhonePe number, WhatsApp number, support email and
    address. The sales page, the customer's editor and the WhatsApp message use them straight away. The business name
-   also signs every invitation. To reword the WhatsApp message to new customers, click **Start from the standard
+   also signs every invitation, and the end of every invitation asks guests whether they'd like one like it, with a
+   button to your WhatsApp number. To reword the WhatsApp message to new customers, click **Start from the standard
    message**, change it, and check it with **Preview with sample details**.
 5. **Read the legal pages** (`terms.html`, `privacy.html`, `refund.html`, `contact.html`) and have them checked by a
    professional. They describe what this site really does with data, but only you can promise your refund terms.

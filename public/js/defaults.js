@@ -119,7 +119,8 @@ export const openState = (link, main) => {
 
 /* ------------------------------ selling ------------------------------ */
 // What customers see about buying an invitation, set on the admin's Settings page (site/settings, which
-// anyone can read, so only put public details here). businessName also signs every invitation.
+// anyone can read, so only put public details here). businessName signs every invitation, and the end of every
+// invitation asks guests to get in touch on the whatsapp number (invite.js renderCredit).
 // payNumber is the phone number customers can pay to on GPay or PhonePe; welcomeMessage is the admin's own wording
 // for the WhatsApp message to a new customer ("" = the standard one in admin-access.js).
 export const SALES_DEFAULTS = { businessName: "", price: 200, upiId: "", payNumber: "", whatsapp: "", email: "", address: "", welcomeMessage: "" };
@@ -283,7 +284,10 @@ export const TRANSLATIONS = {
     previewWish: "This is a preview — wishes aren't saved.",
     editorPreview: "Your preview — this is what your guests see.",
     editorPreviewClosed: "Your preview — only you can see it. Guests can open the link once it is paid and open.",
-    madeWith: "Made with"
+    madeWith: "Made with",
+    creditAsk: "Would you like an invitation like this for your celebration?",
+    creditWhatsApp: "Contact us on WhatsApp", creditContact: "Contact us",
+    creditMessage: "Hi! I saw this invitation and would like one like it for my celebration:"
   },
   ta: {
     shareBtn: "⧉ இணைப்பை நகலெடு",
@@ -312,7 +316,10 @@ export const TRANSLATIONS = {
     previewWish: "இது முன்னோட்டம் — வாழ்த்துகள் சேமிக்கப்படாது.",
     editorPreview: "உங்கள் முன்னோட்டம் — உங்கள் விருந்தினர்கள் இதையே பார்ப்பார்கள்.",
     editorPreviewClosed: "உங்கள் முன்னோட்டம் — இதை நீங்கள் மட்டுமே பார்க்க முடியும். பணம் செலுத்தி இணைப்பு திறக்கப்பட்டதும் விருந்தினர்கள் பார்க்கலாம்.",
-    madeWith: "உருவாக்கம்"
+    madeWith: "உருவாக்கம்",
+    creditAsk: "உங்கள் விழாவுக்கும் இது போன்ற அழைப்பிதழ் வேண்டுமா?",
+    creditWhatsApp: "வாட்ஸ்அப்பில் தொடர்புகொள்ளுங்கள்", creditContact: "எங்களைத் தொடர்புகொள்ளுங்கள்",
+    creditMessage: "வணக்கம்! இந்த அழைப்பிதழைப் பார்த்தேன். என் விழாவுக்கும் இது போன்ற ஒன்று வேண்டும்:"
   }
 };
 

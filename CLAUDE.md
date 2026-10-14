@@ -90,7 +90,9 @@ the starter designs for the sales page's gallery and the showcase.
   first, then Firestore), switches to the event's template if needed, fills in the hooks, and runs the intro,
   countdown, music, language switch, reveal-on-scroll and guest book. Fires `invite:render` after every render.
   With no event to show it sends the visitor to `home.html`. `?editor-preview=1` reads with `editor-firebase.js` (the
-  customer's session) and shows a preview note. `addCredit()` appends "Made with <businessName>" once Settings has one.
+  customer's session) and shows a preview note. `addCredit()` appends the footer that sells to guests: "Would you like
+  an invitation like this?", a button to the business's WhatsApp (Settings' `whatsapp`, else `/contact`) with a
+  message naming the link, and "Made with <businessName>". It shows once Settings has a name or a WhatsApp number.
 - `defaults.js`: `DEFAULT_CONFIG` (sample wedding), per-category `SAMPLES` / `sampleFor()`, `samplePhoto()` and
   `SAMPLE_MUSIC` (the sample previews' cover photo and song), `DEFAULT_CATEGORIES`,
   `TRANSLATIONS` (guest UI strings in EN + TA), `SAMPLE_WISHES`. Also the helpers `tr`, `withDefaults`, `clone`,
