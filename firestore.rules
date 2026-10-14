@@ -44,7 +44,8 @@ service cloud.firestore {
 
     // Whether guests may open an event or extra link now: it is paid for (a missing `paid` counts as paid),
     // switched on, and today in India is on or after its start date and on or before its end date. With no
-    // end date it stays open until 15 days after the event's main date. Dates are "YYYY-MM-DD" strings, compared as numbers like 20270212 so no date parsing
+    // end date it stays open until 15 days after the event's main date, and with `noExpiry` (set by the admin)
+    // it has no end at all. Dates are "YYYY-MM-DD" strings, compared as numbers like 20270212 so no date parsing
     // is needed. Same check as linkState() in js/defaults.js. An extra link has no main date; its details
     // come from its event, which guests can read only while that event is open.
     function isDay(s) {
@@ -65,9 +66,10 @@ service cloud.firestore {
       return d.get('paid', true) != false
         && d.get('active', true) != false
         && (!isDay(start) || indiaDayNumber(request.time) >= dayNumber(start))
-        && (isDay(end)
-          ? indiaDayNumber(request.time) <= dayNumber(end)
-          : (main == '' || indiaDayNumber(request.time - duration.value(15, 'd')) <= dayNumber(main)));
+        && (d.get('noExpiry', false) == true
+          || (isDay(end)
+            ? indiaDayNumber(request.time) <= dayNumber(end)
+            : (main == '' || indiaDayNumber(request.time - duration.value(15, 'd')) <= dayNumber(main))));
     }
 
     // A template an event of this category may use ("" is the built-in Classic, for weddings only).
@@ -151,13 +153,14 @@ service cloud.firestore {
 
       // An editor can change the details of their event, which parts it shows, and pick another design
       // from the event's own category. They cannot change its category, mark it paid, switch it on or off,
-      // or set its dates.
+      // or set its dates or give it no expiry.
       allow update: if isEditorOf(weddingId)
         && request.resource.data.get('category', 'wedding') == resource.data.get('category', 'wedding')
         && request.resource.data.get('paid', true) == resource.data.get('paid', true)
         && request.resource.data.get('active', true) == resource.data.get('active', true)
         && request.resource.data.get('startDate', '') == resource.data.get('startDate', '')
         && request.resource.data.get('endDate', '') == resource.data.get('endDate', '')
+        && request.resource.data.get('noExpiry', false) == resource.data.get('noExpiry', false)
         && request.resource.data.get('parent', '') == ''
         && request.resource.data.get('hiddenSections', []) is list
         && linksChangeOk(weddingId, resource.data.get('links', []), request.resource.data.get('links', []))

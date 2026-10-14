@@ -208,6 +208,7 @@ Event fields (`weddings/<slug>`):
   before selling). The customer's details live in `orders/<slug>`, never here: anyone with the link can read this doc.
 - When guests can open it (admin only): `active` (missing = `true`), `startDate` / `endDate` (`"YYYY-MM-DD"`, India
   time, both inclusive, `""` = none). With no `endDate` the link closes 15 days after the date in `weddingDateTimeISO`.
+  `noExpiry: true` (the event link's **No expiry** box) means it never closes on its own: no end date, no 15-day auto end.
 - `hiddenSections`: part ids from `SECTIONS` in `defaults.js` that this link doesn't show (admin and editor).
 - `links`: the slugs of the event's extra links. Changes only in the same batch as creating or deleting one.
 - **Extra link** docs (`weddings/<slug>` too, so the slug namespace and the rewrite are shared) hold only
@@ -230,7 +231,7 @@ Event fields (`weddings/<slug>`):
   They may create extra links (switched on, no dates, the event's category, recorded in `links` in the same batch,
   at most 2: `linksChangeOk`), change an extra link's `templateId` and `hiddenSections`, and delete one.
 - **Guest**: may `get` an event or link by slug (not list them) while it is open (`isLive`: paid, switched on, between
-  its dates, and before the 15-day auto end, all in India time), read visible wishes of an open event, and create a wish
+  its dates, and before the 15-day auto end unless `noExpiry`, all in India time), read visible wishes of an open event, and create a wish
   of exactly `{ name (1–60), message (1–500), hidden: false, createdAt: request.time }` on an open event (not on an
   extra link's path). An extra link needs its parent to be open too, since that is where its details are read.
   Images and music stay readable by id, as before.
@@ -360,7 +361,7 @@ Without a build step there is no shared config, so these are duplicated on purpo
   before using a cached copy. Vercel can serve an event's page HTML for ~5 minutes after it closes, but the page
   then can't read the details, so guests see the "not open" message.
 - **The 15-day rule applies to old events too.** An event without an `endDate` closes 15 days after its main date
-  as soon as the rules are deployed. To keep one open, set an end date in its Links tab.
+  as soon as the rules are deployed. To keep one open, set an end date or tick **No expiry** in its Links tab.
 - **`/` is the sales page.** `useTemplate("")` fetches Classic as `./index.html`, never `./`. A new query parameter for
   the invite page must also go in the `missing` list of the `/` redirect in `vercel.json`, or `/?that=…` goes to the sales page.
 - **Selling data**: customer names, phones and payment references go in `orders/<slug>` only. `weddings/<slug>` and

@@ -67,6 +67,7 @@ export const DEFAULT_CONFIG = {
   active: true,
   startDate: "",   // "YYYY-MM-DD", the first day guests can open it; "" = straight away
   endDate: "",     // "YYYY-MM-DD", the last day; "" = 15 days after the main date
+  noExpiry: false, // true: never closes on its own (no end date, no 15-day auto end); it stays open until switched off
   // Parts of the invitation this link doesn't show (ids from SECTIONS).
   hiddenSections: [],
   // Link names of the event's extra links: weddings/<slug> docs with { parent: <this event> }.
@@ -88,7 +89,8 @@ export const SECTIONS = [
 
 /* ------------------------- when a link is open to guests ------------------------- */
 // A link is open while it is switched on and today, in India, is between its start and end dates.
-// With no end date it stays open until 15 days after the event's main date. An extra link also
+// With no end date it stays open until 15 days after the event's main date, or for good when the admin
+// gave it no expiry (noExpiry). An extra link also
 // needs its event link to be open, since that is where its details come from.
 // firestore.rules does the same check (isLive) and is what actually turns guests away; keep the two in step.
 export const AUTO_END_DAYS = 15;
@@ -101,7 +103,8 @@ export const indiaToday = () => new Date(Date.now() + 330 * 60000).toISOString()
 export const addDays = (day, n) => new Date(Date.parse(day + "T00:00:00Z") + n * 86400000).toISOString().slice(0, 10);
 export const mainDay = cfg => /^\d{4}-\d{2}-\d{2}T/.test(cfg?.weddingDateTimeISO || "") ? cfg.weddingDateTimeISO.slice(0, 10) : "";
 // The last day guests can open the link, or "" when it has no end.
-export const lastDay = cfg => isDay(cfg?.endDate) ? cfg.endDate : mainDay(cfg) ? addDays(mainDay(cfg), AUTO_END_DAYS) : "";
+export const lastDay = cfg => cfg?.noExpiry === true ? ""
+  : isDay(cfg?.endDate) ? cfg.endDate : mainDay(cfg) ? addDays(mainDay(cfg), AUTO_END_DAYS) : "";
 
 // "live", "unpaid" (waiting for payment), "off" (switched off), "scheduled" (before its start date) or "ended".
 export function linkState(cfg, today = indiaToday()){

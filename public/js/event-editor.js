@@ -590,7 +590,7 @@ let newLinkTemplate = "";
 const siteHost = () => SITE_URL.replace(/^https?:\/\//, "");
 const linkRef = id => fb.doc(fb.db, "weddings", id);
 // Fields only the admin may change (the rules refuse them from an editor): on the event, and on an extra link.
-const ADMIN_ONLY = ["paid", "active", "startDate", "endDate"];
+const ADMIN_ONLY = ["paid", "active", "startDate", "endDate", "noExpiry"];
 const LINK_ADMIN_ONLY = ["active", "startDate", "endDate"];
 // The editor page's View site and Open links show the customer's own preview, which works while the link
 // is closed to guests (unpaid, switched off or outside its dates). The admin reads closed links anyway.
@@ -628,7 +628,8 @@ export function linkStatus(cfg, main = null){
   const end = closing(cfg, main);
   const why = end.auto ? `, ${AUTO_END_DAYS} days after the event` : "";
   if(state === "ended") return { state, text: `Closed. It was open until ${fmtDay(end.day)}${why}.` };
-  return { state, text: end.day ? `Open to guests until ${fmtDay(end.day)}${why}.` : "Open to guests, with no end date." };
+  if(end.day) return { state, text: `Open to guests until ${fmtDay(end.day)}${why}.` };
+  return { state, text: (main || cfg).noExpiry ? "Open to guests, with no expiry. It stays open until it's switched off." : "Open to guests, with no end date." };
 }
 
 function dateField(label, obj, key, hint, onChange){
@@ -682,11 +683,29 @@ function linkCard(link){
     const endHint = link ? "Leave empty to keep it open as long as the event link."
       : `Leave empty to close it ${AUTO_END_DAYS} days after the event` + (day ? ` (after ${fmtDay(addDays(day, AUTO_END_DAYS))}).` : ".");
     const dates = el("div", "two-col");
+    const end = dateField("End date (optional)", cfg, "endDate", "The last day guests can open it. " + endHint, changed);
     dates.append(
       dateField("Start date (optional)", cfg, "startDate", "Guests can open it from this day. Empty: straight away.", changed),
-      dateField("End date (optional)", cfg, "endDate", "The last day guests can open it. " + endHint, changed)
+      end
     );
     box.append(on, dates);
+    // No expiry, for a customer who wants the link to keep working: no end date and no automatic end after
+    // the event. Only on the event link; an extra link with no end date already stays open as long as it.
+    if(!link){
+      const never = el("label", "check");
+      const ncb = Object.assign(el("input"), { type: "checkbox", checked: cfg.noExpiry === true });
+      const endInput = end.querySelector("input");
+      const sync = () => { endInput.disabled = ncb.checked; if(ncb.checked) endInput.value = ""; };
+      ncb.addEventListener("change", () => {
+        cfg.noExpiry = ncb.checked;
+        if(ncb.checked) cfg.endDate = "";
+        sync();
+        changed();
+      });
+      sync();
+      never.append(ncb, " No expiry: the link never closes on its own (until you switch it off)");
+      box.append(never);
+    }
     card.append(box);
   }
 

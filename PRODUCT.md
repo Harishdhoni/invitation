@@ -115,7 +115,7 @@ wording of the WhatsApp message to new customers (with placeholders such as `{cu
 | Events | Add, reorder or remove events. Name, date, time, venue, address, description, Maps search text or link, emoji or image icon |
 | Help & Contacts | Message for outstation guests, and coordinators with any number of phone numbers |
 | Design | The event's category (admin only) and template, with previews of the event in any template |
-| Links | The event link and its extra links. For each: its status, what it shows (**Show on this link**), its design (extra links), and (admin only) **Open to guests**, **Start date** and **End date**. **＋ Add another link** and **Delete** take effect at once |
+| Links | The event link and its extra links. For each: its status, what it shows (**Show on this link**), its design (extra links), and (admin only) **Open to guests**, **Start date** and **End date**, plus **No expiry** on the event link. **＋ Add another link** and **Delete** take effect at once |
 | Wishes | Every wish, live: hide, unhide or delete. Changes apply immediately |
 
 - **Auto-translate**: about a second after you stop typing in an English box, the Tamil box fills in (Gemini through
@@ -186,7 +186,7 @@ wording of the WhatsApp message to new customers (with placeholders such as `{cu
 7. **A second link for friends** (editor or admin): Links → **＋ Add another link** → `arjun-meera-friends`, pick
    *Modern Editorial* → untick **Contact numbers** and **Countdown** on its card → Save → **Copy link** on that card.
 8. **Close a link** (admin): **Switch off** on the event card, or set an **End date** in the Links tab. Without one,
-   the event's links close 15 days after its main date.
+   the event's links close 15 days after its main date, unless **No expiry** is ticked: then they stay open until switched off.
 9. **Sell one** (visitor → admin → customer): the visitor taps **Order on WhatsApp** on the sales page → the admin
    creates the event with the customer's name and phone (unpaid), creates a PIN and sends **Copy details** → the
    customer taps the link, fills in the invitation and checks it with **View site** → pays with **Pay ₹200 by UPI** and
@@ -203,7 +203,7 @@ wording of the WhatsApp message to new customers (with placeholders such as `{cu
 | Wish | Name 1–60 characters, message 1–500. New wishes are visible. Only the admin or that event's editor can hide or delete them |
 | Price | ₹200 per invitation by default (Settings). Payment by UPI, recorded by the admin with **Mark as paid** |
 | Unpaid invitations | Can be filled in and previewed by the customer; guests can't open their links or write wishes until marked paid. Events made before selling count as paid |
-| When a link is open | While paid and switched on, from its start date to its end date (both optional, India time, inclusive). With no end date: until 15 days after the event's main date. An extra link is also closed whenever its event link is. Only the admin sets these. Guests on a closed link can't read the details or write wishes |
+| When a link is open | While paid and switched on, from its start date to its end date (both optional, India time, inclusive). With no end date: until 15 days after the event's main date, or for good when the event link has **No expiry**. An extra link is also closed whenever its event link is. Only the admin sets these. Guests on a closed link can't read the details or write wishes |
 | Links per event | Up to 3 in all (the event link and 2 extra) when an editor adds them; the admin isn't limited. Each link uses a different design. Extra link names follow the slug rules and can't be changed |
 | Editor PIN | 8 characters from `A–Z` and `2–9` without look-alikes (32⁸ ≈ 10¹² combinations). One PIN per event at a time |
 | Photos | Compressed in the browser to fit one Firestore document (≈ 900 KB). Cover up to 1600 px, emblem 900 px, event icons 256 px. The link-preview copy is a JPEG of 1200 px or less, under 300 KB. HEIC isn't supported |

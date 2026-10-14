@@ -154,6 +154,8 @@ Click **Edit** on an event and go through the tabs:
   - **Open to guests** — untick it to switch the link off. Guests then see "This invitation isn't open right now".
   - **Start date** / **End date** (optional, India time) — the first and last day guests can open it. With no end date
     a link closes **15 days after the event's main date**. An extra link also closes whenever the event link is closed.
+  - **No expiry** (event link only) — tick it for a customer who wants the link to keep working: it never closes on its
+    own, with no end date and no 15-day end. It still has to be paid, and **Open to guests** still switches it off.
   - **＋ Add another link** — pick a link name (e.g. `arjun-meera-friends`) and a design no other link of the event uses.
     The link works as soon as it is created; **Delete** on its card removes it.
 - **Wishes** — hide or delete any guest wish; changes are instant.
@@ -249,8 +251,8 @@ the chat), **More apps…** on a phone, or **Copy link** / **Copy message**.
   open; they can only add wishes (max 60-char name, 500-char message) to an open event, and never see hidden ones.
 - **After updating to links with dates**, deploy the new rules: `firebase deploy --only firestore:rules`. Until then
   links never close, and editors can't add links. Deploying applies the 15-day rule to existing events at once: any
-  event whose main date was more than 15 days ago (and has no end date) closes to guests. Set an end date in its
-  **Links** tab first if it should stay open.
+  event whose main date was more than 15 days ago (and has no end date) closes to guests. Set an end date or tick
+  **No expiry** in its **Links** tab first if it should stay open.
 - **Hidden parts are a display choice.** A link that hides the contact numbers doesn't show them, but the details are
   saved once for the whole event and the page downloads them, so someone technical could still find them.
 - **After updating to templates**, deploy the new rules (they add `categories` and `templates`):
