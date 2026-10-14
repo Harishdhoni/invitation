@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<!--
+  Going Up — housewarming template
+  For a family moving into a new flat: a mid-century apartment lobby with terrazzo floors, mint walls and brass.
+  Intro: the lift. One tap on the call button lights it, the needle of the brass floor dial climbs G, 1, 2, 3, 4
+  and stops at home, the lift dings and the brushed-steel doors slide open onto a warm "Welcome home". Hero: the
+  dial again, the photo inside the open lift (a mid-century living room stands in), a monstera, and the date on a
+  door nameplate with a doorbell. Events are apartment doors with brass numbers, a peephole, a knob and a WELCOME
+  mat, the countdown sits in four brass letterboxes, wishes are pinned to the residents' notice board, the help
+  section is the lobby intercom and the footer is the building's directory of new residents.
+  Palette: mint #cfe8df · teal #1f5f5b / #164744 · terracotta #d9774b · mustard #e9b949 · terrazzo cream #f6f0e6 ·
+           brass #c9a24a / #f1d78e · steel #c7ced1 · charcoal #2b2b2b
+  Fonts:   Josefin Sans (signage, headings) · Yellowtail (retro script names) · Work Sans (body) · Catamaran (Tamil)
+  A housewarming template for the invitation site; it follows TEMPLATES.md, and js/invite.js fills in the names,
+  title, verse, date, photo, events, countdown, wishes and contacts. Labels with data-ta switch to Tamil with the
+  தமிழ் button.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f5f5b">
+<title>Housewarming — Going Up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600;700&family=Work+Sans:wght@400;500;600;700&family=Yellowtail&family=Catamaran:wght@400;600;700&display=swap" rel="stylesheet">
+<script>
+  /* Runs before paint: mark JS, and decide whether the intro overlay is shown (not in admin previews or frames). */
+  (function(){
+    var d=document.documentElement, skip=/[?&]preview/.test(location.search);
+    try{ skip=skip||window.self!==window.top; }catch(e){ skip=true; }
+    d.className+=" js"+(skip?"":" intro-open");
+  })();
+</script>
+<style>
+:root{
+  --mint:#cfe8df; --mint-2:#b7dccf; --teal:#1f5f5b; --teal-d:#164744; --teal-dd:#0f3533;
+  --terra:#d9774b; --terra-d:#b85d34; --mustard:#e9b949; --cream:#f6f0e6; --wall:#f7efe3;
+  --brass:#c9a24a; --brass-l:#f1d78e; --brass-d:#8a6a22; --char:#2b2b2b; --ink:#26302e; --ink2:#55615e;
+  --sign:'Josefin Sans','Catamaran',system-ui,sans-serif;
+  --script:'Yellowtail','Catamaran',cursive;
+  --sans:'Work Sans','Catamaran',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --tamil:'Catamaran',sans-serif;
+  --ease:cubic-bezier(.22,.8,.3,1);
+  --brass-grad:linear-gradient(90deg,#9c7424,#f1d78e 22%,#c9a24a 50%,#f1d78e 78%,#9c7424);
+  --steel:repeating-linear-gradient(90deg,rgba(255,255,255,.18) 0 1px,transparent 1px 3px),linear-gradient(90deg,#aab3b8,#d9dfe2 30%,#c3cbcf 55%,#e3e8ea 75%,#b3bcc1);
+  /* terrazzo: chips of terracotta, mustard, teal and grey in cream */
+  --terrazzo:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><g fill='%23d9774b'><path d='M10 14l6-3 3 5-5 4z'/><path d='M78 62l5-2 2 4-4 3z'/><path d='M40 100l4-1 1 4-4 1z'/><path d='M104 30l3 1-1 3-3-1z'/></g><g fill='%23e9b949'><path d='M52 20l5 1-1 5-5-1z'/><path d='M100 90l6 2-2 5-5-2z'/><path d='M20 70l3-3 3 3-3 3z'/></g><g fill='%231f5f5b'><path d='M90 22l4 2-2 4-4-2z'/><path d='M60 80l3 0 1 3-3 1z'/><path d='M8 44l3-1 1 3-3 1z'/><path d='M66 110l4 1-1 3-4-1z'/></g><g fill='%23a9b4b0'><circle cx='34' cy='38' r='1.6'/><circle cx='70' cy='42' r='1.2'/><circle cx='110' cy='56' r='1.4'/><circle cx='86' cy='106' r='1.2'/><circle cx='24' cy='92' r='1'/><circle cx='48' cy='76' r='1.3'/></g><g fill='%232b2b2b' opacity='.6'><circle cx='64' cy='4' r='1'/><circle cx='116' cy='12' r='1.2'/><circle cx='46' cy='60' r='1'/><circle cx='12' cy='112' r='1'/></g></svg>");
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+html.intro-open,html.intro-open body{overflow:hidden}
+body{margin:0;min-height:100vh;overflow-x:hidden;font-family:var(--sans);font-size:1.04rem;line-height:1.65;color:var(--ink);background:var(--wall)}
+h1,h2,h3,p{margin:0}
+a{color:inherit}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--terra);outline-offset:3px;border-radius:10px}
+.ic{width:20px;height:20px;flex:none}
+
+/* ---------- shared bits ---------- */
+.sec-sub,.invites,#heroTagline,.verse .vl,.sec-title,.thanks{text-wrap:balance}
+.section{position:relative;padding:clamp(64px,10vw,104px) 16px;overflow-x:clip}
+.sec-head{text-align:center;max-width:620px;margin:0 auto clamp(30px,5vw,46px)}
+.eyebrow{font-family:var(--sign);font-weight:700;font-size:.8rem;letter-spacing:.24em;text-transform:uppercase;color:var(--terra-d)}
+.sec-title{font-family:var(--sign);font-weight:600;font-size:clamp(2rem,8vw,3rem);line-height:1.1;margin-top:10px;color:var(--teal-d);letter-spacing:-.005em}
+.sec-sub{margin:14px auto 0;max-width:40ch;color:var(--ink2)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;border:0;cursor:pointer;text-decoration:none;
+  font-family:var(--sign);font-weight:700;font-size:.92rem;letter-spacing:.1em;text-transform:uppercase;line-height:1.1;padding:14px 22px 12px;border-radius:999px;
+  background:var(--teal);color:#fff;box-shadow:0 6px 16px rgba(22,71,68,.28);transition:transform .2s var(--ease),background .2s;
+}
+.btn:hover{transform:translateY(-2px);background:var(--teal-d)}
+.btn:active{transform:translateY(1px)}
+.btn svg{width:18px;height:18px;flex:none;margin-top:-2px}
+.btn.ghost{background:transparent;color:var(--teal-d);box-shadow:inset 0 0 0 2px var(--teal)}
+.btn.ghost:hover{background:rgba(31,95,91,.08)}
+
+.js .reveal{opacity:0;transform:translateY(26px)}
+.js .reveal.in{opacity:1;transform:none;transition:opacity .8s ease,transform 1s var(--ease)}
+
+/* the brass floor dial over the lift */
+.dial{display:block;width:min(56vw,220px);height:auto;margin:0 auto;overflow:visible}
+.dial text{font-family:var(--sign)}
+
+/* ---------- intro: the lift ---------- */
+#curtain-overlay{
+  position:fixed;inset:0;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:20px 16px 18px;text-align:center;overflow:hidden;
+  background:repeating-linear-gradient(90deg,rgba(31,95,91,.07) 0 2px,transparent 2px 30px),radial-gradient(ellipse 70% 40% at 50% 45%,rgba(255,243,207,.65),transparent 70%),var(--mint);
+}
+/* the lobby floor: a teal skirting board over terrazzo */
+#curtain-overlay::after{content:"";position:absolute;left:0;right:0;bottom:0;height:70px;pointer-events:none;border-top:8px solid var(--teal-d);background:var(--terrazzo) 0 0/120px 120px,var(--cream)}
+#curtain-overlay>*{position:relative;z-index:1}
+.intro-open #curtain-overlay{display:flex}
+#curtain-overlay.open{opacity:0;transition:opacity .7s ease 3.15s;pointer-events:none}
+#curtain-overlay.hidden{display:none}
+.intro-kicker{position:relative;font-family:var(--sign);font-weight:700;font-size:.8rem;letter-spacing:.24em;text-transform:uppercase;color:var(--terra-d)}
+.intro-title{position:relative;font-family:var(--sign);font-weight:600;font-size:clamp(1.9rem,8.6vw,2.8rem);line-height:1.1;margin-top:4px;color:var(--teal-d)}
+html[lang="ta"] .intro-title{font-family:var(--tamil);font-weight:700;line-height:1.3}
+.intro-names{position:relative;font-family:var(--script);font-size:1.7rem;line-height:1.2;color:var(--terra)}
+.lift-btn{position:relative;display:flex;flex-direction:column;align-items:center;margin-top:12px;padding:0;border:0;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.lift-btn:focus-visible{outline-offset:6px}
+.lift-btn .dial{width:min(46vw,180px);margin-bottom:-2px;position:relative;z-index:1}
+.lift{position:relative;height:min(40vh,320px);aspect-ratio:3/4;padding:11px 11px 0;border-radius:4px 4px 0 0;background:var(--brass-grad);box-shadow:0 18px 30px rgba(22,71,68,.22)}
+.shaft{position:relative;height:100%;overflow:hidden;display:grid;place-items:center;background:radial-gradient(ellipse 80% 60% at 50% 38%,#fff3cf,#f6c46f 58%,#d9874a)}
+.shaft-in{font-family:var(--sign);font-weight:700;font-size:clamp(1rem,4.6vw,1.3rem);letter-spacing:.2em;text-transform:uppercase;color:#7a3c12;padding:0 10px;opacity:0}
+.open .shaft-in{opacity:1;transition:opacity .3s ease 1.95s}
+.door-l,.door-r{position:absolute;z-index:1;top:0;bottom:0;width:50.5%;background:var(--steel);transition:transform 1.05s cubic-bezier(.6,0,.25,1) 1.95s}
+.door-l{left:0;box-shadow:inset -1px 0 0 rgba(0,0,0,.35)}
+.door-r{right:0;box-shadow:inset 1px 0 0 rgba(255,255,255,.5)}
+.door-l::before,.door-r::before{content:"";position:absolute;top:12%;bottom:12%;width:3px;background:var(--brass-grad)}
+.door-l::before{right:14px}.door-r::before{left:14px}
+.door-l::after,.door-r::after{content:"";position:absolute;top:50%;width:16px;height:16px;margin-top:-8px;transform:rotate(45deg);border:2px solid var(--brass)}
+.door-l::after{right:7.5px}.door-r::after{left:7.5px}
+.open .door-l{transform:translateX(-100%)}
+.open .door-r{transform:translateX(100%)}
+.sill{display:block;width:calc(100% + 24px);height:8px;margin:0 -12px;background:var(--brass-grad);border-radius:0 0 3px 3px}
+.lift-wrap{position:relative;display:flex;flex-direction:column;align-items:center}
+.open .lift-wrap{animation:stepIn .8s ease-in 3.05s forwards}
+@keyframes stepIn{to{transform:scale(1.35);opacity:.6}}
+.call{position:relative;display:grid;place-items:center;width:58px;height:58px;margin-top:16px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#f6e1a0,#c9a24a 60%,#8a6a22);box-shadow:0 6px 12px rgba(0,0,0,.2)}
+.call i{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:#fbf4e2;box-shadow:inset 0 -2px 3px rgba(0,0,0,.15);transition:background .2s,box-shadow .2s}
+.call i::before{content:"";width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:12px solid var(--char);margin-top:-3px;transition:border-color .2s}
+.call::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--terra);animation:ring 2.2s ease-out infinite}
+@keyframes ring{0%{transform:scale(.85);opacity:.9}100%{transform:scale(1.5);opacity:0}}
+.open .call i{background:radial-gradient(circle,#fff6d0,#ffc85a);box-shadow:0 0 18px 4px rgba(255,200,90,.8)}
+.open .call i::before{border-bottom-color:#8a3c12}
+.open .call::after{animation:none;opacity:0}
+.intro-hint{position:relative;margin-top:10px;font-weight:600;font-size:.95rem;color:var(--teal-d);animation:breathe 2.4s ease-in-out infinite}
+@keyframes breathe{50%{transform:translateY(-3px)}}
+.open .intro-hint{opacity:0;transition:opacity .3s;animation:none}
+.needle{transform-box:view-box;transform-origin:110px 122px;transform:rotate(-75deg)}
+.open .needle{animation:climb 1.7s ease-in-out .15s forwards}
+@keyframes climb{0%{transform:rotate(-75deg)}14%,20%{transform:rotate(-45deg)}34%,40%{transform:rotate(-15deg)}54%,60%{transform:rotate(15deg)}74%,80%{transform:rotate(45deg)}100%{transform:rotate(75deg)}}
+.ding{position:absolute;z-index:2;top:-6px;right:-30px;font-family:var(--sign);font-weight:700;font-size:1.05rem;letter-spacing:.1em;color:var(--terra-d);opacity:0;transform:scale(.4) rotate(-8deg)}
+.open .ding{animation:ding .5s cubic-bezier(.3,1.7,.6,1) 1.85s forwards}
+@keyframes ding{to{opacity:1;transform:scale(1) rotate(-8deg)}}
+.arrow-up{opacity:.25}
+.open .arrow-up{animation:blink .4s steps(1) 4 .1s,lit 0s linear 1.7s forwards}
+@keyframes blink{50%{opacity:1}}
+@keyframes lit{to{opacity:1}}
+
+/* ---------- hero: the lobby ---------- */
+#hero{
+  position:relative;overflow:hidden;overflow:clip;text-align:center;padding:24px 16px 0;
+  background:repeating-linear-gradient(90deg,rgba(31,95,91,.07) 0 2px,transparent 2px 30px),radial-gradient(ellipse 70% 30% at 50% 40%,rgba(255,243,207,.7),transparent 70%),var(--mint);
+}
+.lang{position:relative;z-index:2;display:inline-flex;gap:2px;padding:4px;border-radius:999px;background:#fbf6ec;box-shadow:0 0 0 1px var(--mint-2),0 6px 16px rgba(22,71,68,.08)}
+.lang-btn{border:0;background:none;cursor:pointer;min-width:52px;min-height:40px;font-family:var(--sign);font-weight:700;font-size:.9rem;padding:8px 14px 5px;border-radius:999px;color:var(--ink2)}
+.lang-btn[lang="ta"]{font-family:var(--tamil);padding-top:6px}
+.lang-btn.active{background:var(--teal);color:#fff}
+.hero-inner{position:relative;max-width:680px;margin:0 auto}
+.addr{display:inline-flex;align-items:center;gap:10px;margin-top:26px;padding:8px 18px 6px;border-radius:999px;background:var(--brass-grad);box-shadow:0 4px 10px rgba(138,106,34,.25);font-family:var(--sign);font-weight:700;font-size:.78rem;letter-spacing:.26em;text-transform:uppercase;color:#3d2c08}
+.title{font-family:var(--sign);font-weight:600;font-size:clamp(2.6rem,12vw,5.2rem);line-height:1.02;margin-top:14px;color:var(--teal-d);letter-spacing:-.01em;overflow-wrap:break-word}
+html[lang="ta"] .title{font-family:var(--tamil);font-weight:700;font-size:clamp(2.1rem,9.6vw,4rem);line-height:1.3}
+.names{margin-top:4px;font-family:var(--script);font-size:clamp(2.2rem,10vw,3.2rem);line-height:1.2;color:var(--terra)}
+html[lang="ta"] .names{font-family:var(--tamil);font-weight:700;font-size:1.8rem}
+.names .hero-amp{color:var(--teal);font-size:.8em;margin:0 .12em}
+.invites{margin:2px auto 0;max-width:34ch;color:var(--ink2)}
+.invites .sg{display:none}
+.hero-inner:not(:has(.names .hero-amp)) .invites .pl{display:none}
+.hero-inner:not(:has(.names .hero-amp)) .invites .sg{display:inline}
+.hlift-wrap{position:relative;width:min(78vw,320px);margin:30px auto 0}
+.hlift-wrap .dial{width:min(52vw,200px);margin-bottom:-2px;position:relative;z-index:1}
+.hlift{position:relative;padding:12px 12px 0;border-radius:4px 4px 0 0;background:var(--brass-grad);box-shadow:0 22px 40px rgba(22,71,68,.25)}
+.hshaft{position:relative;aspect-ratio:3/4;overflow:hidden;background:#f3d9a4}
+.hshaft svg{display:block;width:100%;height:100%}
+.cover-img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;object-position:50% 35%;display:block}
+.hshaft::before,.hshaft::after{content:"";position:absolute;z-index:2;top:0;bottom:0;width:7%;background:var(--steel)}
+.hshaft::before{left:0;box-shadow:inset -1px 0 0 rgba(0,0,0,.3)}
+.hshaft::after{right:0;box-shadow:inset 1px 0 0 rgba(0,0,0,.3)}
+.hlift-wrap .sill{width:calc(100% + 28px);margin:0 -14px}
+.monstera{position:absolute;z-index:3;left:-16%;bottom:-4px;width:40%;height:auto;pointer-events:none;transform-origin:50% 100%;animation:sway 7s ease-in-out infinite alternate}
+@keyframes sway{from{transform:rotate(-2deg)}to{transform:rotate(2.5deg)}}
+.lift-plate{display:inline-block;margin-top:14px;padding:6px 16px 4px;border-radius:4px;background:var(--teal-d);font-family:var(--sign);font-weight:600;font-size:.82rem;letter-spacing:.2em;text-transform:uppercase;color:var(--brass-l)}
+.nameplate{display:inline-flex;align-items:center;gap:14px;max-width:100%;margin-top:30px;padding:10px 10px 10px 22px;border-radius:14px;text-align:left;background:linear-gradient(180deg,#1f5f5b,#164744);color:var(--brass-l);box-shadow:inset 0 0 0 2px var(--brass),inset 0 0 0 5px var(--teal-d),inset 0 0 0 6px rgba(241,215,142,.4),0 12px 22px rgba(22,71,68,.25)}
+#heroDatePill{font-family:var(--sign);font-weight:600;font-size:1.05rem;line-height:1.35;padding-top:3px}
+html[lang="ta"] #heroDatePill{font-family:var(--tamil);padding-top:0}
+.bell{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--brass-grad);box-shadow:0 2px 4px rgba(0,0,0,.3)}
+.bell::before{content:"";width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fffdf4,#e9dcc0);box-shadow:inset 0 -2px 2px rgba(0,0,0,.2)}
+.verse{margin:24px auto 0;max-width:44ch;font-family:var(--tamil);font-weight:600;font-size:.98rem;line-height:1.75;color:var(--teal)}
+#heroTagline{max-width:36ch;margin:16px auto 0;color:var(--ink2)}
+.scroll-cue{display:inline-flex;flex-direction:column;align-items:center;gap:6px;margin:30px 0 26px;padding:6px 10px;font-family:var(--sign);font-weight:700;font-size:.8rem;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);text-decoration:none}
+.scroll-cue i{width:11px;height:11px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);animation:nudge 1.8s ease-in-out infinite}
+@keyframes nudge{50%{transform:translate(0,6px) rotate(45deg)}}
+/* the lobby floor under the hero: a teal skirting board and terrazzo */
+.floor{height:70px;margin:0 -16px;border-top:8px solid var(--teal-d);background:var(--terrazzo) 0 0/120px 120px,var(--cream)}
+.rise{animation:rise 1.1s var(--ease) both}
+.r1{animation-delay:.12s}.r2{animation-delay:.26s}.r3{animation-delay:.4s}.r4{animation-delay:.55s}
+html.intro-open .rise{animation-play-state:paused}
+@keyframes rise{from{opacity:0;transform:translateY(26px)}}
+
+/* ---------- events: apartment doors ---------- */
+#events{background:repeating-linear-gradient(90deg,rgba(185,140,90,.07) 0 2px,transparent 2px 30px),var(--wall)}
+.doors{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:48px 30px;max-width:920px;margin:0 auto}
+.doors>.flat{flex:1 1 320px}
+.flat{--d:var(--teal);--d2:#2a716c;position:relative;max-width:420px;width:100%;margin:0 auto}
+.flat:nth-of-type(3n+2){--d:#c4643e;--d2:#d27650}
+.flat:nth-of-type(3n+3){--d:#cf9c2b;--d2:#dcab3b}
+.fdoor{position:relative;padding:22px 30px 26px 22px;border-radius:8px 8px 2px 2px;background:linear-gradient(90deg,var(--d),var(--d2) 60%,var(--d));box-shadow:inset 0 0 0 4px rgba(0,0,0,.12),0 0 0 8px #fbf6ec,0 0 0 10px #e3d3bc,0 18px 30px rgba(60,40,20,.16)}
+.fnum{display:table;margin:0 auto;padding:6px 16px 3px;border-radius:999px;background:var(--brass-grad);box-shadow:0 2px 4px rgba(0,0,0,.25);font-family:var(--sign);font-weight:700;font-size:1.2rem;letter-spacing:.08em;color:#3d2c08}
+.peep{display:block;width:16px;height:16px;margin:10px auto 14px;border-radius:50%;background:radial-gradient(circle,#1d2422 0 3.5px,#c9a24a 4px 6px,#8a6a22 6.5px)}
+.knob{position:absolute;right:9px;top:54%;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fbe7a8,#c9a24a 55%,#7a5a1a);box-shadow:0 2px 3px rgba(0,0,0,.35)}
+.fpanel{position:relative;padding:20px 18px 22px;text-align:center;border-radius:6px;background:#fbf6ec;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06),0 2px 0 rgba(255,255,255,.25)}
+.ficon{display:grid;place-items:center;width:64px;height:64px;margin:0 auto 10px;border-radius:50%;font-size:1.9rem;line-height:1;background:var(--mint);box-shadow:0 0 0 4px #fff}
+.ficon img{width:40px;height:40px;object-fit:contain}
+.fname{font-family:var(--sign);font-weight:600;font-size:clamp(1.55rem,6.4vw,1.9rem);line-height:1.15;color:var(--ink)}
+html[lang="ta"] .fname{font-family:var(--tamil);font-weight:700;font-size:1.4rem;line-height:1.4}
+.finfo{margin:14px 0 0;padding:0;text-align:left}
+.finfo>div{display:flex;gap:12px;align-items:baseline;padding:10px 2px;border-top:1px solid #eadfcd}
+.finfo>div:last-child{border-bottom:1px solid #eadfcd}
+.finfo dt{flex:none;width:74px;display:flex;align-items:center;gap:7px;font-family:var(--sign);font-weight:700;font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--terra-d);padding-top:2px}
+.finfo dt .ic{width:16px;height:16px;align-self:center;margin-top:-3px}
+.finfo dd{margin:0;flex:1;min-width:0;line-height:1.45}
+.finfo strong{display:block;font-weight:600}
+.finfo small{display:block;font-size:.94rem;color:var(--ink2)}
+.fdesc{margin:14px auto 20px;max-width:32ch;font-style:italic;color:var(--ink2)}
+html[lang="ta"] .fdesc{font-style:normal}
+.mat{display:block;width:78%;margin:16px auto 0;padding:9px 0 6px;border-radius:5px;text-align:center;font-family:var(--sign);font-weight:700;font-size:.9rem;letter-spacing:.42em;text-indent:.42em;text-transform:uppercase;color:#4a2e14;background:repeating-linear-gradient(90deg,rgba(0,0,0,.08) 0 1px,transparent 1px 3px),linear-gradient(#c49556,#a8783f);box-shadow:inset 0 0 0 3px #8a5e2c,0 6px 10px rgba(60,40,20,.18)}
+html[lang="ta"] .mat{font-family:var(--tamil);letter-spacing:.1em;text-indent:.1em;padding-top:6px}
+
+/* ---------- countdown: brass letterboxes ---------- */
+#countdown{color:#fff;background:repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 2px,transparent 2px 30px),linear-gradient(180deg,var(--teal),var(--teal-d))}
+#countdown .eyebrow{color:var(--brass-l)}
+#countdown .sec-title{color:#fff}
+.mboxes{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(8px,2.6vw,20px);max-width:580px;margin:0 auto}
+.mbox{position:relative;padding:12px clamp(6px,2vw,12px) 14px;border-radius:8px 8px 4px 4px;text-align:center;background:linear-gradient(180deg,#f1d78e,#c9a24a 45%,#a8832f);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),0 12px 20px rgba(0,0,0,.28)}
+.mb-slot{display:block;height:7px;margin:0 12% 10px;border-radius:4px;background:#3d2c08;box-shadow:0 1px 0 rgba(255,255,255,.5)}
+.mb-win{display:grid;place-items:center;aspect-ratio:1/1.05;border-radius:4px;background:#fbf6ec;box-shadow:inset 0 2px 5px rgba(0,0,0,.25),0 0 0 2px #8a6a22}
+.mb-win b{font-family:var(--sign);font-weight:700;font-size:clamp(1.3rem,6vw,2.2rem);line-height:1;color:var(--teal-d);padding-top:.12em;font-variant-numeric:tabular-nums}
+.mb-lbl{display:block;margin-top:10px;padding:4px 0 2px;border-radius:3px;background:var(--teal-dd);font-family:var(--sign);font-weight:700;font-size:clamp(.6rem,2.4vw,.74rem);letter-spacing:.14em;text-transform:uppercase;color:var(--brass-l)}
+.mb-lock{position:absolute;right:8px;bottom:calc(100% - 26px);width:7px;height:7px;border-radius:50%;background:#5a420f;display:none}
+.cd-when{margin-top:30px;text-align:center;font-family:var(--sign);font-weight:600;font-size:1.2rem;padding-top:3px}
+.cd-when span:last-child{color:var(--brass-l)}
+html[lang="ta"] .cd-when{font-family:var(--tamil)}
+
+/* ---------- wishes: the residents' notice board ---------- */
+#wishes{background:repeating-linear-gradient(90deg,rgba(31,95,91,.07) 0 2px,transparent 2px 30px),var(--mint)}
+.wish-form{position:relative;max-width:560px;margin:0 auto 46px;padding:28px 22px 26px;border-radius:18px;background:#fbf6ec;display:grid;gap:16px;box-shadow:0 18px 36px rgba(22,71,68,.14)}
+.field{display:grid;gap:7px;font-weight:600;font-size:.94rem;color:var(--ink2)}
+.field input,.field textarea{width:100%;border:1.5px solid #e3d6c2;background:#fff;border-radius:12px;padding:13px 15px;font-size:1rem;color:var(--ink);resize:vertical;transition:border-color .2s,box-shadow .2s}
+.field input::placeholder,.field textarea::placeholder{color:#9aa39f}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 4px rgba(31,95,91,.14)}
+.wish-form .btn{justify-self:center;margin-top:4px;background:var(--terra-d)}
+.wish-form .btn:hover{background:#9c4b28}
+.board-frame{max-width:1000px;margin:0 auto;padding:14px;border-radius:10px;background:linear-gradient(180deg,#8f5e36,#6e4426);box-shadow:inset 0 0 0 2px rgba(255,255,255,.12),0 22px 40px rgba(22,71,68,.25)}
+.board-head{display:table;margin:-30px auto 12px;padding:7px 20px 4px;border-radius:4px;background:var(--brass-grad);box-shadow:0 3px 6px rgba(0,0,0,.25);font-family:var(--sign);font-weight:700;font-size:.82rem;letter-spacing:.24em;text-transform:uppercase;color:#3d2c08}
+.cork{
+  padding:26px 14px 22px;border-radius:4px;
+  background:radial-gradient(circle at 20% 30%,rgba(120,80,40,.35) 1px,transparent 1.5px) 0 0/9px 9px,radial-gradient(circle at 70% 60%,rgba(255,230,190,.35) 1px,transparent 1.5px) 0 0/7px 7px,linear-gradient(135deg,#c99d68,#b88a55);
+  box-shadow:inset 0 2px 8px rgba(0,0,0,.35);
+}
+.pins{display:grid;gap:28px 22px;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));align-items:start}
+.pnote{--c:#fffdf7;position:relative;margin:0;padding:24px 18px 16px;background:var(--c);color:#2a2a2a;box-shadow:0 8px 14px rgba(40,25,10,.3);rotate:-1.4deg}
+.pnote:nth-of-type(4n+2){--c:#d9f0e7;rotate:1.3deg}
+.pnote:nth-of-type(4n+3){--c:#fbe6b3;rotate:-.5deg}
+.pnote:nth-of-type(4n+4){--c:#fbd9c8;rotate:1.7deg}
+.pnote::before{content:"";position:absolute;left:50%;top:-7px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff9d85,#d9452b 60%,#a3301c);box-shadow:0 3px 3px rgba(0,0,0,.35)}
+.pnote:nth-of-type(3n+2)::before{background:radial-gradient(circle at 35% 30%,#7fd1c4,#1f7f78 60%,#145a55)}
+.pnote:nth-of-type(3n+3)::before{background:radial-gradient(circle at 35% 30%,#ffe08a,#e2a92b 60%,#a8781a)}
+.pnote blockquote{margin:0 0 10px;font-size:1rem;line-height:1.6;white-space:pre-line;overflow-wrap:anywhere}
+.pnote figcaption{font-family:var(--script);font-size:1.5rem;line-height:1.15;color:var(--teal-d);overflow-wrap:anywhere}
+html[lang="ta"] .pnote figcaption{font-family:var(--tamil);font-weight:700;font-size:1.02rem}
+.wishes-empty{display:table;margin:0 auto;padding:14px 18px 12px;background:#fffdf7;box-shadow:0 8px 14px rgba(40,25,10,.3);rotate:-1deg;text-align:center;max-width:32ch;color:var(--ink2)}
+.wishes-empty[hidden]{display:none}
+.wishes-more{display:flex;justify-content:center;margin-top:36px}
+
+/* ---------- help: the lobby intercom ---------- */
+.intercom{max-width:560px;margin:0 auto;padding:26px clamp(14px,4vw,24px) 20px;text-align:center;border-radius:20px;background:var(--steel);box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),inset 0 -3px 0 rgba(0,0,0,.12),0 20px 36px rgba(22,71,68,.2)}
+.grille{display:block;width:120px;height:46px;margin:0 auto 14px;border-radius:24px;background:radial-gradient(circle,#3b4246 2.2px,transparent 2.7px) 2px 2px/10px 10px,#9aa3a8;box-shadow:inset 0 2px 4px rgba(0,0,0,.35)}
+.intercom .eyebrow{color:#5b6469}
+.intercom .sec-title{font-size:clamp(1.8rem,7vw,2.4rem);color:var(--char)}
+#stayText{margin:12px auto 20px;max-width:36ch;color:#3e474b}
+#coordinators{display:grid;gap:10px}
+.coord{display:flex;align-items:center;gap:12px;text-align:left;padding:10px 10px 10px 12px;border-radius:12px;background:rgba(255,255,255,.35);box-shadow:inset 0 1px 2px rgba(0,0,0,.18)}
+.coord .lbl{flex:1;min-width:0;padding:8px 12px 6px;border-radius:6px;background:#fbf6ec;box-shadow:inset 0 0 0 1px #d6c9b2,0 0 10px rgba(255,236,190,.6)}
+.c-name{font-family:var(--sign);font-weight:600;font-size:1.06rem;line-height:1.3;overflow-wrap:anywhere}
+html[lang="ta"] .c-name{font-family:var(--tamil);font-weight:700}
+.c-phone{font-size:.92rem;color:var(--ink2)}
+.coord .btn{padding:12px 16px 10px;min-height:46px;flex:none}
+
+/* ---------- footer: the building's directory ---------- */
+.foot{position:relative;padding:0 16px 96px;text-align:center;color:#fff;background:linear-gradient(180deg,var(--teal-d),var(--teal-dd))}
+.foot>.floor{margin:0 -16px 54px;border-top:0;border-bottom:8px solid var(--teal-dd)}
+.directory{max-width:440px;margin:0 auto;padding:10px;border-radius:10px;background:var(--brass-grad);box-shadow:0 18px 30px rgba(0,0,0,.35)}
+.dir-in{padding:22px 18px 20px;border-radius:5px;background:#132e2c;box-shadow:inset 0 0 0 1px rgba(241,215,142,.4)}
+.dir-k{font-family:var(--sign);font-weight:700;font-size:.78rem;letter-spacing:.3em;text-transform:uppercase;color:var(--brass-l)}
+.dir-names{margin-top:6px;font-family:var(--script);font-size:clamp(2rem,9vw,2.8rem);line-height:1.2;color:#fff}
+html[lang="ta"] .dir-names{font-family:var(--tamil);font-weight:700;font-size:1.7rem}
+.dir-names .hero-amp{color:var(--mustard)}
+.hashtag{margin-top:10px;padding-top:12px;border-top:1px dashed rgba(241,215,142,.4);font-family:var(--sign);font-weight:600;font-size:clamp(1.3rem,6vw,1.8rem);line-height:1.2;color:var(--brass-l);overflow-wrap:anywhere}
+.thanks{margin:22px auto 0;max-width:34ch;color:#cfe8df}
+.foot .btn{margin-top:22px;background:transparent;color:var(--brass-l);box-shadow:inset 0 0 0 2px rgba(241,215,142,.6)}
+.foot .btn:hover{background:rgba(241,215,142,.1)}
+
+/* ---------- music + toast ---------- */
+#musicToggle{position:fixed;right:16px;bottom:16px;z-index:40;width:54px;height:54px;border:0;border-radius:50%;cursor:pointer;display:grid;place-items:center;font-size:1.4rem;line-height:1;color:#3d2c08;background:radial-gradient(circle at 40% 35%,#f6e1a0,#c9a24a 60%,#8a6a22);box-shadow:0 0 0 3px #fbf6ec,0 10px 22px rgba(22,71,68,.3)}
+#musicToggle svg{width:24px;height:24px}
+#musicToggle.spinning svg{animation:spin 4s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#toast{position:fixed;left:50%;bottom:88px;z-index:60;transform:translate(-50%,20px);opacity:0;pointer-events:none;max-width:calc(100% - 32px);padding:12px 20px;border-radius:999px;background:var(--teal-d);color:#fff;box-shadow:0 0 0 2px var(--brass);font-weight:600;font-size:.95rem;text-align:center;transition:.3s}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (min-width:760px){
+  .lang{position:absolute;top:22px;right:22px}
+  .addr{margin-top:40px}
+}
+@media (max-height:700px){
+  .lift{height:33vh}
+  .intro-names{font-size:1.4rem}
+  #curtain-overlay::after{height:48px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0s!important}
+  html{scroll-behavior:auto}
+}
+/* Tamil labels: no English-style letter-spacing or capitals, and Catamaran for the Tamil letters. */
+html[lang="ta"] [data-ta]{letter-spacing:0;text-transform:none}
+html[lang="ta"] .sec-title[data-ta]{font-family:var(--tamil);font-weight:700;font-size:clamp(1.6rem,6.4vw,2.4rem);line-height:1.35}
+html[lang="ta"] .eyebrow[data-ta],html[lang="ta"] .addr[data-ta],html[lang="ta"] .lift-plate[data-ta],html[lang="ta"] .dir-k[data-ta],html[lang="ta"] .board-head[data-ta],html[lang="ta"] .intro-kicker[data-ta],html[lang="ta"] .shaft-in[data-ta]{font-family:var(--tamil);font-size:.95rem;font-weight:700;padding-top:4px}
+html[lang="ta"] .btn [data-ta],html[lang="ta"] .btn[data-ta],html[lang="ta"] .mb-lbl,html[lang="ta"] .finfo dt [data-ta]{font-family:var(--tamil);font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- shared art: the brass floor dial, the living room stand-in, the monstera and small icons -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="gBr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6e1a0"/><stop offset=".5" stop-color="#d6ab4a"/><stop offset="1" stop-color="#9c7424"/></linearGradient>
+    <g id="dial-face">
+      <path d="M8 122A102 102 0 0 1 212 122Z" fill="url(#gBr)" stroke="#7a5a1a" stroke-width="2"/>
+      <path d="M30 122A80 80 0 0 1 190 122Z" fill="#fbf4e2" stroke="#7a5a1a" stroke-width="1.5"/>
+      <path d="M40.7 82L47.6 86M70 52.7L74 59.6M110 42V50M150 52.7L146 59.6M179.3 82L172.4 86" stroke="#7a5a1a" stroke-width="1.6" stroke-linecap="round"/>
+      <g fill="#2b2b2b" font-size="16" font-weight="700" text-anchor="middle">
+        <text x="50" y="112">G</text><text x="66" y="84">1</text><text x="94" y="68">2</text><text x="126" y="68">3</text><text x="154" y="84">4</text>
+      </g>
+      <path d="M161 110L170 102L179 110V117H161Z" fill="#d9774b"/><path d="M166 117V112H174V117" fill="#fbf4e2"/>
+      <rect x="4" y="121" width="212" height="9" rx="2" fill="url(#gBr)" stroke="#7a5a1a" stroke-width="1"/>
+    </g>
+    <g id="needle-shape">
+      <path d="M110 122L106.5 117L110 54L113.5 117Z" fill="#2b2b2b"/>
+      <circle cx="110" cy="122" r="8.5" fill="url(#gBr)" stroke="#7a5a1a" stroke-width="1.5"/>
+    </g>
+    <!-- a monstera in a terracotta pot -->
+    <g id="monstera-art">
+      <g fill="#2f6b57">
+        <path d="M60 120C40 104 20 104 8 116C22 132 44 132 60 120Z"/>
+        <path d="M62 116C56 90 40 76 22 74C24 96 40 112 62 116Z"/>
+        <path d="M64 114C70 86 66 62 52 48C42 70 48 96 64 114Z"/>
+        <path d="M66 116C84 96 104 92 118 100C108 118 86 124 66 116Z"/>
+        <path d="M66 112C78 86 96 74 112 74C108 96 90 110 66 112Z"/>
+      </g>
+      <g fill="none" stroke="#cfe8df" stroke-width="2.4" stroke-linecap="round" opacity=".8">
+        <path d="M18 116L30 114M26 86L36 96M54 62L58 78M106 102L94 104M100 84L90 94"/>
+      </g>
+      <path d="M60 120L62 140M64 114L64 140M66 116L65 140" stroke="#24543f" stroke-width="2.4"/>
+      <path d="M38 140H92L86 178H44Z" fill="#d9774b"/>
+      <path d="M36 136H94V144H36Z" fill="#c4643e"/>
+      <path d="M48 156H82" stroke="#f6f0e6" stroke-width="2" opacity=".6"/>
+    </g>
+  </defs>
+  <symbol id="i-cal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10.5h17"/></g></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></g></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></g></symbol>
+  <symbol id="i-go" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></g></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path fill="currentColor" d="M9 17.5V6.2l10-2.2v11.3a3 3 0 1 1-2-2.83V7.5l-6 1.3v8.7a3 3 0 1 1-2-2.83z"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-pushpin" viewBox="0 0 24 24"><path fill="currentColor" d="M15 3l6 6-2.6.6-3.9 3.9.5 4.4-1.5 1.5-4-4L4 20.9 3.1 20l5.5-5.5-4-4L6.1 9l4.4.5 3.9-3.9z"/></symbol>
+</svg>
+
+<!-- ============ INTRO: the lift ============ -->
+<div id="curtain-overlay" data-hide-after="3900">
+  <p class="intro-kicker" data-ta="எங்கள் புது இல்லத்துக்கு வாருங்கள்">You're invited up</p>
+  <p class="intro-title" data-bind="title">Gruhapravesam</p>
+  <p class="intro-names" data-bind="names">Ravi &amp; Priya</p>
+  <button type="button" class="lift-btn" id="openCurtainBtn" data-open-invite aria-label="Call the lift to open the invitation">
+    <span class="lift-wrap">
+      <svg class="dial" viewBox="0 0 220 132" aria-hidden="true" focusable="false">
+        <use href="#dial-face"/>
+        <path class="arrow-up" d="M110 28L118 38H102Z" fill="#d9452b"/>
+        <g class="needle"><use href="#needle-shape"/></g>
+      </svg>
+      <span class="ding" aria-hidden="true">Ding!</span>
+      <span class="lift" aria-hidden="true">
+        <span class="shaft"><span class="shaft-in" data-ta="நல்வரவு">Welcome home</span><span class="door-l"></span><span class="door-r"></span></span>
+      </span>
+      <span class="sill" aria-hidden="true"></span>
+    </span>
+    <span class="call" aria-hidden="true"><i></i></span>
+  </button>
+  <p class="intro-hint" data-ta="வர ▲ பொத்தானை அழுத்துங்கள்">Press ▲ to come up to our new home</p>
+</div>
+
+<!-- ============ HERO: the lobby ============ -->
+<header id="hero">
+  <nav class="lang" aria-label="Language">
+    <button type="button" class="lang-btn active" data-lang="en">EN</button>
+    <button type="button" class="lang-btn" data-lang="ta" lang="ta">தமிழ்</button>
+  </nav>
+
+  <div class="hero-inner">
+    <p class="addr rise" data-ta="புதிய முகவரி">New address</p>
+    <h1 class="title rise r1" data-bind="title">Gruhapravesam</h1>
+    <p class="names rise r1" data-bind="names"><span class="name-part">Ravi</span> <span class="hero-amp">&amp;</span> <span class="name-part">Priya</span></p>
+    <p class="invites rise r2"><span class="pl" data-ta="எங்கள் புது இல்லத்துக்கு உங்களை அன்புடன் அழைக்கிறோம்">invite you up to our new home</span><span class="sg" data-ta="எங்கள் புது இல்லத்துக்கு உங்களை அன்புடன் அழைக்கிறோம்">invites you up to our new home</span></p>
+
+    <div class="hlift-wrap rise r2">
+      <svg class="dial" viewBox="0 0 220 132" aria-hidden="true" focusable="false">
+        <use href="#dial-face"/>
+        <path d="M110 28L118 38H102Z" fill="#d9452b"/>
+        <use href="#needle-shape" transform="rotate(75 110 122)"/>
+      </svg>
+      <div class="hlift">
+        <!-- cover photo goes here (data-bind="cover"); a mid-century living room stands in for the preview -->
+        <div class="hshaft" role="img" aria-label="Our new home">
+          <svg viewBox="0 0 300 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+            <rect width="300" height="400" fill="#cfe8df"/>
+            <path d="M20 0V300M50 0V300M80 0V300M110 0V300M140 0V300M170 0V300M200 0V300M230 0V300M260 0V300M290 0V300" stroke="#bcdccf" stroke-width="2"/>
+            <rect y="290" width="300" height="12" fill="#1f5f5b"/>
+            <rect y="302" width="300" height="98" fill="#f6f0e6"/>
+            <g fill="#d9774b"><path d="M30 330l6-3 3 5-5 4z"/><path d="M240 360l5-2 2 4-4 3z"/></g><g fill="#e9b949"><path d="M110 380l5 1-1 5-5-1z"/><path d="M200 320l4 1-1 4-4-1z"/></g>
+            <ellipse cx="150" cy="350" rx="122" ry="24" fill="#d9774b"/><ellipse cx="150" cy="350" rx="104" ry="17" fill="none" stroke="#f6f0e6" stroke-width="2" opacity=".7"/>
+            <circle cx="150" cy="126" r="44" fill="#f6f0e6" stroke="#c9a24a" stroke-width="7"/>
+            <path d="M118 140A32 32 0 0 1 182 140Z" fill="#d9774b"/><path d="M128 112A22 22 0 0 1 172 112" fill="none" stroke="#1f5f5b" stroke-width="6" stroke-linecap="round"/><circle cx="150" cy="104" r="6" fill="#e9b949"/>
+            <path d="M262 300V160Q262 90 204 90" fill="none" stroke="#2b2b2b" stroke-width="4"/>
+            <path d="M186 96Q204 66 222 96Z" fill="#1f5f5b"/><ellipse cx="204" cy="100" rx="22" ry="8" fill="#fff3cf" opacity=".85"/>
+            <path d="M244 300L262 292L280 300" fill="none" stroke="#2b2b2b" stroke-width="4"/>
+            <rect x="58" y="198" width="184" height="58" rx="18" fill="#e3ad38"/>
+            <rect x="72" y="210" width="74" height="42" rx="12" fill="#f0c869"/><rect x="154" y="210" width="74" height="42" rx="12" fill="#f0c869"/>
+            <rect x="48" y="242" width="204" height="48" rx="12" fill="#e9b949"/>
+            <rect x="36" y="228" width="28" height="62" rx="11" fill="#dba237"/><rect x="236" y="228" width="28" height="62" rx="11" fill="#dba237"/>
+            <path d="M66 290L60 304M234 290L240 304" stroke="#8a5e2c" stroke-width="4" stroke-linecap="round"/>
+            <rect x="160" y="226" width="40" height="22" rx="8" fill="#1f5f5b" transform="rotate(-8 180 237)"/>
+            <use href="#monstera-art" transform="translate(-26 128) scale(.95)"/>
+          </svg>
+          <img class="cover-img" data-bind="cover" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+        </div>
+      </div>
+      <span class="sill" aria-hidden="true"></span>
+      <svg class="monstera" viewBox="0 40 130 140" aria-hidden="true" focusable="false"><use href="#monstera-art"/></svg>
+    </div>
+    <p class="lift-plate rise r3" data-ta="எங்கள் புது இல்லம்">Our new home</p>
+
+    <div class="rise r3"><p class="nameplate"><span id="heroDatePill" data-bind="dateLine">🏡 14th March 2027 • Coimbatore</span><span class="bell" aria-hidden="true"></span></p></div>
+    <p class="verse rise r4" lang="ta" data-bind="verse"></p>
+    <p id="heroTagline" class="rise r4" data-bind="tagline">With the blessings of God and our elders, we are stepping into our new home.</p>
+    <a class="scroll-cue" href="#events"><span data-ta="உள்ளே வாருங்கள்">Step inside</span><i aria-hidden="true"></i></a>
+  </div>
+  <div class="floor" aria-hidden="true"></div>
+</header>
+
+<main>
+<!-- ============ EVENTS: apartment doors ============ -->
+<section id="events" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="எந்த நிகழ்ச்சி, எப்போது">Which door, when</p>
+    <h2 class="sec-title" data-ta="விழா நிகழ்ச்சிகள்">The celebrations</h2>
+    <p class="sec-sub" data-ta="ஒவ்வொரு நிகழ்விலும் உங்களைக் காண ஆவலாக இருக்கிறோம்.">Knock on any of these doors. We'd love to see you at each one.</p>
+  </div>
+
+  <div id="eventsGrid" class="doors">
+    <template>
+    <article class="flat reveal">
+      <div class="fdoor">
+        <span class="fnum" data-field="number">01</span>
+        <span class="peep" aria-hidden="true"></span>
+        <div class="fpanel">
+          <span class="ficon" data-field="icon">🔥</span>
+          <h3 class="fname" data-field="name">Ganapathi Homam</h3>
+          <dl class="finfo">
+            <div data-if="date"><dt><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg><span data-ta="நாள்">Date</span></dt><dd data-field="date">14th March 2027</dd></div>
+            <div data-if="time"><dt><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg><span data-ta="நேரம்">Time</span></dt><dd data-field="time">6:00 AM</dd></div>
+            <div class="fwhere"><dt><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg><span data-ta="இடம்">Venue</span></dt><dd><strong data-field="place">Our new home</strong><small data-field="venue">Saibaba Colony, Coimbatore</small></dd></div>
+          </dl>
+          <p class="fdesc" data-field="desc">A homam to bless the house before we move in.</p>
+          <a class="btn" data-href="map" href="https://www.google.com/maps" target="_blank" rel="noopener"><span data-ta="வழி காட்டு">Get directions</span><svg aria-hidden="true"><use href="#i-go"/></svg></a>
+        </div>
+        <span class="knob" aria-hidden="true"></span>
+      </div>
+      <span class="mat" aria-hidden="true" data-ta="நல்வரவு">Welcome</span>
+    </article>
+    </template>
+  </div>
+</section>
+
+<!-- ============ COUNTDOWN: brass letterboxes ============ -->
+<section id="countdown" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="குடிபுகும் நாள்">Moving day</p>
+    <h2 class="sec-title" data-ta="புதுமனை புக இன்னும்">Counting down to moving in</h2>
+  </div>
+  <div class="mboxes reveal" role="timer" aria-label="Time left until the housewarming">
+    <div class="mbox"><span class="mb-slot" aria-hidden="true"></span><div class="mb-win"><b id="cdDays">000</b></div><span class="mb-lbl" data-ta="நாட்கள்">Days</span></div>
+    <div class="mbox"><span class="mb-slot" aria-hidden="true"></span><div class="mb-win"><b id="cdHours">00</b></div><span class="mb-lbl" data-ta="மணி">Hours</span></div>
+    <div class="mbox"><span class="mb-slot" aria-hidden="true"></span><div class="mb-win"><b id="cdMins">00</b></div><span class="mb-lbl" data-ta="நிமிடம்">Mins</span></div>
+    <div class="mbox"><span class="mb-slot" aria-hidden="true"></span><div class="mb-win"><b id="cdSecs">00</b></div><span class="mb-lbl" data-ta="வினாடி">Secs</span></div>
+  </div>
+  <p class="cd-when reveal"><span data-bind="dateLong">Sunday, 14 March 2027</span> · <span data-bind="time">7:00 AM</span></p>
+</section>
+
+<!-- ============ WISHES: the residents' notice board ============ -->
+<section id="wishes" class="section">
+  <div class="sec-head reveal">
+    <p class="eyebrow" data-ta="வாழ்த்துப் புத்தகம்">Guest book</p>
+    <h2 class="sec-title" data-ta="ஒரு வாழ்த்தை ஒட்டுங்கள்">Pin up a wish</h2>
+    <p class="sec-sub" data-ta="பலகையில் எங்களுக்கு ஒரு வாழ்த்து எழுதுங்கள். ஒவ்வொன்றும் புது இடத்தை எங்கள் வீடாக்கும்.">Leave us a note on the board. Every one makes the new place feel more like home.</p>
+  </div>
+
+  <form id="wishForm" class="wish-form reveal">
+    <label class="field"><span data-ta="உங்கள் பெயர்">Your name</span><input id="wishName" maxlength="60" placeholder="e.g. Lakshmi from 3B" data-ta-ph="எ.கா. 3B லட்சுமி" required></label>
+    <label class="field"><span data-ta="உங்கள் வாழ்த்து">Your wish</span><textarea id="wishMessage" maxlength="500" rows="4" placeholder="Welcome to the new home…" data-ta-ph="புது வீட்டுக்கு வாழ்த்துகள்…" required></textarea></label>
+    <button class="btn" type="submit"><svg aria-hidden="true"><use href="#i-pushpin"/></svg><span data-ta="பலகையில் ஒட்டுங்கள்">Pin it up</span></button>
+  </form>
+
+  <div class="board-frame reveal">
+    <p class="board-head" data-ta="அறிவிப்புப் பலகை">Notice board</p>
+    <div class="cork">
+      <div id="wishesWall" class="pins">
+        <template>
+        <figure class="pnote reveal"><blockquote data-field="message">Welcome to the building! So happy to have you as neighbours.</blockquote><figcaption data-field="name">Lakshmi from 3B</figcaption></figure>
+        </template>
+      </div>
+      <p id="wishesEmpty" class="wishes-empty" hidden data-ta="பலகை காலியாக உள்ளது. முதல் வாழ்த்தை நீங்களே ஒட்டுங்கள் 📌">The board is empty. Be the first to pin a wish 📌</p>
+    </div>
+  </div>
+  <div class="wishes-more"><button id="wishesMore" class="btn ghost" type="button" data-ta="மேலும் வாழ்த்துகள்">Show more wishes</button></div>
+</section>
+
+<!-- ============ HELP: the lobby intercom ============ -->
+<section id="stay" class="section" style="background:var(--wall)">
+  <div class="intercom reveal">
+    <span class="grille" aria-hidden="true"></span>
+    <p class="eyebrow" data-ta="தொடர்புக்கு">Lobby intercom</p>
+    <h2 class="sec-title" data-ta="வழி தெரியவில்லையா? அழையுங்கள்">Buzz us if you're lost</h2>
+    <p id="stayText" data-bind="help">Coming from out of town or need help finding our new home? Call us and we'll guide you.</p>
+    <div id="coordinators">
+      <template>
+      <div class="coord">
+        <div class="lbl"><p class="c-name" data-field="name">Ravi</p><p class="c-phone" data-field="phone">+91 90000 00000</p></div>
+        <a class="btn" data-href="tel" href="tel:+919000000000"><svg aria-hidden="true"><use href="#i-phone"/></svg><span data-ta="அழைக்க">Call</span></a>
+      </div>
+      </template>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ============ FOOTER: the directory of new residents ============ -->
+<footer class="foot">
+  <div class="floor" aria-hidden="true"></div>
+  <div class="directory">
+    <div class="dir-in">
+      <p class="dir-k" data-ta="புதிய குடியிருப்பாளர்கள்">New residents</p>
+      <p class="dir-names" data-bind="names"><span class="name-part">Ravi</span> <span class="hero-amp">&amp;</span> <span class="name-part">Priya</span></p>
+      <p class="hashtag" data-bind="hashtag">#RaviPriyaNewHome</p>
+    </div>
+  </div>
+  <p class="thanks" data-ta="புது வீட்டை எங்கள் இல்லமாக்கியதற்கு நன்றி.">Thank you for helping a new flat feel like home.</p>
+  <button type="button" class="btn" id="shareBtn"><svg aria-hidden="true"><use href="#i-link"/></svg><span data-ta="இணைப்பை நகலெடு">Copy link</span></button>
+</footer>
+
+<button id="musicToggle" type="button" aria-label="Play or pause music"><svg aria-hidden="true"><use href="#i-note"/></svg></button>
+<audio id="bgMusic" loop preload="auto"></audio>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* Intro and bilingual labels. js/invite.js opens the intro on tap (adds .open, then .hidden after data-hide-after);
+   the CSS climbs the floor dial and slides the lift doors open, and this unlocks scrolling and starts the hero. */
+(function(){
+  var html=document.documentElement, overlay=document.getElementById("curtain-overlay");
+  var reduce=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  if(overlay&&!html.classList.contains("intro-open")){
+    // Admin thumbnails and framed previews start on the page itself.
+    overlay.remove();
+  }else if(overlay){
+    var opened=false;
+    overlay.querySelectorAll("[data-open-invite]").forEach(function(b){
+      b.addEventListener("click",function(){
+        if(opened) return;
+        opened=true;
+        overlay.classList.add("open");
+        setTimeout(function(){ html.classList.remove("intro-open"); },reduce?0:3150);
+      });
+    });
+  }
+
+  // Labels with data-ta (and placeholders with data-ta-ph) switch to that Tamil text when the guest picks தமிழ்.
+  var lang="en";
+  function labels(root){
+    root.querySelectorAll("[data-ta]").forEach(function(n){
+      if(n.dataset.en===undefined) n.dataset.en=n.textContent;
+      n.textContent=lang==="ta"?n.dataset.ta:n.dataset.en;
+    });
+    root.querySelectorAll("[data-ta-ph]").forEach(function(n){
+      if(n.dataset.enPh===undefined) n.dataset.enPh=n.placeholder;
+      n.placeholder=lang==="ta"?n.dataset.taPh:n.dataset.enPh;
+    });
+  }
+  document.addEventListener("invite:render",function(e){
+    lang=e.detail&&e.detail.lang==="ta"?"ta":"en";
+    labels(document);
+    // An event with neither a place nor an address has no venue line.
+    document.querySelectorAll("#eventsGrid .fwhere").forEach(function(row){
+      var any=[].some.call(row.querySelectorAll("[data-field]"),function(n){ return n.style.display!=="none"&&n.textContent.trim(); });
+      row.style.display=any?"":"none";
+    });
+  });
+  // New wishes arrive without a full render, so label them as they are added.
+  var wall=document.getElementById("wishesWall");
+  if(wall&&window.MutationObserver) new MutationObserver(function(){ labels(wall); }).observe(wall,{childList:true});
+})();
+</script>
+</body>
+</html>

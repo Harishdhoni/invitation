@@ -233,6 +233,10 @@ All templates fill in the same event details (see TEMPLATES.md).
 | Celestial Night | Wedding | Indigo sky, crescent moon, the couple's initials as a constellation |
 | Vintage Postcard | Wedding | Airmail stripes, stamps, postmarks, ticket-style events |
 | Thoranam Housewarming | Housewarming | Thoranam over the door and a kolam at the threshold, for a Gruhapravesam |
+| Paal Pongum | Housewarming | Light the stove and the milk boils over a brass pot; Athangudi tiles, a Pillaiyar suzhi (உ) emblem, palm-leaf blessings, Tamil-first |
+| Blueprint | Housewarming | For a house the family built: the plans unroll and the house draws itself; drafting title block, room-plan events, dimension-line countdown |
+| Home Lights | Housewarming | Tap the house at dusk and its windows, fairy lights and diyas switch on; pegged polaroid, little-house events, Edison-bulb countdown |
+| Going Up | Housewarming | For a new flat: the lift dial climbs and the doors slide open; apartment-door events, letterbox countdown, notice-board wishes, intercom help |
 | Twinkle Little Star | Birthday | A soft night sky with the birthday child's initial in the stars |
 | Sprinkle Cake | Birthday | Blow out the candle on a two-tier cake; drip icing, a party-hat photo frame, macaron countdown |
 | Level Up | Birthday | 8-bit game: PRESS START intro, game HUD, coin-popping ? blocks, stage select, high-score wishes |
@@ -250,7 +254,7 @@ All templates fill in the same event details (see TEMPLATES.md).
 | Oh Baby | Baby shower | Boho balloon garland with pearl OH BABY letters; let the balloons fly; earthy arch frames |
 | Sweet Dreams | Baby shower | A felt nursery mobile that turns when you wind the music box; stitched felt cards |
 
-The themed birthday and baby-shower designs use original artwork only (no copyrighted characters, logos or franchise
+The themed birthday, baby-shower and newer housewarming designs use original artwork only (no copyrighted characters, logos or franchise
 names). Their fixed labels carry `data-ta` attributes, so they switch to Tamil with the தமிழ் button. The baby-shower
 designs are gender-neutral: no "boy or girl" or gender reveal, which is not allowed in India.
 

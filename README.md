@@ -7,7 +7,7 @@ Tamil-friendly invitation websites — weddings, housewarmings, birthdays, baby 
 - **Many events at once**: each has its own link (`/arjun-meera`), details, photos, music and guest book, with its own
   WhatsApp/Facebook link preview.
 - **Templates**: each event is shown in a template chosen from its category. Templates are HTML pages stored in Firestore
-  and managed on the admin page; 27 starter designs ship in `public/templates/`. How a template shows an event's details
+  and managed on the admin page; 31 starter designs ship in `public/templates/`. How a template shows an event's details
   is described in [TEMPLATES.md](TEMPLATES.md).
 - **Admin** (`public/admin.html`): one login. **Events** lists every event (filter by category); create, import, delete,
   pick a template, and edit names, dates, events, photos, music and contacts, and hide or delete wishes.

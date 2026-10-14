@@ -80,7 +80,7 @@ Important:
 | `public/index.html`: the built-in **Classic** design, and the shell for every event | `js/invite.js` | Guests |
 | `public/admin.html` (`/admin`) | `js/admin.js` | The one admin |
 | `public/editor.html` (`/editor`) | `js/editor.js` | Someone holding an event's PIN |
-| `public/templates/*.html`: 27 starter designs (10 wedding, 1 housewarming, 11 birthday, 5 baby shower) listed in `starters.json`, copied into Firestore on request | none (the runtime is injected) | n/a |
+| `public/templates/*.html`: 31 starter designs (10 wedding, 5 housewarming, 11 birthday, 5 baby shower) listed in `starters.json`, copied into Firestore on request | none (the runtime is injected) | n/a |
 | `public/home.html` (the sales page, served at `/`), `showcase.html` (the tour with every design) and `help`, `terms`, `privacy`, `refund`, `contact` `.html` | `js/site.js` | Customers |
 
 `admin.html` and `editor.html` share `css/admin.css` and end with the same `.site-credit` footer
@@ -312,7 +312,7 @@ Without a build step there is no shared config, so these are duplicated on purpo
 | When a link is open (switch, dates, 15-day auto end, India time) | `firestore.rules` `isLive` · `linkState` / `AUTO_END_DAYS` in `defaults.js` |
 | Links per event (3 in all for editors) | `firestore.rules` `linksChangeOk` (`after.size() <= 2`) · `MAX_LINKS` in `defaults.js` |
 | No-cache headers for html/js/css | `vercel.json` `headers` (Vercel) · `public/.htaccess` (local Apache, so edits show on a normal reload) |
-| Starter templates | `public/templates/starters.json` · the starter count in `README.md` and `SETUP.md` ("Add 27 starter templates") · the catalog in `PRODUCT.md` §6 |
+| Starter templates | `public/templates/starters.json` · the starter count in `README.md` and `SETUP.md` ("Add 31 starter templates") · the catalog in `PRODUCT.md` §6 |
 | Site credit | the `.site-credit` footer in `admin.html` and `editor.html` |
 | Sales settings (businessName, price, upiId, payNumber, whatsapp, email, address, welcomeMessage) | `SALES_DEFAULTS` in `defaults.js` · `FIELDS` in `admin-sales.js` and the Settings form in `admin.html` · `data-site` hooks in `site.js` and the sales/info pages |
 | Bare address → sales page | `vercel.json` redirect of `/` to `/home` (a redirect, because Vercel serves `index.html` before any rewrite; its `missing` list must name every query the invite page takes: `w`, `template`, `template-file`, `editor-preview`) · the `home.html` redirect in `invite.js` `boot()` |
