@@ -145,7 +145,8 @@ export const DEFAULT_CATEGORIES = [
   { id: "wedding", name: "Weddings", order: 1 },
   { id: "housewarming", name: "Housewarmings", order: 2 },
   { id: "birthday", name: "Birthdays", order: 3 },
-  { id: "baby-shower", name: "Baby Showers", order: 4 }
+  { id: "baby-shower", name: "Baby Showers", order: 4 },
+  { id: "engagement", name: "Engagements", order: 5 }
 ];
 export const isWedding = cfg => (cfg?.category || "wedding") === "wedding";
 
@@ -222,6 +223,36 @@ const SAMPLES = {
         place: { en: "Sri Lakshmi Mahal", ta: "" }, venue: { en: "Mylapore, Chennai - 600004", ta: "" },
         desc: { en: "A traditional banana-leaf feast.", ta: "" }, mapQuery: "Mylapore Chennai 600004", mapUrl: "" }
     ]
+  },
+  // The two names are the couple, as for weddings.
+  engagement: {
+    groomName: { en: "Surya", ta: "" },
+    brideName: { en: "Nila", ta: "" },
+    title: { en: "Engagement Ceremony", ta: "நிச்சயதார்த்த விழா" },
+    weddingDateTimeISO: "2027-01-24T10:00:00+05:30",
+    hashtag: "#SuryaNilaEngaged",
+    curtainVerse: "உடம்பொடு உயிரிடை என்னமற் றன்ன\nமடந்தையொடு எம்மிடை நட்பு.",
+    tagline: { en: "With the blessings of our elders, we are getting engaged! Join us and our families as we exchange rings and take the first step towards forever.", ta: "" },
+    heroDateLine: { en: "💍 24th January 2027 • Madurai", ta: "" },
+    accommodationText: { en: "Coming from out of town or need help finding the hall? Call our families and we'll guide you.", ta: "" },
+    coordinators: [
+      { name: { en: "Surya's family", ta: "" }, phones: ["+91 90000 00000"] },
+      { name: { en: "Nila's family", ta: "" }, phones: ["+91 90000 00001"] }
+    ],
+    events: [
+      { id: "nichayathartham", icon: { type: "emoji", emoji: "🪔", imageId: "" },
+        name: { en: "Nichayathartham", ta: "" }, date: { en: "24th January 2027", ta: "" }, time: { en: "10:00 AM to 11:30 AM", ta: "" },
+        place: { en: "Sri Ganesh Mahal", ta: "" }, venue: { en: "K.K. Nagar, Madurai - 625020", ta: "" },
+        desc: { en: "The families exchange thamboolam and read the lagna pathrikai that fixes the wedding date.", ta: "" }, mapQuery: "K.K. Nagar Madurai 625020", mapUrl: "" },
+      { id: "rings", icon: { type: "emoji", emoji: "💍", imageId: "" },
+        name: { en: "Ring Ceremony", ta: "" }, date: { en: "24th January 2027", ta: "" }, time: { en: "11:30 AM", ta: "" },
+        place: { en: "Sri Ganesh Mahal", ta: "" }, venue: { en: "K.K. Nagar, Madurai - 625020", ta: "" },
+        desc: { en: "The couple exchange rings in front of both families.", ta: "" }, mapQuery: "K.K. Nagar Madurai 625020", mapUrl: "" },
+      { id: "lunch", icon: { type: "emoji", emoji: "🍃", imageId: "" },
+        name: { en: "Lunch", ta: "" }, date: { en: "24th January 2027", ta: "" }, time: { en: "12:30 PM onwards", ta: "" },
+        place: { en: "Sri Ganesh Mahal", ta: "" }, venue: { en: "K.K. Nagar, Madurai - 625020", ta: "" },
+        desc: { en: "A banana-leaf feast with both families.", ta: "" }, mapQuery: "K.K. Nagar Madurai 625020", mapUrl: "" }
+    ]
   }
 };
 // For categories the admin adds later.
@@ -248,7 +279,9 @@ const SAMPLE_PHOTOS = {
   wedding: "assets/samples/wedding.jpg",
   housewarming: "assets/samples/housewarming.jpg",
   birthday: "assets/samples/birthday.jpg",
-  "baby-shower": "assets/samples/baby-shower.jpg"
+  "baby-shower": "assets/samples/baby-shower.jpg",
+  // The couple's photo suits an engagement too.
+  engagement: "assets/samples/wedding.jpg"
 };
 export const samplePhoto = category => SAMPLE_PHOTOS[category || "wedding"] || "";
 export const SAMPLE_MUSIC = { v: "sample", url: "assets/samples/the-rose-instrumental.mp3", type: "audio/mpeg", name: "The Rose (instrumental)" };
@@ -289,8 +322,8 @@ export const TRANSLATIONS = {
     editorPreviewClosed: "Your preview — only you can see it. Guests can open the link once it is paid and open.",
     madeWith: "Made with",
     creditAsk: "Would you like an invitation like this for your celebration?",
-    creditWhatsApp: "Contact us on WhatsApp", creditContact: "Contact us",
-    creditMessage: "Hi! I saw this invitation and would like one like it for my celebration:"
+    creditDesigns: "See all designs",
+    backToTop: "Back to top"
   },
   ta: {
     shareBtn: "⧉ இணைப்பை நகலெடு",
@@ -321,8 +354,8 @@ export const TRANSLATIONS = {
     editorPreviewClosed: "உங்கள் முன்னோட்டம் — இதை நீங்கள் மட்டுமே பார்க்க முடியும். பணம் செலுத்தி இணைப்பு திறக்கப்பட்டதும் விருந்தினர்கள் பார்க்கலாம்.",
     madeWith: "உருவாக்கம்",
     creditAsk: "உங்கள் விழாவுக்கும் இது போன்ற அழைப்பிதழ் வேண்டுமா?",
-    creditWhatsApp: "வாட்ஸ்அப்பில் தொடர்புகொள்ளுங்கள்", creditContact: "எங்களைத் தொடர்புகொள்ளுங்கள்",
-    creditMessage: "வணக்கம்! இந்த அழைப்பிதழைப் பார்த்தேன். என் விழாவுக்கும் இது போன்ற ஒன்று வேண்டும்:"
+    creditDesigns: "அனைத்து வடிவமைப்புகளையும் காண்க",
+    backToTop: "மேலே செல்ல"
   }
 };
 

@@ -3,10 +3,11 @@
 // follows the hooks described in TEMPLATES.md; every hook is optional.
 import {
   DEFAULT_CONFIG, TRANSLATIONS, SAMPLE_WISHES, SECTIONS, tr, withDefaults, clone, isValidSlug, isValidId, isWedding, sampleFor,
-  samplePhoto, SAMPLE_MUSIC, linkState, whatsappLink
+  samplePhoto, SAMPLE_MUSIC, linkState
 } from "./defaults.js";
 import { isFirebaseConfigured, SITE_URL, ADMIN_UID } from "./firebase-config.js";
 import { smoothScroll } from "./smooth-scroll.js";
+import { addScrollTop } from "./scroll-top.js";
 
 /* ---------------------------- small helpers ---------------------------- */
 const $ = id => document.getElementById(id);
@@ -515,60 +516,101 @@ async function refreshConfig(){
 }
 
 /* ----------------------------- signature + preview bar ----------------------------- */
-// The very end of the page asks guests whether they'd like an invitation like this, with a button to message the
-// business on WhatsApp (or its contact page), then "Made with <business name>" linking to the sales page. Guests
-// who liked an invitation are the next customers. The details come from the admin's Settings (site/settings);
-// nothing shows until a business name or WhatsApp number is set. Not in admin thumbnails.
-let brand = null;    // { name, whatsapp }
+// The very end of every invitation, the same in every design: a thin rule, "Would you like an invitation like this
+// for your celebration?", a small button to the showcase (every design, opened on this event's kind) and then
+// "Made with <business name>" linking to the sales page. Guests who liked an invitation are the next customers.
+// The business name comes from the admin's Settings (site/settings); that line waits for it. Not in admin thumbnails.
+let brand = null;    // { name }
 async function addCredit(){
-  if(window.self !== window.top || !fb) return;
-  renderCredit(cachedBrand());
+  if(window.self !== window.top) return;
+  renderCredit(cachedBrand() || { name: "" });
+  if(!fb) return;
   try {
     const snap = await fb.getDoc(fb.doc(fb.db, "site", "settings"));
-    const s = snap.exists() ? snap.data() : {};
-    const b = { name: String(s.businessName || "").trim(), whatsapp: String(s.whatsapp || "").trim() };
-    if(b.name || b.whatsapp) store.set(BRAND_CACHE, JSON.stringify(b)); else store.del(BRAND_CACHE);
+    const b = { name: String((snap.exists() && snap.data().businessName) || "").trim() };
+    if(b.name) store.set(BRAND_CACHE, JSON.stringify(b)); else store.del(BRAND_CACHE);
     renderCredit(b);
   } catch(e){
     console.warn("Couldn't load the site settings for the signature.", e);
   }
 }
-// Earlier visits cached the business name alone, as plain text.
+// Earlier visits cached the business name alone as plain text, or with the WhatsApp number.
 function cachedBrand(){
   const raw = store.get(BRAND_CACHE);
   if(!raw) return null;
-  try { const b = JSON.parse(raw); if(b && typeof b === "object") return b; } catch {}
-  return { name: raw, whatsapp: "" };
+  try { const b = JSON.parse(raw); if(b && typeof b === "object") return { name: String(b.name || "") }; } catch {}
+  return { name: raw };
 }
-// Inline styles, so every template's own rules for p and a can't restyle it; colours follow the template's text.
+
+// One look for every design, in the phone's own font. Its colours come from the design's text (currentColor), so
+// it suits light and dark pages alike. Id selectors keep a template's own rules for p and a off it. The side padding
+// keeps the centred lines clear of the music and back-to-top buttons in the bottom-right corner, so the strip stays short.
+const CREDIT_CSS = `
+#madeWith{box-sizing:border-box;margin:0;padding:26px 70px 28px;text-align:center;letter-spacing:normal;text-transform:none;
+  font:400 14px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Tamil","Nirmala UI",sans-serif;}
+#madeWith p{margin:0;padding:0;font:inherit;color:inherit;}
+#madeWith .mw-rule{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 12px;opacity:.4;}
+#madeWith .mw-rule::before,#madeWith .mw-rule::after{content:"";width:56px;height:1px;background:currentColor;}
+#madeWith .mw-rule svg{width:7px;height:7px;fill:currentColor;}
+#madeWith .mw-ask{max-width:290px;margin:0 auto;opacity:.85;}
+#madeWith .mw-btn{display:inline-flex;align-items:center;gap:8px;height:38px;margin:10px 0 0;padding:0 16px 0 14px;border-radius:999px;
+  font-family:inherit;font-size:13.5px;font-weight:600;line-height:1;color:inherit;text-decoration:none;cursor:pointer;
+  border:1px solid currentColor;border-color:color-mix(in srgb,currentColor 45%,transparent);
+  background:color-mix(in srgb,currentColor 7%,transparent);transition:background-color .2s,transform .2s;}
+#madeWith .mw-btn:hover{background:color-mix(in srgb,currentColor 15%,transparent);transform:translateY(-1px);}
+#madeWith .mw-btn:focus-visible{outline:2px solid currentColor;outline-offset:3px;}
+#madeWith .mw-btn svg{flex:none;width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+#madeWith .mw-btn .mw-go{width:14px;height:14px;opacity:.7;}
+#madeWith .mw-made{margin:12px 0 0;font-size:12px;opacity:.65;}
+#madeWith .mw-made a{color:inherit;font-weight:600;text-decoration:none;border-bottom:1px solid currentColor;
+  border-bottom-color:color-mix(in srgb,currentColor 35%,transparent);}
+#madeWith .mw-made a:hover{border-bottom-color:currentColor;}
+@media(prefers-reduced-motion:reduce){#madeWith .mw-btn{transition:none;}#madeWith .mw-btn:hover{transform:none;}}
+`;
+const SVG_NS = "http://www.w3.org/2000/svg";
+function icon(d, className){
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  if(className) svg.setAttribute("class", className);
+  const path = document.createElementNS(SVG_NS, "path");
+  path.setAttribute("d", d);
+  svg.append(path);
+  return svg;
+}
+
 function renderCredit(b){
   brand = b;
   let box = $("madeWith");
-  if(!b || !(b.name || b.whatsapp)) return box?.remove();
   if(!box){
+    if(!$("madeWithStyle")){
+      const style = el("style", "", CREDIT_CSS);
+      style.id = "madeWithStyle";
+      document.head.append(style);
+    }
     box = el("div");
     box.id = "madeWith";
-    // Room underneath for the round music button, which sits at the bottom right.
-    Object.assign(box.style, { margin: "0", padding: "28px 16px 84px", textAlign: "center", fontSize: "13px", lineHeight: "1.5" });
     document.body.append(box);
     box.style.color = creditColor();
   }
-  const ask = el("p", "", T().creditAsk);
-  ask.style.margin = "0";
-  // The message names this link, so the business can see which design the guest liked.
-  const page = slug ? `${SITE_URL}/${slug}` : location.href;
-  const contact = el("a", "", b.whatsapp ? "💬 " + T().creditWhatsApp : T().creditContact);
-  Object.assign(contact, { href: whatsappLink(b.whatsapp, `${T().creditMessage} ${page}`) || SITE_URL + "/contact",
+  const rule = el("div", "mw-rule");
+  rule.setAttribute("aria-hidden", "true");
+  rule.append(icon("M12 3l9 9-9 9-9-9z"));
+  // Every design, opened on this event's kind; the showcase's chips lead to the others.
+  const kind = closed ? "" : config.category || "";
+  const designs = el("a", "mw-btn");
+  Object.assign(designs, { href: SITE_URL + "/showcase" + (kind ? "?category=" + encodeURIComponent(kind) : ""),
     target: "_blank", rel: "noopener" });
-  Object.assign(contact.style, { display: "inline-block", margin: "10px 0 0", padding: "9px 20px", border: "1px solid currentColor",
-    borderRadius: "999px", color: "inherit", textDecoration: "none", fontWeight: "600" });
-  box.replaceChildren(ask, contact);
-  if(!b.name) return;
-  const made = el("p", "", T().madeWith + " ");
-  Object.assign(made.style, { margin: "14px 0 0", fontSize: "12px", opacity: ".7" });
+  designs.append(
+    icon("M4 4h6.5v6.5H4zM13.5 4H20v6.5h-6.5zM4 13.5h6.5V20H4zM13.5 13.5H20V20h-6.5z"),
+    el("span", "", T().creditDesigns),
+    icon("M5 12h14M13 6l6 6-6 6", "mw-go")
+  );
+  box.replaceChildren(rule, el("p", "mw-ask", T().creditAsk), designs);
+  if(!b?.name) return;
+  const made = el("p", "mw-made", T().madeWith + " ");
   const a = el("a", "", b.name);
   Object.assign(a, { href: SITE_URL + "/", target: "_blank", rel: "noopener" });
-  a.style.color = "inherit";
   made.append(a);
   box.append(made);
 }
@@ -989,6 +1031,8 @@ function start(){
   classicExtras();
   // Started here, after any template swap, which replaces the <html> and <body> it watches for scroll locks.
   smoothScroll();
+  // Back to top, above the music button. Not in admin thumbnails and previews in a frame.
+  if(window.self === window.top) addScrollTop({ above: () => $("musicToggle") }).dataset.i18nTitle = "backToTop";
   // Admin thumbnails and previews in a frame show the page without the intro.
   if(preview && window.self !== window.top){
     $("curtain-overlay")?.classList.add("open", "hidden");

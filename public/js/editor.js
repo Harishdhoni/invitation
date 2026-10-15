@@ -9,6 +9,8 @@
 import { isFirebaseConfigured } from "./firebase-config.js";
 import { $, show, toast, wireSidebar } from "./admin-ui.js";
 import { smoothScroll } from "./smooth-scroll.js";
+import { addScrollTop } from "./scroll-top.js";
+import { startAssistant } from "./assistant.js";
 import { normalizePin, isValidPin, formatPin } from "./pin.js";
 import { openEditor, hasUnsavedChanges, discardChanges } from "./event-editor.js";
 import { openShare } from "./share.js";
@@ -98,6 +100,9 @@ $("pinForm").addEventListener("submit", async e => {
 
 wireSidebar();
 smoothScroll();
+addScrollTop();
+// Help with this page, from the PIN screen on (finding the PIN is often the first question).
+startAssistant("editor");
 
 // The sidebar's Share button: the home page or showcase link, worded for passing on to a friend.
 $("shareOpenBtn").addEventListener("click", () => openShare(fb, "friend"));

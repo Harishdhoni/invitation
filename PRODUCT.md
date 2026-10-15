@@ -1,6 +1,6 @@
 # Product: Online Invitations
 
-An invitation website, in Tamil and English, for each family event: weddings, housewarmings, birthdays, baby showers, or any other
+An invitation website, in Tamil and English, for each family event: weddings, engagements, housewarmings, birthdays, baby showers, or any other
 category the admin adds. Guests get one link, usually over WhatsApp. It opens a designed page on their phone with
 music, every event's time and directions, a countdown, a guest book and tap-to-call contacts. One admin runs any
 number of these invitations from a single admin page. They can give a family member a PIN so that person can edit
@@ -61,10 +61,12 @@ Every event's page has these parts. Each template decides which parts to show an
 - **Extra links**: an event can be shared at up to three links, each in its own design. Each link can leave parts
   out (cover photo, events, countdown, guest book, help message, contact numbers, music). Guests on every link
   see the same details and write in the same guest book.
-- **Signature and contact**: every invitation ends by asking guests “Would you like an invitation like this for your
-  celebration?” with a **Contact us on WhatsApp** button (a ready message naming the link they saw; the contact page
-  when no WhatsApp number is set), then a small “Made with <name>” line linking to the sales page. It shows once the
-  admin sets a business name or WhatsApp number, in English or Tamil with the page.
+- **Signature**: every invitation ends with the same footer in every design: a thin rule, “Would you like an
+  invitation like this for your celebration?”, a small **See all designs** button that opens the showcase on that
+  kind of event (in a new tab), and a small “Made with <name>” line linking to the sales page once the admin sets a
+  business name. It takes its colours from the design's text, so it suits light and dark designs, and it is in
+  English or Tamil with the page.
+- **Back to top**: a round button on the right, above the music button, once the guest has scrolled most of a screen.
 - **Link previews**: on Vercel, each event link previews with its own title, date line and cover photo. The main
   link always shows the generic card.
 - **Repeat visits**: details, photos and music are cached on the device. If Firebase can't be reached, the last
@@ -98,6 +100,11 @@ see: **Home page ↗** (the sales page) and **Showcase ↗** (every design, the 
 **Share** (sidebar, every admin page): the link to the home page or to the showcase (all designs, or one kind of
 event) in a ready-written message with the price and business name, to send on WhatsApp (to a number or any
 chat), through the phone's share menu, or to copy.
+
+**Ask AI** (bottom right, every admin view, once signed in): an assistant that answers how to do things on this page
+(create an event, send a PIN, record a payment, keep a link open longer, add designs, change settings) and offers
+one-tap shortcuts to the right view or editor tab. Above it, a **back to top** button shows once the page is scrolled.
+Both sit above the save bar while an editor shows it.
 
 **Settings** (`?view=settings`): business name (also signs every invitation), price, UPI ID, GPay / PhonePe number,
 WhatsApp number (also the contact button at the end of every invitation), support email, business address, and the
@@ -135,7 +142,7 @@ wording of the WhatsApp message to new customers (with placeholders such as `{cu
 - **Template editor**: name, category, description, and the HTML (paste, type, or upload a `.html` file; download is
   also available). A live preview with sample details shows it at phone or desktop size. A size meter warns when
   no hooks are found. Hook help is built in.
-- **Categories**: add (e.g. Engagement), rename, and delete once a category has no templates or events. Weddings
+- **Categories**: add (e.g. Naming Ceremony), rename, and delete once a category has no templates or events. Weddings
   can't be deleted.
 
 ### 3.3 The editor page (`/editor`)
@@ -153,6 +160,10 @@ wording of the WhatsApp message to new customers (with placeholders such as `{cu
   link shows, and delete extra links. New links start open, until the event's own end.
 - The sidebar has **Home page ↗** and **Showcase ↗** (in a new tab) and **Share**: the admin's Share window, worded
   for a customer telling a friend ("I made my invitation as a website with …"), without the business's sign-off.
+- **Ask AI** (bottom right, from the PIN screen on): an assistant for customers, in English, Tamil or Tamil typed in
+  English letters. It explains where things are and how the Tamil, photos, music, links and payment work, offers
+  shortcuts to the right tab, **View site**, the payment button or a WhatsApp message to the business, and never asks
+  for the PIN or personal details. A **back to top** button sits above it.
 - The browser remembers the PIN until the admin changes or revokes it, or the editor clicks **Leave editor**.
 - When the admin changes or revokes the PIN, the editor's next save is refused and they are asked for the new PIN.
 
@@ -166,6 +177,9 @@ wording of the WhatsApp message to new customers (with placeholders such as `{cu
   opens on birthdays), what the customer can change in their editor, the steps, the price and a few questions. Each
   design has **Preview** (a live phone-sized preview beside its details on a computer, the full page on a phone) and
   **Choose**, a WhatsApp message naming the design.
+- **Ask AI** on the home page and the showcase: an assistant for visitors that answers what an invitation includes,
+  the price and how ordering works, suggests designs for their event, and offers shortcuts to a section, the
+  designs of one kind of event, a design's live preview, or **Order on WhatsApp**. With a **back to top** button.
 - **Help** (how to make your invitation, step by step), **Terms**, **Privacy**, **Refunds** and **Contact**. They show
   the business name, price and contact details from Settings.
 
@@ -181,7 +195,7 @@ wording of the WhatsApp message to new customers (with placeholders such as `{cu
    the reception → write a wish → it appears on the wall.
 4. **Moderate** (admin or editor): Wishes tab → **Hide** an inappropriate wish. It disappears from every guest's wall
    immediately.
-5. **New kind of event** (admin): Templates → ＋ New category "Engagement" → ＋ New template (it starts from the blank
+5. **New kind of event** (admin): Templates → ＋ New category "Naming Ceremony" → ＋ New template (it starts from the blank
    starter) → restyle it, check the phone preview → Save → create an event in that category.
 6. **Revoke access** (admin): **Revoke** on the event card. The PIN stops working immediately, even for someone
    editing at that moment.
@@ -253,8 +267,13 @@ All templates fill in the same event details (see TEMPLATES.md).
 | Special Delivery | Baby shower | A stork brings the bundle; shipping-label events, a tracking-timeline countdown, gift-tag wishes |
 | Oh Baby | Baby shower | Boho balloon garland with pearl OH BABY letters; let the balloons fly; earthy arch frames |
 | Sweet Dreams | Baby shower | A felt nursery mobile that turns when you wind the music box; stitched felt cards |
+| Ring Box | Engagement | Emerald velvet and champagne gold: the ring box opens and the solitaire rises; emerald-cut photo setting, jeweller's-certificate events, faceted-gem countdown |
+| Thamboolam | Engagement | The families exchange thamboolam plates and the lagna pathrikai unrolls; turmeric-dabbed card, betel-leaf photo frame, drawstring-bag events, Tamil-first |
+| Peony Bloom | Engagement | Wine-dark florals: a peony blooms around the couple's initials; gilded oval photo frame, botanical-plate events, pressed-flower wishes |
+| It's a Yes! | Engagement | Bright and festive: the "Will you…?" card flips to a confetti YES!; sticker-badge photo frame, tear-off calendar countdown |
+| Golden Hour | Engagement | A seashore at sunset: the sun sets as the couple join hands; the photo is the sun, events on the sand, messages-in-bottles wishes |
 
-The themed birthday, baby-shower and newer housewarming designs use original artwork only (no copyrighted characters, logos or franchise
+The themed birthday, baby-shower, engagement and newer housewarming designs use original artwork only (no copyrighted characters, logos or franchise
 names). Their fixed labels carry `data-ta` attributes, so they switch to Tamil with the தமிழ் button. The baby-shower
 designs are gender-neutral: no "boy or girl" or gender reveal, which is not allowed in India.
 
@@ -287,8 +306,9 @@ New templates start from `public/templates/blank.html`, which uses every hook wi
   and up to 30 for the wishes wall. The free Spark plan's 50,000 reads a day are shared by all events, so two big
   weddings on one day can use them up. **Selling needs the pay-as-you-go Blaze plan** (with a budget alert): a
   300-guest wedding costs about ₹1–3.
-- **Gemini through Firebase AI Logic**: the free tier. When the quota is hit, the admin sees "Translation limit
-  reached for the moment".
+- **Gemini through Firebase AI Logic**: the free tier, shared by Tamil translation and the **Ask AI** assistant (one
+  request per question, on the fast model). When the quota is hit, the admin sees "Translation limit reached for the
+  moment" and the assistant says "Lots of questions right now".
 - **Hosting**: static pages plus two small functions for link previews. Vercel's free Hobby plan is for
   non-commercial use only; selling needs Vercel Pro (about $20 a month) or a host whose free plan allows commercial use.
 
@@ -321,7 +341,7 @@ These are things the product doesn't do today.
 | Order | The record of who bought an invitation and how they paid (`orders/<slug>`, admin only) |
 | Unpaid | A sold invitation whose payment hasn't been recorded yet: its customer can edit and preview it, guests can't open it |
 | Sales page | The bare site address `/`: designs, price and **Order on WhatsApp** |
-| Category | A kind of event (Weddings, Housewarmings, Birthdays, Baby Showers, or one the admin adds). Each has its own templates and sample details |
+| Category | A kind of event (Weddings, Housewarmings, Birthdays, Baby Showers, Engagements, or one the admin adds). Each has its own templates and sample details |
 | Template | A whole HTML page design that any event in its category can use |
 | Classic | The built-in Maroon & Gold wedding design in `index.html` |
 | Starter template | A design shipped in `public/templates/`, copied into Firestore on request |
@@ -329,6 +349,8 @@ These are things the product doesn't do today.
 | Editor PIN | The code that lets one person edit one event |
 | Muhurtham | The auspicious time of a Hindu wedding ceremony. The main countdown target for weddings |
 | Gruhapravesam | A Hindu housewarming ceremony |
+| Nichayathartham | A Tamil engagement ceremony: the families exchange thamboolam and read the lagna pathrikai that fixes the wedding date |
+| Thamboolam | A plate of betel leaves, areca nuts, fruit, flowers, turmeric and kumkum that the two families exchange |
 | Thoranam | A garland of mango leaves (and flowers) hung over a doorway for festive occasions |
 | Kolam | A geometric design drawn with rice flour at a threshold |
 | Kasavu, Kanjivaram, zari | Kerala gold-bordered cloth, Tamil silk sarees, and gold thread, used as design themes |

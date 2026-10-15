@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<!--
+  It's a Yes! — engagement template
+  The big-news energy of a couple announcing "we said yes": bold flat colour, chunky ink outlines with hard offset
+  shadows, confetti, squiggles and stickers. Intro: on a confetti backdrop a card asks "Will you…?" with two
+  hand-drawn boxes, "Yes" and "Absolutely". One tap scribbles a tick into each, the card flips over to a giant
+  "YES!", a ring sticker slaps on and confetti bursts in from both sides. Hero: the title as a tilted sticker label,
+  the names with the ampersand inside a heart, a ring sticker, and the photo in a scalloped badge ringed by a turning
+  "save the date". Events are chunky folder cards in a different colour each, the countdown is four tear-off calendar
+  pages on a spiral, wishes are sticky notes held by washi tape, help has a phone sticker, the footer is confetti.
+  Palette: cream #fff5ea · hot pink #ff3d7f / #d4145a · tangerine #ff7a45 · sunshine #ffcf3f · mint #49c6a8 ·
+           lilac #b89cff · ink plum #26163a
+  Fonts:   Shrikhand (display) · Bricolage Grotesque (headings and body) · Gochi Hand (handwritten notes) ·
+           Coiny (Tamil display) · Noto Sans Tamil (Tamil text)
+  An engagement template for the invitation site; it follows TEMPLATES.md, and js/invite.js fills in the names,
+  title, verse, date, photo, events, countdown, wishes and contacts. Labels with data-ta switch to Tamil with the
+  தமிழ் button.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ff3d7f">
+<title>Engagement — It's a Yes!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Gochi+Hand&family=Coiny&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
+<script>
+  /* Runs before paint: mark JS, and decide whether the intro overlay is shown (not in admin previews or frames). */
+  (function(){
+    var d=document.documentElement, skip=/[?&]preview/.test(location.search);
+    try{ skip=skip||window.self!==window.top; }catch(e){ skip=true; }
+    d.className+=" js"+(skip?"":" intro-open");
+  })();
+</script>
+<style>
+:root{
+  --cream:#fff5ea; --paper:#fffdf8; --pink:#ff3d7f; --pink-d:#d4145a; --tang:#ff7a45; --sun:#ffcf3f; --mint:#49c6a8;
+  --lilac:#b89cff; --ink:#26163a; --ink2:#5a4870;
+  --disp:'Shrikhand','Coiny','Noto Sans Tamil',Georgia,serif;
+  --head:'Bricolage Grotesque','Coiny','Noto Sans Tamil',system-ui,sans-serif;
+  --sans:'Bricolage Grotesque','Noto Sans Tamil',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --hand:'Gochi Hand','Noto Sans Tamil',cursive;
+  --ta-disp:'Coiny','Noto Sans Tamil',sans-serif;
+  --ta:'Noto Sans Tamil',sans-serif;
+  --ease:cubic-bezier(.22,.8,.3,1);
+  --pop:cubic-bezier(.34,1.56,.64,1);
+  /* one tile of confetti, reused on the intro, the hero edges and the footer */
+  --confetti:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><g fill='none' stroke-linecap='round' stroke-width='3.5'><path d='M186 28q5-7 10 0t10 0' stroke='%23ff7a45'/><path d='M18 120q5-7 10 0t10 0' stroke='%23b89cff'/><path d='M118 198q5-7 10 0t10 0' stroke='%23ff3d7f'/><path d='M148 110q5-7 10 0t10 0' stroke='%2349c6a8'/></g><rect x='22' y='24' width='15' height='6' rx='2' fill='%23ffcf3f' transform='rotate(-28 29 27)'/><rect x='62' y='70' width='13' height='5' rx='2' fill='%23ff3d7f' transform='rotate(40 68 72)'/><rect x='204' y='80' width='14' height='6' rx='2' fill='%2349c6a8' transform='rotate(-60 211 83)'/><rect x='88' y='142' width='15' height='6' rx='2' fill='%23ff7a45' transform='rotate(22 95 145)'/><rect x='192' y='194' width='13' height='5' rx='2' fill='%23b89cff' transform='rotate(-35 198 196)'/><circle cx='96' cy='22' r='4.5' fill='%2349c6a8'/><circle cx='134' cy='68' r='3' fill='%2326163a'/><circle cx='56' cy='164' r='4' fill='%23ffcf3f'/><circle cx='222' cy='146' r='3' fill='%2326163a'/><circle cx='160' cy='216' r='4' fill='%23ff7a45'/><path d='M144 30l10-5 1 11z' fill='%23b89cff'/><path d='M176 150l10 4-8 7z' fill='%23ff3d7f'/><path d='M28 204l9-6 2 11z' fill='%23ffcf3f'/><circle cx='24' cy='62' r='2.5' fill='%2326163a'/></svg>");
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+html.intro-open,html.intro-open body{overflow:hidden}
+body{margin:0;min-height:100vh;overflow-x:hidden;font-family:var(--sans);font-size:1.05rem;line-height:1.6;color:var(--ink);background:var(--cream)}
+h1,h2,h3,p{margin:0}
+a{color:inherit}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--ink);outline-offset:4px;border-radius:12px}
+.ic{width:18px;height:18px;flex:none}
+
+/* ---------- shared bits ---------- */
+.sec-sub,.invites,#heroTagline,.verse .vl,.sec-title,.thanks,#stayText{text-wrap:balance}
+.section{position:relative;padding:clamp(64px,10vw,104px) 16px;overflow-x:clip}
+.sec-head{text-align:center;max-width:640px;margin:0 auto clamp(34px,5vw,50px)}
+/* the handwritten note that leads each section */
+.hand{display:inline-block;font-family:var(--hand);font-size:1.6rem;line-height:1.1;color:var(--pink-d);rotate:-3deg}
+.sec-title{
+  font-family:var(--disp);font-weight:400;font-size:clamp(2.4rem,10vw,3.8rem);line-height:1.04;margin-top:8px;color:var(--ink);
+  text-shadow:.055em .055em 0 var(--accent,var(--pink));font-variant-numeric:lining-nums;
+}
+.sec-sub{margin:16px auto 0;max-width:40ch;color:var(--ink2)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;padding:10px 22px;cursor:pointer;text-decoration:none;
+  border:3px solid var(--ink);border-radius:999px;background:var(--paper);color:var(--ink);box-shadow:4px 4px 0 var(--ink);
+  font-family:var(--sans);font-weight:800;font-size:1rem;line-height:1.15;transition:transform .15s var(--ease),box-shadow .15s var(--ease);
+}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn svg{width:19px;height:19px;flex:none}
+.btn.hot{background:var(--pink)}
+.btn.sunny{background:var(--sun)}
+
+.js .reveal{opacity:0;transform:translateY(28px)}
+.js .reveal.in{opacity:1;transform:none;transition:opacity .7s ease,transform .9s var(--pop)}
+
+/* a sticker: flat colour, ink outline and a hard shadow */
+.sticker{display:block;overflow:visible}
+
+/* ---------- intro: will you…? ---------- */
+#curtain-overlay{
+  position:fixed;inset:0;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  padding:24px 16px;text-align:center;overflow:hidden;background:var(--confetti) 0 0/240px,var(--pink);
+}
+.intro-open #curtain-overlay,#curtain-overlay.open{display:flex}
+#curtain-overlay.open{opacity:0;transition:opacity .6s ease 3.2s;pointer-events:none}
+#curtain-overlay.hidden{display:none}
+.intro-kicker{position:relative;font-family:var(--hand);font-size:1.75rem;line-height:1.1;color:var(--ink);rotate:-3deg}
+html[lang="ta"] .intro-kicker{font-family:var(--ta-disp);font-size:1.3rem}
+.q-card{
+  position:relative;display:block;width:min(82vw,330px,50vh);padding:0;border:0;background:none;cursor:pointer;perspective:1300px;
+  -webkit-tap-highlight-color:transparent;rotate:-2deg;
+}
+.q-card:focus-visible{outline-offset:10px}
+.q-flip{position:relative;display:block;width:100%;aspect-ratio:5/6;transform-style:preserve-3d}
+.q-face{
+  position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:22px 22px 24px;border:3.5px solid var(--ink);
+  border-radius:26px;-webkit-backface-visibility:hidden;backface-visibility:hidden;
+}
+.q-front{align-items:center;background:var(--paper);box-shadow:8px 8px 0 var(--ink)}
+/* the back face is turned round, so its shadow is mirrored to land on the same side once it shows */
+.q-back{align-items:center;background:var(--sun);box-shadow:-8px 8px 0 var(--ink);transform:rotateY(180deg);overflow:visible}
+.q-label{font-weight:800;font-size:.78rem;letter-spacing:.2em;text-transform:uppercase;color:var(--pink-d)}
+.q-ask{display:block;margin-top:8px;font-family:var(--disp);font-size:clamp(2.5rem,11.4vw,3.3rem);line-height:1;color:var(--ink)}
+html[lang="ta"] .q-ask{font-family:var(--ta-disp);font-size:2.3rem;line-height:1.3}
+.q-squig{display:block;width:150px;height:14px;margin:8px auto 14px}
+.q-opts{display:grid;gap:8px;justify-items:start}
+.q-opt{display:flex;align-items:center;gap:12px;font-family:var(--hand);font-size:2.05rem;line-height:1;color:var(--ink)}
+html[lang="ta"] .q-opt{font-family:var(--ta-disp);font-size:1.4rem}
+.q-box{width:48px;height:48px;flex:none;overflow:visible}
+.tick{stroke-dasharray:64;stroke-dashoffset:64}
+.q-doodle{position:absolute;overflow:visible;pointer-events:none}
+.qd1{left:16px;top:16px;width:30px}
+.qd2{right:18px;bottom:18px;width:34px}
+.q-back::before{
+  content:"";position:absolute;inset:0;border-radius:22px;opacity:.55;
+  background:repeating-conic-gradient(from 0deg at 50% 46%,#ffe27a 0 10deg,transparent 10deg 20deg);
+}
+.q-said{position:relative;font-family:var(--hand);font-size:1.9rem;line-height:1;color:var(--ink);rotate:-4deg}
+html[lang="ta"] .q-said{font-family:var(--ta-disp);font-size:1.25rem}
+.q-yes{
+  position:relative;display:block;margin:2px 0 6px;font-family:var(--disp);font-size:clamp(4.2rem,21vw,5.8rem);line-height:1.05;color:var(--pink);
+  -webkit-text-stroke:.05em var(--ink);paint-order:stroke fill;text-shadow:.06em .06em 0 var(--ink);
+}
+html[lang="ta"] .q-yes{font-family:var(--ta-disp);font-size:clamp(2.4rem,11vw,3.2rem);line-height:1.4}
+.q-names{position:relative;max-width:100%;font-family:var(--head);font-weight:800;font-size:1.15rem;line-height:1.3;overflow-wrap:anywhere}
+.q-names .hero-amp{color:var(--pink-d)}
+.q-ring{position:absolute;right:-26px;top:-30px;width:96px;rotate:14deg;opacity:0}
+.intro-hint{
+  position:relative;display:inline-flex;align-items:center;gap:10px;padding:9px 18px;border:3px solid var(--ink);border-radius:999px;
+  background:var(--paper);box-shadow:3px 3px 0 var(--ink);font-weight:800;font-size:.98rem;color:var(--ink);animation:nudgeY 1.6s ease-in-out infinite;
+}
+.intro-hint svg{width:22px;height:22px;color:var(--pink-d)}
+@keyframes nudgeY{50%{transform:translateY(-4px)}}
+/* the confetti cannons on both sides (pieces are added by the script below) */
+.cannon{position:absolute;top:60%;width:0;height:0}
+.cannon.l{left:0}.cannon.r{right:0}
+.cf{position:absolute;left:-6px;top:-4px;width:13px;height:7px;border-radius:2px;opacity:0}
+.cf.d{width:9px;height:9px;border-radius:50%}
+.cf.t{width:12px;height:11px;border-radius:0;clip-path:polygon(50% 0,100% 100%,0 100%)}
+.cf.s{width:20px;height:5px;border-radius:3px}
+
+.open .tick.t1{animation:draw .38s ease-out .05s forwards}
+.open .tick.t2{animation:draw .38s ease-out .42s forwards}
+.open .q-flip{animation:flip .85s var(--ease) .95s both}
+.open .q-yes{animation:yes .6s var(--pop) 1.45s both}
+.open .q-ring{animation:slapOn .55s var(--pop) 1.75s both}
+.open .intro-hint{opacity:0;transition:opacity .25s;animation:none}
+.open .cf{animation:burst 2s cubic-bezier(.12,.75,.3,1) var(--d) forwards}
+.open .q-card{animation:lift 3.6s ease both}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes flip{0%{transform:none}55%{transform:rotateY(100deg) scale(1.08)}100%{transform:rotateY(180deg)}}
+@keyframes yes{from{opacity:0;transform:scale(.3) rotate(-10deg)}to{opacity:1;transform:none}}
+@keyframes slapOn{from{opacity:0;transform:scale(2.2) rotate(-30deg)}to{opacity:1;transform:none}}
+@keyframes lift{0%,80%{transform:none}100%{transform:scale(1.06)}}
+@keyframes burst{
+  0%{opacity:1;transform:translate(0,0) rotate(0)}
+  55%{opacity:1;transform:translate(var(--x),var(--y)) rotate(var(--r));animation-timing-function:cubic-bezier(.45,0,.9,.55)}
+  100%{opacity:0;transform:translate(calc(var(--x) * 1.15),calc(var(--y) + 240px)) rotate(calc(var(--r) * 2))}
+}
+
+/* ---------- hero ---------- */
+#hero{position:relative;overflow:hidden;overflow:clip;text-align:center;padding:18px 16px clamp(80px,11vw,120px);background:var(--cream)}
+/* confetti around the edges only, so the names stay clean */
+#hero::before{
+  content:"";position:absolute;inset:0;pointer-events:none;background:var(--confetti) 0 0/240px;
+  -webkit-mask-image:radial-gradient(ellipse 72% 58% at 50% 42%,transparent 58%,#000 82%);mask-image:radial-gradient(ellipse 72% 58% at 50% 42%,transparent 58%,#000 82%);
+}
+.lang{position:relative;z-index:2;display:inline-flex;gap:2px;padding:3px;border:3px solid var(--ink);border-radius:999px;background:var(--paper);box-shadow:3px 3px 0 var(--ink)}
+.lang-btn{border:0;background:none;cursor:pointer;min-width:54px;min-height:40px;padding:6px 14px;border-radius:999px;font-weight:800;font-size:.88rem;color:var(--ink)}
+.lang-btn.active{background:var(--pink)}
+.hero-inner{position:relative;max-width:720px;margin:0 auto}
+.title-wrap{margin-top:24px}
+.title{
+  display:inline-block;max-width:100%;padding:9px 20px 10px;border:3px solid var(--ink);border-radius:14px;background:var(--sun);box-shadow:4px 4px 0 var(--ink);
+  font-family:var(--head);font-weight:800;font-size:clamp(1rem,4.4vw,1.3rem);line-height:1.2;letter-spacing:.08em;text-transform:uppercase;rotate:-3deg;
+  overflow-wrap:break-word;
+}
+html[lang="ta"] .title{letter-spacing:0;font-family:var(--ta-disp);font-weight:400;font-size:clamp(1.05rem,4.8vw,1.35rem);line-height:1.5}
+/* the names: huge, with the ampersand in a heart; a script below shrinks a long name to fit its line */
+.names-wrap{position:relative;margin-top:16px;font-size:clamp(3.4rem,17.5vw,7.2rem)}
+.names{display:flex;flex-direction:column;align-items:center;font-family:var(--disp);font-weight:400;font-size:1em;line-height:1.02;color:var(--pink)}
+.names .name-part{display:block;max-width:100%;white-space:nowrap;padding:0 .08em .06em;-webkit-text-stroke:.045em var(--ink);paint-order:stroke fill;text-shadow:.055em .055em 0 var(--ink)}
+.names .name-part:last-child{color:var(--tang)}
+/* the heart is sized in the ampersand's own em (half the names' size) */
+.names .hero-amp{
+  position:relative;display:grid;place-items:center;width:1.96em;height:1.8em;margin:.04em 0 .08em;padding-bottom:.2em;font-size:.5em;line-height:1;
+  color:var(--pink);-webkit-text-stroke:.07em var(--ink);paint-order:stroke fill;
+  background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 108 100'><path d='M54 94C22 71 4 54 4 32C4 16 16 4 31 4C41 4 49 9 54 18C59 9 67 4 77 4C92 4 104 16 104 32C104 54 86 71 54 94Z' transform='translate(4 4)' fill='%2326163a'/><path d='M54 94C22 71 4 54 4 32C4 16 16 4 31 4C41 4 49 9 54 18C59 9 67 4 77 4C92 4 104 16 104 32C104 54 86 71 54 94Z' fill='%23ffcf3f' stroke='%2326163a' stroke-width='5' stroke-linejoin='round'/></svg>") center/contain no-repeat;
+  animation:beat 1.8s ease-in-out infinite;
+}
+@keyframes beat{0%,100%{transform:scale(1)}14%{transform:scale(1.1)}28%{transform:scale(1)}42%{transform:scale(1.06)}}
+/* stickers beside the heart (only when there are two names) */
+.hero-ring{position:absolute;top:50%;left:calc(50% + .66em);width:1.2em;margin-top:-.62em;rotate:12deg}
+.hero-doodle{position:absolute;top:50%;right:calc(50% + .72em);width:.95em;margin-top:-.46em;rotate:-8deg}
+.names-wrap:not(:has(.hero-amp)) .hero-ring,.names-wrap:not(:has(.hero-amp)) .hero-doodle{display:none}
+.invites{margin:16px auto 0;max-width:30ch;font-family:var(--head);font-weight:700;font-size:clamp(1.1rem,4.6vw,1.3rem);line-height:1.4}
+html[lang="ta"] .invites{font-weight:600;font-size:1.02rem;line-height:1.7}
+.verse{margin:18px auto 0;max-width:44ch;font-family:var(--ta);font-weight:600;font-size:.93rem;line-height:1.85;color:var(--ink2)}
+.verse-wrap{position:relative;display:flex;align-items:center;justify-content:center;gap:12px}
+.verse-wrap .squig{width:30px;height:12px;flex:none}
+#heroTagline{max-width:36ch;margin:14px auto 0;color:var(--ink2)}
+.date-pill{
+  display:inline-block;max-width:100%;margin-top:24px;padding:11px 22px;border:3px solid var(--ink);border-radius:999px;background:var(--mint);
+  box-shadow:4px 4px 0 var(--ink);font-weight:800;font-size:1.04rem;line-height:1.35;font-variant-numeric:lining-nums;
+}
+html[lang="ta"] .date-pill{font-weight:700}
+
+/* the photo: a scalloped sticker badge with "save the date" turning round it */
+.badge-wrap{position:relative;width:min(84vw,350px);margin:60px auto 0}
+.badge{position:relative;aspect-ratio:1;rotate:-4deg}
+.badge-art{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.ring-txt{transform-origin:100px 100px;animation:spin 32s linear infinite}
+.ring-txt text{font-family:var(--head);font-weight:800;font-size:12.5px;letter-spacing:.06em;fill:var(--ink)}
+html[lang="ta"] .ring-txt text{font-family:var(--ta);font-weight:700;font-size:11px;letter-spacing:0}
+.photo{position:absolute;left:17.5%;top:17.5%;width:65%;height:65%;border-radius:50%;overflow:hidden;border:3px solid var(--ink);background:var(--pink)}
+.photo svg{display:block;width:100%;height:100%}
+.cover-img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;object-position:50% 22%;display:block}
+.b-heart{position:absolute;left:-4%;top:2%;width:20%;rotate:-14deg}
+.b-star{position:absolute;right:-3%;bottom:4%;width:21%;rotate:10deg}
+.caption{display:flex;align-items:flex-start;justify-content:center;gap:6px;margin-top:14px;font-family:var(--hand);font-size:1.6rem;line-height:1.15;color:var(--ink)}
+.caption svg{width:38px;height:34px;flex:none;margin-top:-14px}
+html[lang="ta"] .caption{font-family:var(--ta-disp);font-size:1.12rem;line-height:1.5}
+.scroll-cue{display:inline-flex;flex-direction:column;align-items:center;gap:6px;margin-top:34px;padding:6px 10px;font-weight:800;font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;text-decoration:none;color:var(--ink)}
+.scroll-cue i{width:12px;height:12px;border-right:3px solid currentColor;border-bottom:3px solid currentColor;transform:rotate(45deg);animation:cue 1.8s ease-in-out infinite}
+@keyframes cue{50%{transform:translate(0,6px) rotate(45deg)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* hero entrance, held while the intro is up */
+.rise{animation:rise .9s var(--pop) both}
+.slap{animation:slap .7s var(--pop) both}
+.popin{animation:popin .6s var(--pop) both}
+.r1{animation-delay:.12s}.r2{animation-delay:.24s}.r3{animation-delay:.38s}.r4{animation-delay:.52s}.r5{animation-delay:.7s}
+html.intro-open .rise,html.intro-open .slap,html.intro-open .popin{animation-play-state:paused}
+@keyframes rise{from{opacity:0;transform:translateY(30px)}}
+@keyframes slap{from{opacity:0;transform:scale(1.8) rotate(-8deg)}}
+@keyframes popin{from{opacity:0;transform:scale(0) rotate(-40deg)}}
+
+/* ---------- the ribbon between the hero and the plan ---------- */
+.ribbon-wrap{position:relative;z-index:3;overflow-x:clip;margin:-34px 0 -6px;padding:16px 0}
+.ribbon{margin:0 -8%;padding:11px 0;overflow:hidden;background:var(--ink);rotate:-2.6deg;box-shadow:0 5px 0 var(--pink)}
+.mq{display:flex;width:max-content;animation:marquee 46s linear infinite}
+.mq-g{display:flex;align-items:center;flex:none}
+.mq-g span{padding:0 18px;font-weight:800;font-size:1rem;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;color:var(--sun)}
+.mq-g svg{width:18px;height:18px;flex:none;color:var(--pink)}
+html[lang="ta"] .mq-g span{font-family:var(--ta);font-weight:700;font-size:.95rem}
+@keyframes marquee{to{transform:translateX(-50%)}}
+
+/* ---------- events: chunky folder cards ---------- */
+#events{--accent:var(--pink);padding-top:clamp(70px,10vw,110px)}
+.cards{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:64px 30px;max-width:1080px;margin:0 auto;padding-top:28px}
+.cards>.ev{flex:1 1 300px}
+.ev{
+  --c:var(--pink);position:relative;max-width:420px;width:100%;padding:26px 20px 24px;border:3px solid var(--ink);border-radius:0 24px 24px 24px;
+  background:var(--c);box-shadow:8px 8px 0 var(--ink);
+}
+.ev:nth-of-type(5n+2){--c:var(--sun)}
+.ev:nth-of-type(5n+3){--c:var(--mint)}
+.ev:nth-of-type(5n+4){--c:var(--lilac)}
+.ev:nth-of-type(5n+5){--c:var(--tang)}
+/* the folder tab; its ::after is the tab's own slice of hard shadow */
+.ev-tab{
+  position:absolute;left:-3px;bottom:100%;display:flex;align-items:baseline;gap:6px;padding:7px 16px 4px;border:3px solid var(--ink);border-bottom:0;
+  border-radius:14px 14px 0 0;background:var(--c);font-weight:800;font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;
+}
+.ev-tab b{font-family:var(--disp);font-weight:400;font-size:1.25rem;letter-spacing:0;line-height:1;font-variant-numeric:lining-nums}
+.ev-tab::after{content:"";position:absolute;top:5px;right:-11px;bottom:3px;width:8px;border-radius:0 8px 0 0;background:var(--ink)}
+.ev-icon{
+  float:right;position:relative;display:grid;place-items:center;width:74px;height:74px;margin:-56px -8px 8px 12px;border:3px solid var(--ink);border-radius:50%;
+  background:var(--paper);box-shadow:4px 4px 0 var(--ink);font-size:2.1rem;line-height:1;rotate:8deg;
+}
+.ev-icon::before{content:"";position:absolute;inset:4px;border:2px dashed var(--c);border-radius:50%}
+.ev-icon img{width:44px;height:44px;object-fit:contain}
+.ev-name{font-family:var(--head);font-weight:800;font-size:clamp(1.6rem,6.6vw,1.95rem);line-height:1.08;letter-spacing:-.01em;overflow-wrap:break-word}
+html[lang="ta"] .ev-name{font-size:1.4rem;line-height:1.45;letter-spacing:0}
+.ev-info{clear:both;margin:18px 0 0;padding:2px 14px;border:3px solid var(--ink);border-radius:16px;background:var(--paper)}
+.ev-info>div{display:flex;gap:12px;align-items:baseline;padding:10px 0;border-top:2px dashed #d9cfe2}
+.ev-info>div:first-child{border-top:0}
+.ev-info dt{flex:none;width:82px;display:flex;align-items:center;gap:7px;font-weight:800;font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
+.ev-info dt .ic{align-self:center;color:var(--pink-d)}
+.ev-info dd{margin:0;flex:1;min-width:0;font-weight:600;line-height:1.45;overflow-wrap:anywhere}
+.ev-info strong{display:block;font-weight:800}
+.ev-info small{display:block;font-size:.95rem;font-weight:400;color:var(--ink2)}
+.ev-desc{margin:16px 2px 20px;font-family:var(--hand);font-size:1.38rem;line-height:1.25}
+html[lang="ta"] .ev-desc{font-family:var(--sans);font-size:1rem;line-height:1.6}
+.ev .btn{margin-top:2px}
+.ev-desc+.btn{margin-top:0}
+
+/* ---------- countdown: tear-off calendar pages ---------- */
+#countdown{--accent:var(--paper);background:var(--sun);border-block:3px solid var(--ink)}
+#countdown .hand{color:var(--ink)}
+#countdown .sec-title{text-shadow:.055em .055em 0 var(--pink)}
+.cals{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(10px,3vw,26px);max-width:640px;margin:0 auto;padding-top:14px}
+.cal{
+  --c:var(--pink);position:relative;display:flex;flex-direction:column;min-width:0;border:3px solid var(--ink);border-radius:12px;background:var(--paper);text-align:center;
+  box-shadow:0 7px 0 -3px var(--paper),0 7px 0 0 var(--ink),0 14px 0 -6px var(--paper),0 14px 0 -3px var(--ink);rotate:-2deg;
+}
+.cal:nth-child(2){--c:var(--tang);rotate:1.5deg}
+.cal:nth-child(3){--c:var(--mint);rotate:-1deg}
+.cal:nth-child(4){--c:var(--lilac);rotate:2deg}
+/* spiral wire through punched holes along the top */
+.cal::before{
+  content:"";position:absolute;left:8px;right:8px;top:-14px;height:26px;
+  background:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='26'><circle cx='7' cy='20' r='2.6' fill='%2326163a'/><rect x='4.4' y='1.5' width='5.2' height='19' rx='2.6' fill='none' stroke='%2326163a' stroke-width='2.2'/></svg>") 0 0/14px 26px space no-repeat;
+}
+.cal-top{
+  display:block;padding:20px 4px 7px;border-bottom:3px dashed var(--ink);border-radius:9px 9px 0 0;background:var(--c);
+  font-weight:800;font-size:clamp(.62rem,2.6vw,.8rem);letter-spacing:.14em;text-transform:uppercase;
+}
+.cal b{display:block;padding:clamp(12px,3.4vw,20px) 2px clamp(14px,3.8vw,22px);font-family:var(--disp);font-weight:400;font-size:clamp(1.7rem,8.2vw,3.2rem);line-height:1;font-variant-numeric:lining-nums tabular-nums}
+.cd-when{
+  display:table;margin:44px auto 0;padding:10px 22px;border:3px solid var(--ink);border-radius:999px;background:var(--paper);box-shadow:4px 4px 0 var(--ink);
+  text-align:center;font-weight:800;font-size:1.06rem;line-height:1.4;font-variant-numeric:lining-nums;
+}
+.cd-when .dot{margin:0 .3em;color:var(--pink-d)}
+.cd-when span{white-space:nowrap}
+html[lang="ta"] .cd-when{font-weight:700;font-size:.98rem}
+
+/* ---------- wishes: sticky notes and washi tape ---------- */
+#wishes{--accent:var(--mint);background-image:radial-gradient(circle,#e9dccd 1.5px,transparent 2px);background-size:24px 24px}
+.wish-form{
+  position:relative;display:grid;gap:16px;max-width:560px;margin:0 auto 70px;padding:28px 22px 26px;border:3px solid var(--ink);border-radius:24px;
+  background:var(--paper);box-shadow:8px 8px 0 var(--ink);
+}
+.field{display:grid;gap:7px;font-weight:800;font-size:.95rem}
+.field input,.field textarea{
+  width:100%;padding:12px 15px;border:3px solid var(--ink);border-radius:14px;background:var(--cream);font-size:1rem;color:var(--ink);resize:vertical;
+  transition:box-shadow .15s,transform .15s;
+}
+.field input::placeholder,.field textarea::placeholder{color:#8a7d96}
+.field input:focus,.field textarea:focus{outline:none;box-shadow:4px 4px 0 var(--pink);transform:translate(-1px,-1px)}
+.wish-form .btn{justify-self:center;margin-top:4px}
+.notes{display:grid;gap:52px 28px;max-width:1000px;margin:0 auto;padding-top:20px;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));align-items:start}
+.wnote{
+  --n:#ffe07a;--tape:rgba(255,61,127,.78);position:relative;margin:0;padding:30px 20px 18px;border:3px solid var(--ink);border-radius:6px 6px 28px 6px;
+  background:var(--n);box-shadow:5px 5px 0 var(--ink);rotate:-1.6deg;
+}
+.wnote:nth-of-type(5n+2){--n:#ffb4cf;--tape:rgba(73,198,168,.82);rotate:1.4deg}
+.wnote:nth-of-type(5n+3){--n:#a7e9d7;--tape:rgba(184,156,255,.88);rotate:-.6deg}
+.wnote:nth-of-type(5n+4){--n:#dccfff;--tape:rgba(255,207,63,.9);rotate:1.8deg}
+.wnote:nth-of-type(5n+5){--n:#ffc3a6;--tape:rgba(73,198,168,.82);rotate:-1.2deg}
+.wnote::before{
+  content:"";position:absolute;left:50%;top:-17px;width:104px;height:30px;margin-left:-52px;rotate:-4deg;
+  background:repeating-linear-gradient(-45deg,rgba(255,255,255,.42) 0 5px,transparent 5px 11px),var(--tape);
+  clip-path:polygon(0 0,4% 18%,0 34%,4% 50%,0 66%,4% 82%,0 100%,100% 100%,96% 82%,100% 66%,96% 50%,100% 34%,96% 18%,100% 0);
+}
+.wnote blockquote{margin:0 0 12px;font-size:1.02rem;line-height:1.55;white-space:pre-line;overflow-wrap:anywhere}
+.wnote figcaption{font-family:var(--hand);font-size:1.45rem;line-height:1.1;color:var(--ink);overflow-wrap:anywhere}
+.wnote figcaption::before{content:"— "}
+.wishes-empty{text-align:center;margin:0 auto 20px;max-width:40ch;font-family:var(--hand);font-size:1.5rem;color:var(--ink2)}
+html[lang="ta"] .wishes-empty{font-family:var(--ta);font-size:1rem}
+.wishes-more{display:flex;justify-content:center;margin-top:48px}
+
+/* ---------- help: need a hand? ---------- */
+#stay{--accent:var(--sun);background:var(--lilac);border-top:3px solid var(--ink);padding-top:clamp(110px,14vw,140px)}
+.help{
+  position:relative;max-width:620px;margin:0 auto;padding:30px clamp(16px,4vw,28px) 24px;text-align:center;border:3px solid var(--ink);border-radius:28px;
+  background:var(--paper);box-shadow:8px 8px 0 var(--ink);
+}
+.phone{display:block;width:118px;margin:-96px auto 2px;overflow:visible}
+.phone .buzz{animation:buzz 2.4s ease-in-out infinite;transform-origin:70px 75px}
+@keyframes buzz{0%,70%,100%{transform:none}74%{transform:rotate(-5deg)}78%{transform:rotate(5deg)}82%{transform:rotate(-4deg)}86%{transform:rotate(3deg)}90%{transform:none}}
+.help .sec-title{font-size:clamp(2.2rem,9vw,3rem)}
+#stayText{margin:14px auto 22px;max-width:38ch;color:var(--ink2)}
+#coordinators{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.coord{display:flex;align-items:center;gap:10px;text-align:left;padding:10px 10px 10px 12px;border:3px solid var(--ink);border-radius:18px;background:var(--cream)}
+.coord .av{display:grid;place-items:center;width:46px;height:46px;flex:none;border:3px solid var(--ink);border-radius:50%;background:var(--pink);color:var(--paper)}
+.coord:nth-of-type(4n+2) .av{background:var(--mint)}
+.coord:nth-of-type(4n+3) .av{background:var(--tang)}
+.coord:nth-of-type(4n+4) .av{background:var(--sun)}
+.coord .av svg{width:22px;height:22px}
+.coord .who{flex:1;min-width:0}
+.c-name{font-weight:800;font-size:1.06rem;line-height:1.3;overflow-wrap:anywhere}
+.c-phone{font-size:.92rem;white-space:nowrap;color:var(--ink2);font-variant-numeric:lining-nums}
+.coord .btn{flex:none;gap:7px;min-height:46px;padding:9px 14px}
+
+/* ---------- footer: confetti and the hashtag ---------- */
+.foot{position:relative;overflow:hidden;padding:44px 16px 32px;text-align:center;border-top:3px solid var(--ink);background:var(--confetti) 0 0/240px,var(--pink)}
+.foot-k{display:inline-block;font-family:var(--hand);font-size:1.8rem;line-height:1.1;color:var(--ink);rotate:-3deg}
+html[lang="ta"] .foot-k{font-family:var(--ta-disp);font-size:1.3rem}
+.hashtag{
+  max-width:1000px;margin:12px auto 0;font-family:var(--disp);font-size:clamp(2.3rem,10.5vw,5.4rem);line-height:1.15;white-space:nowrap;color:var(--paper);
+  -webkit-text-stroke:.045em var(--ink);paint-order:stroke fill;text-shadow:.055em .055em 0 var(--ink);font-variant-numeric:lining-nums;
+}
+.thanks{margin:18px auto 0;max-width:34ch;font-weight:600;color:var(--ink)}
+.foot .btn{margin-top:16px}
+
+/* ---------- music + toast ---------- */
+#musicToggle{
+  position:fixed;right:16px;bottom:16px;z-index:40;display:grid;place-items:center;width:54px;height:54px;border:3px solid var(--ink);border-radius:50%;
+  cursor:pointer;background:var(--sun);color:var(--ink);box-shadow:3px 3px 0 var(--ink);
+}
+#musicToggle svg{width:24px;height:24px}
+#musicToggle.spinning svg{animation:spin 4s linear infinite}
+#toast{
+  position:fixed;left:50%;bottom:88px;z-index:60;width:max-content;max-width:calc(100% - 32px);padding:11px 20px;border:3px solid var(--ink);border-radius:22px;
+  background:var(--paper);color:var(--ink);box-shadow:4px 4px 0 var(--ink);font-weight:800;font-size:.95rem;text-align:center;
+  transform:translate(-50%,20px);opacity:0;pointer-events:none;transition:.3s;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (min-width:760px){
+  .lang{position:absolute;top:22px;right:22px}
+  #hero{padding-top:56px}
+  .title-wrap{margin-top:0}
+  .badge-wrap{margin-top:72px}
+}
+/* Tamil "Call" is wider: on narrow phones the button keeps only its icon (the label stays for screen readers) */
+@media (max-width:430px){
+  html[lang="ta"] .coord .btn{width:48px;height:48px;min-height:0;padding:0;border-radius:50%}
+  html[lang="ta"] .coord .btn span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0s!important}
+  html{scroll-behavior:auto}
+}
+/* Tamil labels: no English-style letter-spacing or capitals. */
+html[lang="ta"] [data-ta]{letter-spacing:0;text-transform:none}
+html[lang="ta"] .sec-title[data-ta]{font-family:var(--ta-disp);font-size:clamp(1.75rem,7.4vw,2.6rem);line-height:1.4}
+html[lang="ta"] .hand[data-ta]{font-family:var(--ta-disp);font-size:1.12rem;line-height:1.5}
+html[lang="ta"] .q-label[data-ta],html[lang="ta"] .ev-tab [data-ta],html[lang="ta"] .ev-info dt [data-ta],html[lang="ta"] .cal-top[data-ta],
+html[lang="ta"] .scroll-cue [data-ta]{font-family:var(--ta);font-weight:700;font-size:.86rem}
+html[lang="ta"] .btn [data-ta],html[lang="ta"] .btn[data-ta],html[lang="ta"] .intro-hint [data-ta]{font-family:var(--ta);font-weight:700;font-size:.95rem}
+</style>
+</head>
+<body>
+
+<!-- shared art: the ring, the stickers and the icons -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <path id="heartP" d="M54 94C22 71 4 54 4 32C4 16 16 4 31 4C41 4 49 9 54 18C59 9 67 4 77 4C92 4 104 16 104 32C104 54 86 71 54 94Z"/>
+    <path id="sparkP" d="M0-12Q0 0 12 0Q0 0 0 12Q0 0-12 0Q0 0 0-12Z"/>
+  </defs>
+  <!-- an engagement ring: a gold band, a setting and a faceted stone, with sparkles -->
+  <symbol id="ring-art" viewBox="0 0 200 200">
+    <ellipse cx="100" cy="120" rx="48" ry="44" fill="none" stroke="#26163a" stroke-width="22"/>
+    <ellipse cx="100" cy="120" rx="48" ry="44" fill="none" stroke="#ffcf3f" stroke-width="14"/>
+    <path d="M58 104A46 42 0 0 1 72 86" fill="none" stroke="#fff8d6" stroke-width="4" stroke-linecap="round"/>
+    <path d="M86 81L114 81L108 68L92 68Z" fill="#ffcf3f" stroke="#26163a" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M78 46L89 33L111 33L122 46L100 72Z" fill="#effcf8" stroke="#26163a" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M78 46L95 46L100 72Z" fill="#b9ece0"/>
+    <path d="M78 46H122M89 33L95 46L100 72L105 46L111 33" fill="none" stroke="#26163a" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M78 46L89 33L111 33L122 46L100 72Z" fill="none" stroke="#26163a" stroke-width="3.5" stroke-linejoin="round"/>
+    <g fill="#fffdf8" stroke="#26163a" stroke-width="2.4" stroke-linejoin="round">
+      <use href="#sparkP" transform="translate(142 40) scale(1)"/>
+      <use href="#sparkP" transform="translate(58 58) scale(.7)"/>
+      <use href="#sparkP" transform="translate(154 88) scale(.55)"/>
+    </g>
+  </symbol>
+  <!-- the ring on a round sticker, with sparkle marks; --st sets the sticker's colour -->
+  <symbol id="ring-sticker" viewBox="-14 -20 140 140" overflow="visible">
+    <circle cx="64" cy="64" r="52" fill="#26163a"/>
+    <circle cx="60" cy="60" r="52" style="fill:var(--st,#49c6a8)" stroke="#26163a" stroke-width="3.5"/>
+    <circle cx="60" cy="60" r="43" fill="none" stroke="#fffdf8" stroke-width="2.4" stroke-dasharray="4 6" stroke-linecap="round"/>
+    <use href="#ring-art" x="10" y="12" width="100" height="100"/>
+    <g fill="none" stroke="#26163a" stroke-width="3.5" stroke-linecap="round"><path d="M104 2L112-8M114 18L126 14M94-6L94-17"/></g>
+  </symbol>
+  <symbol id="i-star" viewBox="-13 -13 26 26"><use href="#sparkP" fill="currentColor"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10.5h17"/></g></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></g></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></g></symbol>
+  <symbol id="i-go" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></g></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path fill="currentColor" d="M9 17.5V6.2l10-2.2v11.3a3 3 0 1 1-2-2.83V7.5l-6 1.3v8.7a3 3 0 1 1-2-2.83z"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-tick" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="16" height="16" rx="3.5"/><path d="M7 12.5l3.5 3.5L21 4"/></g></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path fill="currentColor" stroke="#26163a" stroke-width="1.6" stroke-linejoin="round" d="M12 20.5C6.2 16.3 2.8 13.1 2.8 9.1A4.6 4.6 0 0 1 7.4 4.5c2 0 3.5 1 4.6 2.6 1.1-1.6 2.6-2.6 4.6-2.6a4.6 4.6 0 0 1 4.6 4.6c0 4-3.4 7.2-9.2 11.4z"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/></g></symbol>
+  <symbol id="squig" viewBox="0 0 30 12"><path d="M2 6q3.25-5 6.5 0t6.5 0 6.5 0 6.5 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
+</svg>
+
+<!-- ============ INTRO: will you…? ============ -->
+<div id="curtain-overlay" data-hide-after="3900">
+  <p class="intro-kicker" data-ta="ஒரு இனிய செய்தி!">Psst… big news!</p>
+  <button type="button" class="q-card" id="openCurtainBtn" data-open-invite aria-label="Tap the card to open the invitation">
+    <span class="q-flip">
+      <span class="q-face q-front">
+        <svg class="q-doodle qd1" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><use href="#sparkP" transform="translate(15 15) scale(1.1)" fill="#ffcf3f" stroke="#26163a" stroke-width="2.2"/></svg>
+        <svg class="q-doodle qd2" viewBox="0 0 108 100" aria-hidden="true" focusable="false"><use href="#heartP" fill="#ff3d7f" stroke="#26163a" stroke-width="7"/></svg>
+        <span class="q-label" data-ta="ஒரு சின்ன கேள்வி">One little question</span>
+        <span class="q-ask" data-ta="சம்மதமா?">Will you…?</span>
+        <svg class="q-squig" viewBox="0 0 150 14" aria-hidden="true" focusable="false"><path d="M3 8q9-8 18 0t18 0 18 0 18 0 18 0 18 0 18 0 18 0" fill="none" stroke="#ff3d7f" stroke-width="4" stroke-linecap="round"/></svg>
+        <span class="q-opts">
+          <span class="q-opt">
+            <svg class="q-box" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+              <path d="M8 9C17 7 30 8 40 7C41 17 40 30 41 40C30 41 18 40 7 41C8 30 7 19 8 9Z" fill="#fffdf8" stroke="#26163a" stroke-width="3.5" stroke-linejoin="round"/>
+              <path class="tick t1" d="M12 25L21 35L45 4" fill="none" stroke="#ff3d7f" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span data-ta="ஆம்">Yes</span>
+          </span>
+          <span class="q-opt">
+            <svg class="q-box" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+              <path d="M7 8C18 9 29 7 41 8C40 18 41 29 40 41C29 40 19 41 8 40C9 29 8 19 7 8Z" fill="#fffdf8" stroke="#26163a" stroke-width="3.5" stroke-linejoin="round"/>
+              <path class="tick t2" d="M12 24L22 35L46 5" fill="none" stroke="#ff3d7f" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span data-ta="நிச்சயமாக!">Absolutely</span>
+          </span>
+        </span>
+      </span>
+      <span class="q-face q-back">
+        <span class="q-said" data-ta="எங்கள் பதில்">We said</span>
+        <span class="q-yes" data-ta="சம்மதம்!">YES!</span>
+        <span class="q-names" data-bind="names">Surya &amp; Nila</span>
+        <svg class="q-ring" viewBox="-14 -20 140 140" style="--st:#ff7a45" aria-hidden="true" focusable="false"><use href="#ring-sticker"/></svg>
+      </span>
+    </span>
+  </button>
+  <p class="intro-hint"><svg aria-hidden="true"><use href="#i-tick"/></svg><span data-ta="அட்டையைத் தொடுங்கள்">Tap the card to answer</span></p>
+  <div class="cannon l" aria-hidden="true"></div>
+  <div class="cannon r" aria-hidden="true"></div>
+</div>
+
+<!-- ============ HERO ============ -->
+<header id="hero">
+  <nav class="lang" aria-label="Language">
+    <button type="button" class="lang-btn active" data-lang="en">EN</button>
+    <button type="button" class="lang-btn" data-lang="ta" lang="ta">தமிழ்</button>
+  </nav>
+
+  <div class="hero-inner">
+    <div class="title-wrap"><h1 class="title slap" data-bind="title">Engagement Ceremony</h1></div>
+
+    <div class="names-wrap">
+      <p class="names rise r1" data-bind="names"><span class="name-part">Surya</span> <span class="hero-amp">&amp;</span> <span class="name-part">Nila</span></p>
+      <svg class="hero-doodle popin r3" viewBox="0 0 60 60" aria-hidden="true" focusable="false">
+        <path d="M8 40q6-10 12 0t12 0 12 0" fill="none" stroke="#49c6a8" stroke-width="4.5" stroke-linecap="round"/>
+        <use href="#sparkP" transform="translate(40 16) scale(1.05)" fill="#ffcf3f" stroke="#26163a" stroke-width="2.4"/>
+        <use href="#sparkP" transform="translate(14 14) scale(.6)" fill="#b89cff" stroke="#26163a" stroke-width="3"/>
+      </svg>
+      <svg class="hero-ring sticker popin r4" viewBox="-14 -20 140 140" aria-hidden="true" focusable="false"><use href="#ring-sticker"/></svg>
+    </div>
+
+    <p class="invites rise r2" data-ta="என்றென்றும் இணைந்திருக்கச் ‘சம்மதம்’ சொல்லியாச்சு! கொண்டாட வாருங்கள்!">said yes to forever. Come celebrate with us!</p>
+
+    <div class="verse-wrap rise r3">
+      <p class="verse" lang="ta" data-bind="verse"></p>
+    </div>
+    <p id="heroTagline" class="rise r3" data-bind="tagline">With the blessings of our elders, we are getting engaged!</p>
+    <p class="date-pill rise r4" id="heroDatePill" data-bind="dateLine">💍 24th January 2027 • Madurai</p>
+
+    <div class="badge-wrap reveal">
+      <div class="badge">
+        <svg class="badge-art" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+          <path transform="translate(5 5)" fill="#26163a" d="M100 12A13.5 13.5 0 0 1 124.8 15.6A13.5 13.5 0 0 1 147.6 26A13.5 13.5 0 0 1 166.5 42.4A13.5 13.5 0 0 1 180 63.4A13.5 13.5 0 0 1 187.1 87.5A13.5 13.5 0 0 1 187.1 112.5A13.5 13.5 0 0 1 180 136.6A13.5 13.5 0 0 1 166.5 157.6A13.5 13.5 0 0 1 147.6 174A13.5 13.5 0 0 1 124.8 184.4A13.5 13.5 0 0 1 100 188A13.5 13.5 0 0 1 75.2 184.4A13.5 13.5 0 0 1 52.4 174A13.5 13.5 0 0 1 33.5 157.6A13.5 13.5 0 0 1 20 136.6A13.5 13.5 0 0 1 12.9 112.5A13.5 13.5 0 0 1 12.9 87.5A13.5 13.5 0 0 1 20 63.4A13.5 13.5 0 0 1 33.5 42.4A13.5 13.5 0 0 1 52.4 26A13.5 13.5 0 0 1 75.2 15.6A13.5 13.5 0 0 1 100 12Z"/>
+          <path fill="#ffcf3f" stroke="#26163a" stroke-width="2.2" stroke-linejoin="round" d="M100 12A13.5 13.5 0 0 1 124.8 15.6A13.5 13.5 0 0 1 147.6 26A13.5 13.5 0 0 1 166.5 42.4A13.5 13.5 0 0 1 180 63.4A13.5 13.5 0 0 1 187.1 87.5A13.5 13.5 0 0 1 187.1 112.5A13.5 13.5 0 0 1 180 136.6A13.5 13.5 0 0 1 166.5 157.6A13.5 13.5 0 0 1 147.6 174A13.5 13.5 0 0 1 124.8 184.4A13.5 13.5 0 0 1 100 188A13.5 13.5 0 0 1 75.2 184.4A13.5 13.5 0 0 1 52.4 174A13.5 13.5 0 0 1 33.5 157.6A13.5 13.5 0 0 1 20 136.6A13.5 13.5 0 0 1 12.9 112.5A13.5 13.5 0 0 1 12.9 87.5A13.5 13.5 0 0 1 20 63.4A13.5 13.5 0 0 1 33.5 42.4A13.5 13.5 0 0 1 52.4 26A13.5 13.5 0 0 1 75.2 15.6A13.5 13.5 0 0 1 100 12Z"/>
+          <circle cx="100" cy="100" r="81" fill="none" stroke="#26163a" stroke-width="1.4" stroke-dasharray="2 4" stroke-linecap="round"/>
+          <path id="ringPath" d="M100 28a72 72 0 1 1 0 144a72 72 0 1 1 0-144" fill="none"/>
+          <g class="ring-txt"><text><textPath href="#ringPath" textLength="448" lengthAdjust="spacing" data-ta="தேதியைக் குறித்துக்கொள்ளுங்கள் ✦ தேதியைக் குறித்துக்கொள்ளுங்கள் ✦ ">SAVE THE DATE ✦ SAVE THE DATE ✦ SAVE THE DATE ✦ </textPath></text></g>
+        </svg>
+        <!-- cover photo goes here (data-bind="cover"); a ring on a colour burst stands in for the preview -->
+        <div class="photo" id="coupleCover" role="img" aria-label="The couple">
+          <svg viewBox="0 0 200 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+            <rect width="200" height="200" fill="#ff3d7f"/>
+            <path fill="#ff6e9e" d="M100 100L250 100L244.9 138.8ZM100 100L229.9 175L206.1 206.1ZM100 100L175 229.9L138.8 244.9ZM100 100L100 250L61.2 244.9ZM100 100L25 229.9L-6.1 206.1ZM100 100L-29.9 175L-44.9 138.8ZM100 100L-50 100L-44.9 61.2ZM100 100L-29.9 25L-6.1 -6.1ZM100 100L25 -29.9L61.2 -44.9ZM100 100L100 -50L138.8 -44.9ZM100 100L175 -29.9L206.1 -6.1ZM100 100L229.9 25L244.9 61.2Z"/>
+            <circle cx="100" cy="104" r="56" fill="#ffcf3f" stroke="#26163a" stroke-width="3"/>
+            <use href="#ring-art" x="22" y="22" width="156" height="156"/>
+          </svg>
+          <img class="cover-img" data-bind="cover" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+        </div>
+        <svg class="b-heart sticker" viewBox="0 0 116 108" aria-hidden="true" focusable="false"><use href="#heartP" transform="translate(6 6)" fill="#26163a"/><use href="#heartP" fill="#ff7a45" stroke="#26163a" stroke-width="5" stroke-linejoin="round"/></svg>
+        <svg class="b-star sticker" viewBox="-20 -20 46 46" aria-hidden="true" focusable="false"><use href="#sparkP" transform="translate(4 4) scale(1.45)" fill="#26163a"/><use href="#sparkP" transform="scale(1.45)" fill="#b89cff" stroke="#26163a" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      </div>
+      <p class="caption">
+        <svg viewBox="0 0 38 34" aria-hidden="true" focusable="false"><path d="M33 30C22 30 11 24 9 6M3 13L9 4L16 11" fill="none" stroke="#26163a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span data-ta="இரு இதயம், ஒரே சம்மதம்">two hearts, one big yes</span>
+      </p>
+    </div>
+
+    <a class="scroll-cue" href="#events"><span data-ta="நிகழ்ச்சி விவரம்">See the plan</span><i aria-hidden="true"></i></a>
+  </div>
+</header>
+
+<main>
+<!-- a ribbon of good news between the hero and the plan -->
+<div class="ribbon-wrap" aria-hidden="true">
+  <div class="ribbon"><div class="mq">
+    <div class="mq-g">
+      <span data-ta="சம்மதம்!">It's a yes!</span><svg><use href="#i-star"/></svg><span data-ta="தேதியைக் குறித்துக்கொள்ளுங்கள்">Save the date</span><svg><use href="#i-star"/></svg>
+      <span data-ta="சம்மதம்!">It's a yes!</span><svg><use href="#i-star"/></svg><span data-ta="தேதியைக் குறித்துக்கொள்ளுங்கள்">Save the date</span><svg><use href="#i-star"/></svg>
+      <span data-ta="சம்மதம்!">It's a yes!</span><svg><use href="#i-star"/></svg><span data-ta="தேதியைக் குறித்துக்கொள்ளுங்கள்">Save the date</span><svg><use href="#i-star"/></svg>
+    </div>
+    <div class="mq-g">
+      <span data-ta="சம்மதம்!">It's a yes!</span><svg><use href="#i-star"/></svg><span data-ta="தேதியைக் குறித்துக்கொள்ளுங்கள்">Save the date</span><svg><use href="#i-star"/></svg>
+      <span data-ta="சம்மதம்!">It's a yes!</span><svg><use href="#i-star"/></svg><span data-ta="தேதியைக் குறித்துக்கொள்ளுங்கள்">Save the date</span><svg><use href="#i-star"/></svg>
+      <span data-ta="சம்மதம்!">It's a yes!</span><svg><use href="#i-star"/></svg><span data-ta="தேதியைக் குறித்துக்கொள்ளுங்கள்">Save the date</span><svg><use href="#i-star"/></svg>
+    </div>
+  </div></div>
+</div>
+
+<!-- ============ EVENTS: chunky folder cards ============ -->
+<section id="events" class="section">
+  <div class="sec-head reveal">
+    <p class="hand" data-ta="மறக்காதீர்கள்!">mark your calendar!</p>
+    <h2 class="sec-title" data-ta="விழா நிகழ்ச்சிகள்">The plan</h2>
+    <p class="sec-sub" data-ta="எங்கு, எப்போது வர வேண்டும் என்பது இதோ. உங்கள் வாழ்த்துகளுடன் வாருங்கள்!">Here's where to be and when. Bring your biggest cheers!</p>
+  </div>
+
+  <div id="eventsGrid" class="cards">
+    <template>
+    <article class="ev reveal">
+      <span class="ev-tab"><span data-ta="எண்">No.</span><b data-field="number">01</b></span>
+      <span class="ev-icon" data-field="icon">💍</span>
+      <h3 class="ev-name" data-field="name">Ring Ceremony</h3>
+      <dl class="ev-info">
+        <div data-if="date"><dt><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg><span data-ta="நாள்">Date</span></dt><dd data-field="date">24th January 2027</dd></div>
+        <div data-if="time"><dt><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg><span data-ta="நேரம்">Time</span></dt><dd data-field="time">11:30 AM</dd></div>
+        <div class="ev-where"><dt><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg><span data-ta="இடம்">Venue</span></dt><dd><strong data-field="place">Sri Ganesh Mahal</strong><small data-field="venue">K.K. Nagar, Madurai</small></dd></div>
+      </dl>
+      <p class="ev-desc" data-field="desc">The couple exchange rings in front of both families.</p>
+      <a class="btn" data-href="map" href="https://www.google.com/maps" target="_blank" rel="noopener"><span data-ta="வழி காட்டு">Get directions</span><svg aria-hidden="true"><use href="#i-go"/></svg></a>
+    </article>
+    </template>
+  </div>
+</section>
+
+<!-- ============ COUNTDOWN: tear-off calendar pages ============ -->
+<section id="countdown" class="section">
+  <div class="sec-head reveal">
+    <p class="hand" data-ta="நாள் எண்ணிக்கை">counting down…</p>
+    <h2 class="sec-title" data-ta="இன்னும் சில நாட்களே!">Not long now!</h2>
+  </div>
+  <div class="cals reveal" role="timer" aria-label="Time left until the engagement">
+    <div class="cal"><span class="cal-top" data-ta="நாட்கள்">Days</span><b id="cdDays">000</b></div>
+    <div class="cal"><span class="cal-top" data-ta="மணி">Hours</span><b id="cdHours">00</b></div>
+    <div class="cal"><span class="cal-top" data-ta="நிமிடம்">Mins</span><b id="cdMins">00</b></div>
+    <div class="cal"><span class="cal-top" data-ta="வினாடி">Secs</span><b id="cdSecs">00</b></div>
+  </div>
+  <p class="cd-when reveal"><span data-bind="dateLong">Sunday, 24 January 2027</span> <span class="dot" aria-hidden="true">·</span> <span data-bind="time">10:00 AM</span></p>
+</section>
+
+<!-- ============ WISHES: sticky notes ============ -->
+<section id="wishes" class="section">
+  <div class="sec-head reveal">
+    <p class="hand" data-ta="வாழ்த்துப் புத்தகம்">guest book</p>
+    <h2 class="sec-title" data-ta="வாழ்த்து எழுதுங்கள்!">Leave us a note!</h2>
+    <p class="sec-sub" data-ta="உங்கள் வாழ்த்தை எழுதுங்கள்; அதை எங்கள் அன்புச் சுவரில் ஒட்டி வைப்போம்.">Write us a wish and we'll stick it on our wall of love.</p>
+  </div>
+
+  <form id="wishForm" class="wish-form reveal">
+    <label class="field"><span data-ta="உங்கள் பெயர்">Your name</span><input id="wishName" maxlength="60" placeholder="e.g. Kavya Akka" data-ta-ph="எ.கா. காவ்யா அக்கா" required></label>
+    <label class="field"><span data-ta="உங்கள் வாழ்த்து">Your wish</span><textarea id="wishMessage" maxlength="500" rows="4" placeholder="So happy for you two! Can't wait to celebrate…" data-ta-ph="உங்கள் இருவருக்கும் மனமார்ந்த வாழ்த்துகள்…" required></textarea></label>
+    <button class="btn hot" type="submit"><svg aria-hidden="true"><use href="#i-send"/></svg><span data-ta="வாழ்த்து அனுப்பு">Send your wish</span></button>
+  </form>
+
+  <div id="wishesWall" class="notes">
+    <template>
+    <figure class="wnote reveal"><blockquote data-field="message">So happy for you both! Can't wait to celebrate.</blockquote><figcaption data-field="name">Kavya</figcaption></figure>
+    </template>
+  </div>
+  <p id="wishesEmpty" class="wishes-empty" hidden data-ta="முதல் வாழ்த்தை நீங்களே எழுதுங்கள்!">Be the first to leave a wish!</p>
+  <div class="wishes-more"><button id="wishesMore" class="btn sunny" type="button" data-ta="மேலும் வாழ்த்துகள்">Show more wishes</button></div>
+</section>
+
+<!-- ============ HELP: need a hand? ============ -->
+<section id="stay" class="section">
+  <div class="help reveal">
+    <svg class="phone" viewBox="0 0 140 150" aria-hidden="true" focusable="false">
+      <g class="buzz">
+        <g transform="rotate(-10 70 75)">
+          <rect x="33" y="15" width="84" height="130" rx="24" fill="#26163a"/>
+          <rect x="28" y="10" width="84" height="130" rx="24" fill="#fffdf8" stroke="#26163a" stroke-width="3.5"/>
+          <rect x="38" y="20" width="64" height="110" rx="15" fill="#ff7a45" stroke="#26163a" stroke-width="3.5"/>
+          <rect x="45" y="34" width="50" height="74" rx="7" fill="#fff5ea" stroke="#26163a" stroke-width="3"/>
+          <rect x="60" y="25.5" width="20" height="4" rx="2" fill="#26163a"/>
+          <circle cx="70" cy="119" r="5" fill="#fff5ea" stroke="#26163a" stroke-width="2.6"/>
+          <path d="M70 87C60 79 54 73 54 66C54 61 58 57 62.5 57C66 57 68.5 59 70 62C71.5 59 74 57 77.5 57C82 57 86 61 86 66C86 73 80 79 70 87Z" fill="#ff3d7f" stroke="#26163a" stroke-width="2.6" stroke-linejoin="round"/>
+        </g>
+      </g>
+      <g fill="none" stroke="#26163a" stroke-width="4" stroke-linecap="round"><path d="M16 56q-6 12 0 24M6 48q-10 20 0 40M126 50q6 12 0 24M136 42q10 20 0 40"/></g>
+    </svg>
+    <p class="hand" data-ta="கவலை வேண்டாம்">we've got you</p>
+    <h2 class="sec-title" data-ta="உதவி வேண்டுமா?">Need a hand?</h2>
+    <p id="stayText" data-bind="help">Coming from out of town or need help finding the hall? Call our families and we'll guide you.</p>
+    <div id="coordinators">
+      <template>
+      <div class="coord">
+        <span class="av" aria-hidden="true"><svg><use href="#i-heart"/></svg></span>
+        <div class="who"><p class="c-name" data-field="name">Surya's family</p><p class="c-phone" data-field="phone">+91 90000 00000</p></div>
+        <a class="btn hot" data-href="tel" href="tel:+919000000000"><svg aria-hidden="true"><use href="#i-phone"/></svg><span data-ta="அழைக்க">Call</span></a>
+      </div>
+      </template>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ============ FOOTER: confetti and the hashtag ============ -->
+<footer class="foot">
+  <p class="foot-k" data-ta="விழாவில் சந்திப்போம்!">See you there!</p>
+  <p class="hashtag" data-bind="hashtag">#SuryaNilaEngaged</p>
+  <p class="thanks" data-ta="எங்கள் மகிழ்ச்சியில் பங்கேற்றதற்கு நன்றி. உங்களுடன் கொண்டாடக் காத்திருக்கிறோம்!">Thank you for cheering us on. We can't wait to celebrate with you!</p>
+  <button type="button" class="btn sunny" id="shareBtn"><svg aria-hidden="true"><use href="#i-link"/></svg><span data-ta="இணைப்பை நகலெடு">Copy link</span></button>
+</footer>
+
+<button id="musicToggle" type="button" aria-label="Play or pause music"><svg aria-hidden="true"><use href="#i-note"/></svg></button>
+<audio id="bgMusic" loop preload="auto"></audio>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* Intro, bilingual labels and name fitting. js/invite.js opens the intro on tap (adds .open, then .hidden after
+   data-hide-after); the CSS ticks the boxes, flips the card and fires the confetti, and this unlocks scrolling and
+   starts the hero's entrance. */
+(function(){
+  var html=document.documentElement, overlay=document.getElementById("curtain-overlay");
+  var reduce=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  if(overlay&&!html.classList.contains("intro-open")){
+    // Admin thumbnails and framed previews start on the page itself.
+    overlay.remove();
+  }else if(overlay){
+    // Confetti for the two cannons: each piece flies up and inwards, then falls.
+    var cols=["#ffcf3f","#49c6a8","#b89cff","#ff7a45","#fffdf8","#26163a"], shapes=["","d","t","s"];
+    var span=Math.min(window.innerWidth||390,820);
+    [["l",1],["r",-1]].forEach(function(side){
+      var box=overlay.querySelector(".cannon."+side[0]);
+      if(!box) return;
+      for(var i=0;i<26;i++){
+        var p=document.createElement("i"), a=(18+Math.random()*62)*Math.PI/180, dist=span*(.28+Math.random()*.62);
+        p.className="cf "+shapes[i%4];
+        p.style.cssText="--x:"+Math.round(side[1]*Math.cos(a)*dist)+"px;--y:"+Math.round(-Math.sin(a)*dist)+"px;--r:"+Math.round((Math.random()*2-1)*560)+"deg;--d:"+(1.5+Math.random()*.4).toFixed(2)+"s;background:"+cols[i%cols.length];
+        box.appendChild(p);
+      }
+    });
+    var opened=false;
+    overlay.querySelectorAll("[data-open-invite]").forEach(function(b){
+      b.addEventListener("click",function(){
+        if(opened) return;
+        opened=true;
+        overlay.classList.add("open");
+        setTimeout(function(){ html.classList.remove("intro-open"); },reduce?0:3200);
+      });
+    });
+  }
+
+  // A long name or hashtag shrinks to stay on one line instead of breaking mid-word.
+  function fitOne(n,min){
+    n.style.fontSize="";
+    n.style.whiteSpace="";
+    var w=n.clientWidth;
+    if(!w) return;
+    var over=n.scrollWidth/w;
+    if(over<=1.01) return;
+    var size=parseFloat(getComputedStyle(n).fontSize)/over*.97;
+    if(size<min){ size=min; n.style.whiteSpace="normal"; }
+    n.style.fontSize=size+"px";
+  }
+  function fit(){
+    document.querySelectorAll(".names .name-part").forEach(function(n){ fitOne(n,30); });
+    document.querySelectorAll(".hashtag").forEach(function(n){ fitOne(n,22); });
+  }
+  var fitTimer;
+  function fitSoon(){ clearTimeout(fitTimer); fitTimer=setTimeout(fit,60); }
+  window.addEventListener("resize",fitSoon);
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(fit);
+  if(window.MutationObserver){
+    var mo=new MutationObserver(fitSoon);
+    document.querySelectorAll(".names,.hashtag").forEach(function(n){ mo.observe(n,{childList:true,subtree:true,characterData:true}); });
+  }
+
+  // Labels with data-ta (and placeholders with data-ta-ph) switch to that Tamil text when the guest picks தமிழ்.
+  var lang="en";
+  function labels(root){
+    root.querySelectorAll("[data-ta]").forEach(function(n){
+      if(n.dataset.en===undefined) n.dataset.en=n.textContent;
+      n.textContent=lang==="ta"?n.dataset.ta:n.dataset.en;
+    });
+    root.querySelectorAll("[data-ta-ph]").forEach(function(n){
+      if(n.dataset.enPh===undefined) n.dataset.enPh=n.placeholder;
+      n.placeholder=lang==="ta"?n.dataset.taPh:n.dataset.enPh;
+    });
+  }
+  document.addEventListener("invite:render",function(e){
+    lang=e.detail&&e.detail.lang==="ta"?"ta":"en";
+    labels(document);
+    // An event with neither a place nor an address has no venue line.
+    document.querySelectorAll("#eventsGrid .ev-where").forEach(function(row){
+      var any=[].some.call(row.querySelectorAll("[data-field]"),function(n){ return n.style.display!=="none"&&n.textContent.trim(); });
+      row.style.display=any?"":"none";
+    });
+    // The date pill under the countdown: no dot without both parts, and no empty pill.
+    var when=document.querySelector(".cd-when");
+    if(when){
+      var shown=function(n){ return !!(n&&n.style.display!=="none"&&n.textContent.trim()); };
+      var hasD=shown(when.querySelector('[data-bind="dateLong"]')), hasT=shown(when.querySelector('[data-bind="time"]'));
+      when.querySelector(".dot").style.display=hasD&&hasT?"":"none";
+      when.style.display=hasD||hasT?"":"none";
+    }
+    fit();
+  });
+  // New wishes arrive without a full render, so label them as they are added.
+  var wall=document.getElementById("wishesWall");
+  if(wall&&window.MutationObserver) new MutationObserver(function(){ labels(wall); }).observe(wall,{childList:true});
+})();
+</script>
+</body>
+</html>

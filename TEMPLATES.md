@@ -93,6 +93,9 @@ Links to those sections (`<a href="#events">` in a menu or a scroll cue) hide wi
 - **Music**: `id="musicToggle"` (gets class `spinning` while playing) and `<audio id="bgMusic">`. Added automatically, as a
   round button at the bottom right, if the event has music and the template doesn't have them.
 - **Toast** messages: `id="toast"`, gets class `show`. Added automatically if missing.
+- **Added by the runtime** (outside frames), so a template needs nothing for them: the signature footer
+  (`id="madeWith"`) after the page's own content, the same in every design, and a round back-to-top button
+  (`id="toTop"`) on the right, just above a music button fixed in the bottom-right corner. Keep these ids free.
 - **Language**: buttons `class="lang-btn" data-lang="en"` / `"ta"` switch between English and Tamil, and `data-i18n="<key>"`
   elements get the built-in UI text (see `TRANSLATIONS` in `js/defaults.js`). Without buttons the page is English.
 - **Share**: `id="shareBtn"` copies the event's link.

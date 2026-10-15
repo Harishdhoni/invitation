@@ -1260,7 +1260,7 @@ $("copyLinkBtn").addEventListener("click", () => copyText(shareLink(weddingId)))
 
 /* ------------------------------ editor page extras ------------------------------ */
 // Editor page: how to pay while the invitation is unpaid, and the business name beside the year in the footer
-// ("Developed by Harish S" stays). Both come from the admin's Settings (site/settings), followed live, so a new
+// ("Developed by Harish Siva" stays). Both come from the admin's Settings (site/settings), followed live, so a new
 // price or the admin marking the invitation paid shows straight away. The page works without them.
 let sales = null;
 

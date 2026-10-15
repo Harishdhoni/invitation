@@ -5,7 +5,7 @@ Human setup and deploy steps are in [SETUP.md](SETUP.md). The template contract 
 
 ## What this is
 
-Tamil / English invitation websites for weddings, housewarmings, birthdays, baby showers and any other category the admin adds.
+Tamil / English invitation websites for weddings, engagements, housewarmings, birthdays, baby showers and any other category the admin adds.
 Many events run at once. Each one lives at `/<slug>` (e.g. `/arjun-meera`) with its own details, photos, music,
 guest book and template. One admin (email + password) manages everything. An event's editor gets in with a PIN.
 An event can have extra links that show the same details in other designs, each with its own hidden parts and its own
@@ -81,14 +81,17 @@ Important:
 | `public/index.html`: the built-in **Classic** design, and the shell for every event | `js/invite.js` | Guests |
 | `public/admin.html` (`/admin`) | `js/admin.js` | The one admin |
 | `public/editor.html` (`/editor`) | `js/editor.js` | Someone holding an event's PIN |
-| `public/templates/*.html`: 31 starter designs (10 wedding, 5 housewarming, 11 birthday, 5 baby shower) listed in `starters.json`, copied into Firestore on request | none (the runtime is injected) | n/a |
+| `public/templates/*.html`: 36 starter designs (10 wedding, 5 housewarming, 11 birthday, 5 baby shower, 5 engagement) listed in `starters.json`, copied into Firestore on request | none (the runtime is injected) | n/a |
 | `public/home.html` (the sales page, served at `/`), `showcase.html` (the tour with every design) and `help`, `terms`, `privacy`, `refund`, `contact` `.html` | `js/site.js` | Customers |
 
 `admin.html` and `editor.html` share `css/admin.css` and the same sidebar (no fixed header). On wide screens its toggle
 folds it to a rail of icons and back; on phones and tablets a menu button slides it in. The credit ("© 2026 ✦ Developed
-by Harish S") sits at the foot of the sidebar (`.site-credit.side-credit`); the page's own `.site-credit` footer shows
+by Harish Siva") sits at the foot of the sidebar (`.site-credit.side-credit`); the page's own `.site-credit` footer shows
 only under the login, PIN and setup screens. On the editor page `event-editor.js` puts the business name from Settings
 beside the year in both.
+The admin, editor, home and showcase pages have a **corner dock** at the bottom right (`cornerDock()` in
+`scroll-top.js`): the back-to-top button above the assistant's **Ask AI** button. `admin.css` lifts it above the save
+bar with `--dock-bottom`. The admin's assistant starts once signed in; the editor's from the PIN screen.
 The sales and information pages share `css/home.css`. `public/assets/templates/<id>.webp` are phone screenshots of
 the starter designs for the sales page's gallery and the showcase, and the thumbnails of unchanged starters in the
 admin and editor.
@@ -99,9 +102,11 @@ admin and editor.
   first, then Firestore), switches to the event's template if needed, fills in the hooks, and runs the intro,
   countdown, music, language switch, reveal-on-scroll and guest book. Fires `invite:render` after every render.
   With no event to show it sends the visitor to `home.html`. `?editor-preview=1` reads with `editor-firebase.js` (the
-  customer's session) and shows a preview note. `addCredit()` appends the footer that sells to guests: "Would you like
-  an invitation like this?", a button to the business's WhatsApp (Settings' `whatsapp`, else `/contact`) with a
-  message naming the link, and "Made with <businessName>". It shows once Settings has a name or a WhatsApp number.
+  customer's session) and shows a preview note. `addCredit()` appends the footer that sells to guests, the same in
+  every design (`#madeWith`, styled by `CREDIT_CSS` with id selectors and the design's own text colour): a thin rule,
+  "Would you like an invitation like this?", a small **See all designs** button to `SITE_URL/showcase?category=<the
+  event's category>`, and "Made with <businessName>" once Settings has a name. It isn't added inside frames.
+  `start()` also adds the back-to-top button (`scroll-top.js`) above the design's music button.
 - `defaults.js`: `DEFAULT_CONFIG` (sample wedding), per-category `SAMPLES` / `sampleFor()`, `samplePhoto()` and
   `SAMPLE_MUSIC` (the sample previews' cover photo and song), `DEFAULT_CATEGORIES`,
   `TRANSLATIONS` (guest UI strings in EN + TA), `SAMPLE_WISHES`. Also the helpers `tr`, `withDefaults`, `clone`,
@@ -180,6 +185,24 @@ admin and editor.
   On a mouse or trackpad (`(hover: hover) and (pointer: fine)`, no reduced motion, not in a frame) it loads Lenis from
   jsDelivr and glides the wheel; touch screens keep native scrolling. Boxes that scroll by themselves and open
   `<dialog>`s keep their own scrolling. It pauses while `<html>` or `<body>` has `overflow:hidden` (intros, the menu).
+- `scroll-top.js`: `addScrollTop()`, the round back-to-top button on every page. It shows after most of a screen of
+  scrolling and glides up (through Lenis when it runs). It brings its own `<style>` (id selectors, so templates
+  can't restyle it). With `above` (invitations) it floats on its own, see-through, centred 12px over the design's
+  music button when that is fixed in the bottom-right corner (measured with `offset*`, which ignore a spinning
+  button's transform); otherwise it goes into `cornerDock()` in maroon and gold.
+- `assistant.js`: `startAssistant(page)`, the **Ask AI** chat on the admin, editor, home and showcase pages (`page` is
+  `"admin"`, `"editor"`, `"home"` or `"showcase"`). It answers questions about that page with Gemini through
+  Firebase AI Logic, in a named Firebase app `"assistant"` (no Auth, no Firestore) loaded on the first question,
+  streaming the reply. Replies are plain text with `**bold**`, lists and `[text](go:id)` shortcuts, built with
+  `textContent` only; a shortcut becomes a button only when its place exists and shows right now. The system prompt
+  is built from `assistant-guide.js`, the public `site/settings` (business name, price, read through REST like
+  `site.js`) and, on the home page and showcase, `starters.json` (so it can offer `go:preview:<id>`). Each question
+  is sent with a short "where I am" note (view, tab, section). The chat is kept per tab in `sessionStorage`
+  (`wi:assistant:<page>`). Styles: `css/assistant.css`, loaded by the script.
+- `assistant-guide.js`: what the assistant knows. `PRODUCT` (shared facts, with `{business}` and `{price}`) and
+  `GUIDES[page]`: `about` (the page explained, quoting button, tab and section names exactly), `greeting`,
+  `suggestions`, `places` (`id → { does, run, when }`: the shortcuts) and `where()`. `where()` reads only the page's
+  own labels, never names, numbers or other customer details.
 
 ### Serverless functions in `api/` (Vercel only, CommonJS)
 
@@ -290,7 +313,7 @@ Event fields (`weddings/<slug>`):
   existing density: most functions have a one- or two-line lead comment.
 - **Dependencies**: avoid new ones. If you really need one, load it from a CDN at runtime (see `loadLame` in
   `audio-trim.js`, and Lenis `1.3.26` from jsDelivr in `smooth-scroll.js`). The Firebase SDK version `12.19.0` is
-  pinned in `firebase.js`, `editor-firebase.js` and `translate.js`. Bump all three together.
+  pinned in `firebase.js`, `editor-firebase.js`, `translate.js` and `assistant.js`. Bump them together.
 - **Old data must keep working**: read configs through `withDefaults()` / `normalize()`, and never assume a newly
   added field exists. Don't rename stored fields or collections.
 - **Bilingual content**: store it as `{ en, ta }` and read it with `tr(field, lang)`, which falls back to English. In
@@ -335,14 +358,16 @@ Without a build step there is no shared config, so these are duplicated on purpo
 | Live site URL | `firebase-config.js` `SITE_URL` · `og:image` / `og:url` in `public/index.html` · `og:image` in `home.html` and `showcase.html` |
 | Slug and id rules | `defaults.js` `isValidSlug` / `isValidId` · `api/_firestore.js` · the `vercel.json` rewrite regex |
 | Reserved slugs | `RESERVED_SLUGS` in `defaults.js`. Add every new top-level page or folder in `public/` |
-| Firebase SDK version | `firebase.js` · `editor-firebase.js` · `translate.js` |
+| Firebase SDK version | `firebase.js` · `editor-firebase.js` · `translate.js` · `assistant.js` |
+| What the assistant knows | `assistant-guide.js` (button, tab and section names, element ids its shortcuts click, section ids such as `#features` and `#how` in `home.html`) · the pages it describes · `PRODUCT.md`. Rename a button or tab and the guide must follow |
+| Corner dock above the save bar | `--dock-bottom` in `admin.css` (80px) · the `.savebar` height in `admin.css` |
 | Template hooks | `invite.js` (the implementation) · `TEMPLATES.md` · the Hooks `<details>` in `admin.html` · `templates/blank.html` |
 | Parts a link can hide | `SECTIONS` in `defaults.js` · `PART_SELECTORS` and the render functions in `invite.js` · the table in `TEMPLATES.md` · the Hooks `<details>` in `admin.html` |
 | When a link is open (switch, dates, 15-day auto end, India time) | `firestore.rules` `isLive` · `linkState` / `AUTO_END_DAYS` in `defaults.js` |
 | Links per event (3 in all for editors) | `firestore.rules` `linksChangeOk` (`after.size() <= 2`) · `MAX_LINKS` in `defaults.js` |
 | No-cache headers for html/js/css | `vercel.json` `headers` (Vercel) · `public/.htaccess` (local Apache, so edits show on a normal reload) |
-| Starter templates | `public/templates/starters.json` · the starter count in `README.md` and `SETUP.md` ("Add 31 starter templates") · the catalog in `PRODUCT.md` §6 |
-| Site credit | two copies in each of `admin.html` and `editor.html` ("Developed by Harish S"): the `.side-credit` in the sidebar and the page's `.site-credit` footer · `loadSales()` in `event-editor.js`, which adds the business name to their first part |
+| Starter templates | `public/templates/starters.json` · the starter count in `README.md` and `SETUP.md` ("Add 36 starter templates") · the catalog in `PRODUCT.md` §6 |
+| Site credit | two copies in each of `admin.html` and `editor.html` ("Developed by Harish Siva"): the `.side-credit` in the sidebar and the page's `.site-credit` footer · `loadSales()` in `event-editor.js`, which adds the business name to their first part |
 | Sidebar breakpoint (1024px) | the `min-width:1024px` / `max-width:1023.98px` queries in `admin.css` · `matchMedia` in `wireSidebar()` (`admin-ui.js`) |
 | Sales settings (businessName, price, upiId, payNumber, whatsapp, email, address, welcomeMessage) | `SALES_DEFAULTS` in `defaults.js` · `FIELDS` in `admin-sales.js` and the Settings form in `admin.html` · `data-site` hooks in `site.js` and the sales/info pages |
 | Bare address → sales page | `vercel.json` redirect of `/` to `/home` (a redirect, because Vercel serves `index.html` before any rewrite; its `missing` list must name every query the invite page takes: `w`, `template`, `template-file`, `editor-preview`) · the `home.html` redirect in `invite.js` `boot()` |
@@ -405,7 +430,7 @@ Without a build step there is no shared config, so these are duplicated on purpo
 - **Sample photo and song**: while `invite.js` shows sample details (`sample`), the cover slot gets the category's
   photo from `public/assets/samples/` and the music is `SAMPLE_MUSIC`, played from its URL (`preload="none"`, so admin
   thumbnails don't each download it) instead of Firestore chunks. Neither is ever put in a config, so `sampleFor()` and
-  new events stay without a photo or song. The baby shower photo is cropped from the original to drop its empty top.
+  new events stay without a photo or song. The baby shower photo is cropped from the original to drop its empty top. Engagements reuse the wedding photo.
 - **Everything is India time.** `datetime-local` input is stored with `+05:30`, and dates are displayed with
   `timeZone: "Asia/Kolkata"`. Event dates are free text; `parseEventDate()` pulls the day, month and year out of the
   English for template date hooks.
@@ -426,6 +451,9 @@ Without a build step there is no shared config, so these are duplicated on purpo
   (390×780 WebP of the opened intro with sample details, as in the existing ones) for the sales page.
 - **Secrets**: `.env.local` and `.vercel/` hold the Vercel CLI link and token. They are gitignored. Never commit or
   print them. The Firebase web `apiKey` in `firebase-config.js` is public by design; the rules protect the data.
+- **The assistant and Tamil translation share one Gemini quota** (AI Logic, Gemini Developer API). Anyone on the home
+  page or showcase can ask, so busy days use it up faster; the assistant then says "Lots of questions right now".
+  It never calls the model until a question is sent.
 - **HEIC photos** can't be decoded by browsers. The upload shows an error asking for JPG, PNG or WebP.
 
 ## Checking a change

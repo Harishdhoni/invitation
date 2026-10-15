@@ -10,9 +10,11 @@
 //   #showcase, #designReel, #designPreview, data-count="designs|occasions"
 //                                                                 the showcase page: every design with category filters
 //                                                                 and a live preview, a moving strip of them, and counts
+//   <body data-page="home|showcase">                              the back-to-top button and the assistant (js/assistant.js)
 import { firebaseConfig, useEmulator, EMULATOR, SITE_URL } from "./firebase-config.js";
 import { salesSettings, whatsappLink, DEFAULT_CATEGORIES } from "./defaults.js";
 import { smoothScroll } from "./smooth-scroll.js";
+import { addScrollTop } from "./scroll-top.js";
 
 const $$ = sel => [...document.querySelectorAll(sel)];
 function el(tag, className, text){
@@ -278,6 +280,11 @@ function backBar(){
 
 $$("[data-site-host]").forEach(n => { n.textContent = new URL(SITE_URL).host; });
 smoothScroll();
+// The home page and the showcase (<body data-page>) get the back-to-top button and the assistant.
+if(["home", "showcase"].includes(document.body.dataset.page)){
+  addScrollTop();
+  import("./assistant.js").then(m => m.startAssistant(document.body.dataset.page)).catch(e => console.warn("The assistant didn't load.", e));
+}
 backBar();
 gallery();
 showcase();

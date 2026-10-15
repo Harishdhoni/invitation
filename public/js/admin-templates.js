@@ -309,7 +309,7 @@ async function addCategory(e){
   const error = $("newCategoryError");
   error.textContent = "";
   const id = slugify(name).slice(0, 40).replace(/-+$/, "");
-  if(!name || !isValidId(id)) return void (error.textContent = "Type a name with at least two letters or numbers, like Engagement.");
+  if(!name || !isValidId(id)) return void (error.textContent = "Type a name with at least two letters or numbers, like Naming Ceremony.");
   if(data.categories.some(c => c.id === id || c.name.toLowerCase() === name.toLowerCase()))
     return void (error.textContent = `There's already a category called "${name}".`);
   try {

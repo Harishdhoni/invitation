@@ -4,7 +4,7 @@ trigger: always_on
 
 # Cascade rules: Online Invitations (wedding-invite)
 
-Tamil / English invitation websites (weddings, housewarmings, birthdays, baby showers, custom categories). There are many events,
+Tamil / English invitation websites (weddings, engagements, housewarmings, birthdays, baby showers, custom categories). There are many events,
 each at `/<slug>` with its own details, photos, music, guest book and template. One admin manages everything, and
 an editor can edit one event with a PIN. More detail: `CLAUDE.md` (code), `PRODUCT.md` (product), `SETUP.md`
 (setup/deploy), `TEMPLATES.md` (template hooks). Read TEMPLATES.md before you touch `public/templates/` or the hooks
@@ -45,7 +45,7 @@ in `invite.js`.
   dropdown kept in `sessionStorage` `wi:templatesCategory`, template editor, picker, thumbnails, starters),
   `js/admin-access.js` (editor PINs). `admin.html` and `editor.html` share `css/admin.css` and the sidebar
   (no fixed header; folds to an icon rail on wide screens, a slide-in menu below 1024px). The credit
-  ("© 2026 ✦ Developed by Harish S") is at the foot of the sidebar; the `.site-credit` page footer shows only under
+  ("© 2026 ✦ Developed by Harish Siva") is at the foot of the sidebar; the `.site-credit` page footer shows only under
   the login, PIN and setup screens.
 - `public/editor.html` + `js/editor.js`: PIN entry. `js/editor-firebase.js` is a separate named app `"editor"` with
   anonymous auth, so it never replaces an admin session. Keep it separate.
@@ -60,7 +60,7 @@ in `invite.js`.
 - `api/` (Vercel, CommonJS): `invite.js` serves `/<slug>` with per-event OG tags between `<!-- og:start -->` and
   `<!-- og:end -->` and adds `meta wedding-id` / `template-id` and the runtime script. `og-image.js` serves the
   preview image. `_firestore.js` is a credential-less REST reader.
-- `public/templates/*.html` + `starters.json`: 31 starter designs (10 wedding, 5 housewarming, 11 birthday, 5 baby shower). These are
+- `public/templates/*.html` + `starters.json`: 36 starter designs (10 wedding, 5 housewarming, 11 birthday, 5 baby shower, 5 engagement). These are
   **seeds only**. Once added in the admin, events use the Firestore copy, so editing the file changes nothing live.
 
 ## Data (Firestore)

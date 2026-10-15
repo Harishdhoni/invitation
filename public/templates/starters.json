@@ -60,5 +60,15 @@
   { "id": "oh-baby", "file": "baby-shower-oh-baby.html", "name": "Oh Baby", "category": "baby-shower",
     "description": "A boho balloon garland with pearl OH BABY letters: let the balloons fly. Earthy tones, arch frames and a balloon countdown." },
   { "id": "sweet-dreams", "file": "baby-shower-sweet-dreams.html", "name": "Sweet Dreams", "category": "baby-shower",
-    "description": "A felt nursery mobile that turns when guests wind the music box. Stitched felt cards, a cloud photo frame and a lullaby feel." }
+    "description": "A felt nursery mobile that turns when guests wind the music box. Stitched felt cards, a cloud photo frame and a lullaby feel." },
+  { "id": "ring-box", "file": "engagement-ring-box.html", "name": "Ring Box", "category": "engagement",
+    "description": "Emerald velvet and champagne gold: open the ring box and the solitaire rises. An emerald-cut photo setting, jeweller's-certificate events and a faceted-gem countdown." },
+  { "id": "thamboolam", "file": "engagement-thamboolam.html", "name": "Thamboolam", "category": "engagement",
+    "description": "The two families exchange thamboolam plates and the lagna pathrikai unrolls. A turmeric-dabbed card, a betel-leaf photo frame and drawstring-bag events. Tamil-first." },
+  { "id": "peony-bloom", "file": "engagement-peony-bloom.html", "name": "Peony Bloom", "category": "engagement",
+    "description": "Moody wine-dark florals: tap the bud and a peony blooms around the couple's initials. A gilded oval photo frame, botanical-plate events and pressed-flower wishes." },
+  { "id": "its-a-yes", "file": "engagement-its-a-yes.html", "name": "It's a Yes!", "category": "engagement",
+    "description": "Big news in bright colours: tick Yes and the card flips to a confetti YES! A sticker-badge photo frame, chunky colour cards and a tear-off calendar countdown." },
+  { "id": "golden-hour", "file": "engagement-golden-hour.html", "name": "Golden Hour", "category": "engagement",
+    "description": "A seashore at sunset: tap the sun and it sinks as the couple join hands. The photo is the setting sun, events sit on the sand and wishes arrive as messages in bottles." }
 ]

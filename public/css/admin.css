@@ -285,6 +285,8 @@ main{max-width:980px;margin:0 auto;padding:1.2rem 1rem 7rem;}
   max-width:calc(100vw - 32px);text-align:center;
 }
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+/* The corner dock (back to top and the assistant, js/scroll-top.js) stands above the save bar while one shows. */
+body:has(#appView:not([hidden]) :is(#editorView,#templateEditorView):not([hidden]) .savebar){--dock-bottom:80px;}
 
 /* ---------- selects ---------- */
 select{

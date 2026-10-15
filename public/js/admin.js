@@ -3,6 +3,8 @@ import { isFirebaseConfigured, ADMIN_UID, SITE_URL, useEmulator } from "./fireba
 import { compressPreviewImage } from "./image-utils.js";
 import { $, show, el, toast, actionBtn, copyText, permissionHint, wireSidebar, go, useRouter } from "./admin-ui.js";
 import { smoothScroll } from "./smooth-scroll.js";
+import { addScrollTop } from "./scroll-top.js";
+import { startAssistant } from "./assistant.js";
 import { data, loaded, failed, onData, startData } from "./admin-data.js";
 import {
   useFirebase, templatesIn, templateName, categoryName, templatePicker,
@@ -571,6 +573,7 @@ $("loginForm").addEventListener("submit", async e => {
 
 wireSidebar();
 smoothScroll();
+addScrollTop();
 
 // The sidebar's Share button: the home page or showcase link for customers.
 $("shareOpenBtn").addEventListener("click", () => openShare(fb));
@@ -635,6 +638,8 @@ async function enterApp(user){
   // Everything every view needs is read now and kept current, and every view is drawn as it arrives.
   startData(fb);
   route();
+  // Help with this page, for the signed-in admin only.
+  startAssistant("admin");
 }
 
 /* ---------------------------------- views ---------------------------------- */

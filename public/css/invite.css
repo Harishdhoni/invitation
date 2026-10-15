@@ -432,8 +432,8 @@ html[lang="ta"] .stay-box p{font-family:var(--tamil);font-size:.98rem;}
 @media(max-width:520px){.stay-box{padding:1.8rem 1.3rem;}}
 
 /* ================================ FOOTER ================================ */
-footer{background:var(--maroon-dark);color:var(--gold-light);text-align:center;padding:3.2rem 1.5rem 5.5rem;}
-footer::before{content:"❁";display:block;color:var(--gold);font-size:1.1rem;margin-bottom:.9rem;opacity:.75;}
+footer{background:var(--maroon-dark);color:var(--gold-light);text-align:center;padding:2.2rem 1.5rem 2rem;}
+footer::before{content:"❁";display:block;color:var(--gold);font-size:1.1rem;margin-bottom:.6rem;opacity:.75;}
 footer .hashtag{
   font-family:var(--display);font-size:1.4rem;margin-bottom:.6rem;overflow-wrap:anywhere;
   background:linear-gradient(180deg,var(--gold-light),var(--gold) 60%,var(--gold-dark));
