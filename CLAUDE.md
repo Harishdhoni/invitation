@@ -5,7 +5,7 @@ Human setup and deploy steps are in [SETUP.md](SETUP.md). The template contract 
 
 ## What this is
 
-Tamil / English invitation websites for weddings, engagements, housewarmings, birthdays, baby showers and any other category the admin adds.
+Tamil / English invitation websites for weddings, engagements, haldi ceremonies, housewarmings, birthdays, baby showers and any other category the admin adds.
 Many events run at once. Each one lives at `/<slug>` (e.g. `/arjun-meera`) with its own details, photos, music,
 guest book and template. One admin (email + password) manages everything. An event's editor gets in with a PIN.
 An event can have extra links that show the same details in other designs, each with its own hidden parts and its own
@@ -81,7 +81,7 @@ Important:
 | `public/index.html`: the built-in **Classic** design, and the shell for every event | `js/invite.js` | Guests |
 | `public/admin.html` (`/admin`) | `js/admin.js` | The one admin |
 | `public/editor.html` (`/editor`) | `js/editor.js` | Someone holding an event's PIN |
-| `public/templates/*.html`: 36 starter designs (10 wedding, 5 housewarming, 11 birthday, 5 baby shower, 5 engagement) listed in `starters.json`, copied into Firestore on request | none (the runtime is injected) | n/a |
+| `public/templates/*.html`: 41 starter designs (10 wedding, 5 housewarming, 11 birthday, 5 baby shower, 5 engagement, 5 haldi) listed in `starters.json`, copied into Firestore on request | none (the runtime is injected) | n/a |
 | `public/home.html` (the sales page, served at `/`), `showcase.html` (the tour with every design) and `help`, `terms`, `privacy`, `refund`, `contact` `.html` | `js/site.js` | Customers |
 
 `admin.html` and `editor.html` share `css/admin.css` and the same sidebar (no fixed header). On wide screens its toggle
@@ -366,7 +366,7 @@ Without a build step there is no shared config, so these are duplicated on purpo
 | When a link is open (switch, dates, 15-day auto end, India time) | `firestore.rules` `isLive` · `linkState` / `AUTO_END_DAYS` in `defaults.js` |
 | Links per event (3 in all for editors) | `firestore.rules` `linksChangeOk` (`after.size() <= 2`) · `MAX_LINKS` in `defaults.js` |
 | No-cache headers for html/js/css | `vercel.json` `headers` (Vercel) · `public/.htaccess` (local Apache, so edits show on a normal reload) |
-| Starter templates | `public/templates/starters.json` · the starter count in `README.md` and `SETUP.md` ("Add 36 starter templates") · the catalog in `PRODUCT.md` §6 |
+| Starter templates | `public/templates/starters.json` · the starter count in `README.md` and `SETUP.md` ("Add 41 starter templates") · the catalog in `PRODUCT.md` §6 |
 | Site credit | two copies in each of `admin.html` and `editor.html` ("Developed by Harish Siva"): the `.side-credit` in the sidebar and the page's `.site-credit` footer · `loadSales()` in `event-editor.js`, which adds the business name to their first part |
 | Sidebar breakpoint (1024px) | the `min-width:1024px` / `max-width:1023.98px` queries in `admin.css` · `matchMedia` in `wireSidebar()` (`admin-ui.js`) |
 | Sales settings (businessName, price, upiId, payNumber, whatsapp, email, address, welcomeMessage) | `SALES_DEFAULTS` in `defaults.js` · `FIELDS` in `admin-sales.js` and the Settings form in `admin.html` · `data-site` hooks in `site.js` and the sales/info pages |
@@ -430,7 +430,7 @@ Without a build step there is no shared config, so these are duplicated on purpo
 - **Sample photo and song**: while `invite.js` shows sample details (`sample`), the cover slot gets the category's
   photo from `public/assets/samples/` and the music is `SAMPLE_MUSIC`, played from its URL (`preload="none"`, so admin
   thumbnails don't each download it) instead of Firestore chunks. Neither is ever put in a config, so `sampleFor()` and
-  new events stay without a photo or song. The baby shower photo is cropped from the original to drop its empty top. Engagements reuse the wedding photo.
+  new events stay without a photo or song. The baby shower photo is cropped from the original to drop its empty top. Engagements and haldi ceremonies reuse the wedding photo.
 - **Everything is India time.** `datetime-local` input is stored with `+05:30`, and dates are displayed with
   `timeZone: "Asia/Kolkata"`. Event dates are free text; `parseEventDate()` pulls the day, month and year out of the
   English for template date hooks.

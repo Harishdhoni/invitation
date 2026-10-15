@@ -45,6 +45,7 @@ const CATEGORY_PLACES = {
   "category:birthday": "shows only the birthday designs",
   "category:baby-shower": "shows only the baby shower designs",
   "category:engagement": "shows only the engagement designs",
+  "category:haldi": "shows only the haldi designs",
   "category:all": "shows every design again"
 };
 function categoryPlaces(box){
@@ -66,7 +67,7 @@ export function previewDesign(id){
 /* ------------------------------ for every page ------------------------------ */
 // The facts every page's assistant can use. {price} and {business} are filled in from Settings.
 export const PRODUCT = `ABOUT THE PRODUCT
-{business} makes invitation websites in Tamil and English for weddings, engagements (Nichayathartham), housewarmings (Gruhapravesam), birthdays and baby showers (including Valaikappu). Each invitation is one link, shared on WhatsApp, that opens a designed page in any phone's browser. Guests install nothing.
+{business} makes invitation websites in Tamil and English for weddings, engagements (Nichayathartham), haldi ceremonies, housewarmings (Gruhapravesam), birthdays and baby showers (including Valaikappu). Each invitation is one link, shared on WhatsApp, that opens a designed page in any phone's browser. Guests install nothing.
 
 What guests get on every invitation:
 - An opening animation they tap (curtains, temple doors, an envelope, a cake candle and so on). The family's song starts with it.
@@ -102,7 +103,7 @@ const home = {
   greeting: "Hi! I can tell you what an invitation website includes, help you find a design, and explain how ordering works. You can ask in English or தமிழ்.",
   suggestions: ["What do my guests get?", "How much does it cost?", "How do I order one?", "Show me the birthday designs"],
   about: `THIS PAGE: the home page, the sales page for visitors thinking of buying an invitation.
-From the top: the header (Designs, Pricing, FAQ, Showcase, and an Order now button), the hero with "Order on WhatsApp" and "See the designs", "What you get" (eight features), "Designs" (every design with category chips: All designs, Weddings, Housewarmings, Birthdays, Baby Showers, Engagements; tapping a design opens it live with sample details), "Pricing" (one price per invitation and what it includes), "How it works" (three steps: message us on WhatsApp, fill it in and preview, pay and share), "Questions" (FAQ) and a last "Order on WhatsApp" button. The footer links to Showcase, Help, Terms, Privacy, Refunds and Contact.
+From the top: the header (Designs, Pricing, FAQ, Showcase, and an Order now button), the hero with "Order on WhatsApp" and "See the designs", "What you get" (eight features), "Designs" (every design with category chips: All designs, Weddings, Housewarmings, Birthdays, Baby Showers, Engagements, Haldi Ceremonies; tapping a design opens it live with sample details), "Pricing" (one price per invitation and what it includes), "How it works" (three steps: message us on WhatsApp, fill it in and preview, pay and share), "Questions" (FAQ) and a last "Order on WhatsApp" button. The footer links to Showcase, Help, Terms, Privacy, Refunds and Contact.
 Ordering always happens on WhatsApp: the Order buttons open a chat with {business} with a message already typed.`,
   places: {
     designs: section("#designs", "scrolls to the designs"),
@@ -129,7 +130,7 @@ const showcase = {
   greeting: "Hi! I can help you find a design for your event, open a live preview, and explain what you can change yourself. You can ask in English or தமிழ்.",
   suggestions: ["Which design suits a temple wedding?", "Show me the baby shower designs", "What can I change myself?", "How do I pay?"],
   about: `THIS PAGE: the showcase, the page to share with anyone who wants to know what the invitations are. It shows every design.
-From the top: the header (Home, For guests, Designs, Pricing, Order now), a hero with counts and "See every design", "What your guests see" (a sample WhatsApp chat and the four steps of opening an invitation), "Designs" (category chips: All designs, Weddings, Housewarmings, Birthdays, Baby Showers, Engagements; each design has a picture, Preview and Choose), "What you can do" (what the customer changes themselves in the editor), "How it works" (four steps: message us on WhatsApp, get your editor link, fill it in and preview, pay and share) with the price card, "Questions", and a last "Order on WhatsApp" button.
+From the top: the header (Home, For guests, Designs, Pricing, Order now), a hero with counts and "See every design", "What your guests see" (a sample WhatsApp chat and the four steps of opening an invitation), "Designs" (category chips: All designs, Weddings, Housewarmings, Birthdays, Baby Showers, Engagements, Haldi Ceremonies; each design has a picture, Preview and Choose), "What you can do" (what the customer changes themselves in the editor), "How it works" (four steps: message us on WhatsApp, get your editor link, fill it in and preview, pay and share) with the price card, "Questions", and a last "Order on WhatsApp" button.
 Preview opens the design live with sample details (beside its details on a computer, the full page on a phone; full screen shows the opening animation and the தமிழ் switch). Choose opens WhatsApp with a message naming that design. The design can be changed later; the details stay.`,
   places: {
     guests: section("#guests", "scrolls to what guests see"),

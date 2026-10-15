@@ -113,6 +113,12 @@ function categoryChips(box, groups, draw){
   chips.append(chip("", "All designs", groups.reduce((n, g) => n + g.list.length, 0)),
     ...groups.map(g => chip(g.id, g.name, g.list.length)));
   pick(current);
+  // On a phone the row scrolls sideways, so a shared link (?category=) brings its chip into view. Only the row
+  // moves, not the page.
+  if(current) requestAnimationFrame(() => {
+    const on = chips.querySelector(`.chip[data-category="${current}"]`);
+    if(on && chips.scrollWidth > chips.clientWidth) chips.scrollLeft = on.offsetLeft - chips.offsetLeft - 16;
+  });
   return chips;
 }
 

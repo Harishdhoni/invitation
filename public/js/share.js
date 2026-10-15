@@ -14,7 +14,7 @@ const VOICES = {
     title: "Share your site",
     intro: "Send customers the link to your home page, or to the showcase of every design.",
     phone: "Customer's WhatsApp number (optional)",
-    home: "Hi! 🙏 We make invitation websites in Tamil and English for weddings, engagements, housewarmings, birthdays and baby showers: " +
+    home: "Hi! 🙏 We make invitation websites in Tamil and English for weddings, engagements, haldi ceremonies, housewarmings, birthdays and baby showers: " +
       "one link to share on WhatsApp, with your photos, music, directions and a guest book.\n\n" +
       "₹{price} per invitation. See the designs and order here: {link}",
     showcase: "Hi! 🙏 Here are all our invitation designs{for}. Tap any one to see it live: {link}\n\n" +
@@ -23,7 +23,7 @@ const VOICES = {
   },
   friend: {
     title: "Share with friends",
-    intro: "Know someone with a wedding, engagement, birthday or housewarming coming up? Send them the home page, or every design to choose from.",
+    intro: "Know someone with a wedding, engagement, haldi, birthday or housewarming coming up? Send them the home page, or every design to choose from.",
     phone: "Their WhatsApp number (optional)",
     home: "Hi! 🙏 I made my invitation as a website{with}, in Tamil and English: one link to share on WhatsApp, " +
       "with photos, music, directions and a guest book.\n\n" +

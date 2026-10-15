@@ -4,7 +4,7 @@ trigger: always_on
 
 # Cascade rules: Online Invitations (wedding-invite)
 
-Tamil / English invitation websites (weddings, engagements, housewarmings, birthdays, baby showers, custom categories). There are many events,
+Tamil / English invitation websites (weddings, engagements, haldi ceremonies, housewarmings, birthdays, baby showers, custom categories). There are many events,
 each at `/<slug>` with its own details, photos, music, guest book and template. One admin manages everything, and
 an editor can edit one event with a PIN. More detail: `CLAUDE.md` (code), `PRODUCT.md` (product), `SETUP.md`
 (setup/deploy), `TEMPLATES.md` (template hooks). Read TEMPLATES.md before you touch `public/templates/` or the hooks
@@ -60,7 +60,7 @@ in `invite.js`.
 - `api/` (Vercel, CommonJS): `invite.js` serves `/<slug>` with per-event OG tags between `<!-- og:start -->` and
   `<!-- og:end -->` and adds `meta wedding-id` / `template-id` and the runtime script. `og-image.js` serves the
   preview image. `_firestore.js` is a credential-less REST reader.
-- `public/templates/*.html` + `starters.json`: 36 starter designs (10 wedding, 5 housewarming, 11 birthday, 5 baby shower, 5 engagement). These are
+- `public/templates/*.html` + `starters.json`: 41 starter designs (10 wedding, 5 housewarming, 11 birthday, 5 baby shower, 5 engagement, 5 haldi). These are
   **seeds only**. Once added in the admin, events use the Firestore copy, so editing the file changes nothing live.
 
 ## Data (Firestore)

@@ -1,6 +1,6 @@
 # Product: Online Invitations
 
-An invitation website, in Tamil and English, for each family event: weddings, engagements, housewarmings, birthdays, baby showers, or any other
+An invitation website, in Tamil and English, for each family event: weddings, engagements, haldi ceremonies, housewarmings, birthdays, baby showers, or any other
 category the admin adds. Guests get one link, usually over WhatsApp. It opens a designed page on their phone with
 music, every event's time and directions, a countdown, a guest book and tap-to-call contacts. One admin runs any
 number of these invitations from a single admin page. They can give a family member a PIN so that person can edit
@@ -272,8 +272,13 @@ All templates fill in the same event details (see TEMPLATES.md).
 | Peony Bloom | Engagement | Wine-dark florals: a peony blooms around the couple's initials; gilded oval photo frame, botanical-plate events, pressed-flower wishes |
 | It's a Yes! | Engagement | Bright and festive: the "Will you…?" card flips to a confetti YES!; sticker-badge photo frame, tear-off calendar countdown |
 | Golden Hour | Engagement | A seashore at sunset: the sun sets as the couple join hands; the photo is the sun, events on the sand, messages-in-bottles wishes |
+| Marigold Mela | Haldi | Tap the urli of haldi: turmeric handprints stamp the screen and a brush sweeps it gold; a canopy of decorated umbrellas, marigold-wreath photo frame, events hung on marigold strings, brass-urli countdown, handprint-stamped wishes |
+| Haldi Groove | Haldi | 70s retro: drop the needle and a haldi-yellow record spins (the music starts with that tap); album-sleeve photo with a date sticker, cassette-tape events, daisy countdown, ON AIR dedications |
+| Phool Chadar | Haldi | Pastel lemon, sage and blush: lift a sheer embroidered dupatta; a phool chadar (flower canopy) with hanging strands, oval photo frame with flower clusters, embroidered events edged with gota lace, embroidery-hoop countdown, stitched-patch wishes |
+| The Haldi Times | Haldi | A newspaper special edition: the front page spins in with "<names> to turn yellow!"; masthead, yellow-printed lead photo, weather and dress-code briefs, a news ticker, clip-out events, letters-to-the-editor wishes |
+| Petal Pool | Haldi | A pool haldi in turquoise and yellow: tap the water and dive in; the photo floats in a pool ring, pool-deck events with lifebuoy numbers, pool-ring countdown, paper-boat wishes |
 
-The themed birthday, baby-shower, engagement and newer housewarming designs use original artwork only (no copyrighted characters, logos or franchise
+The themed birthday, baby-shower, engagement, haldi and newer housewarming designs use original artwork only (no copyrighted characters, logos or franchise
 names). Their fixed labels carry `data-ta` attributes, so they switch to Tamil with the தமிழ் button. The baby-shower
 designs are gender-neutral: no "boy or girl" or gender reveal, which is not allowed in India.
 
@@ -341,7 +346,7 @@ These are things the product doesn't do today.
 | Order | The record of who bought an invitation and how they paid (`orders/<slug>`, admin only) |
 | Unpaid | A sold invitation whose payment hasn't been recorded yet: its customer can edit and preview it, guests can't open it |
 | Sales page | The bare site address `/`: designs, price and **Order on WhatsApp** |
-| Category | A kind of event (Weddings, Housewarmings, Birthdays, Baby Showers, Engagements, or one the admin adds). Each has its own templates and sample details |
+| Category | A kind of event (Weddings, Housewarmings, Birthdays, Baby Showers, Engagements, Haldi Ceremonies, or one the admin adds). Each has its own templates and sample details |
 | Template | A whole HTML page design that any event in its category can use |
 | Classic | The built-in Maroon & Gold wedding design in `index.html` |
 | Starter template | A design shipped in `public/templates/`, copied into Firestore on request |
@@ -350,6 +355,10 @@ These are things the product doesn't do today.
 | Muhurtham | The auspicious time of a Hindu wedding ceremony. The main countdown target for weddings |
 | Gruhapravesam | A Hindu housewarming ceremony |
 | Nichayathartham | A Tamil engagement ceremony: the families exchange thamboolam and read the lagna pathrikai that fixes the wedding date |
+| Haldi | A pre-wedding ceremony where family and friends apply turmeric paste to the bride or groom, with flowers, music and yellow clothes. Close to the Tamil nalangu |
+| Urli | A wide, shallow brass bowl, often filled with water and flowers (or, at a haldi, turmeric paste) |
+| Phool chadar | A canopy of flowers held over the bride (or groom) by four relatives as they walk in |
+| Gota | Gold or silver ribbon lace sewn along the edge of a dupatta or saree |
 | Thamboolam | A plate of betel leaves, areca nuts, fruit, flowers, turmeric and kumkum that the two families exchange |
 | Thoranam | A garland of mango leaves (and flowers) hung over a doorway for festive occasions |
 | Kolam | A geometric design drawn with rice flour at a threshold |

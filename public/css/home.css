@@ -190,6 +190,8 @@ body:has(.back-bar) .chips{top:100px;}
 
 /* The designs: category chips that stay in view, then one card per design. */
 .chips{position:sticky;top:60px;z-index:5;display:flex;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;background:#fff;padding:10px 0;}
+/* A computer has no swipe and the row's scrollbar is hidden, so there every chip wraps into view. */
+@media(min-width:761px){.chips{flex-wrap:wrap;overflow-x:visible;}}
 .chip{flex:none;display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--line);
   background:var(--bg);color:var(--maroon-dark);font:500 .92rem var(--sans);cursor:pointer;}
 .chip:hover{border-color:var(--gold);}

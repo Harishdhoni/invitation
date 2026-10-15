@@ -70,5 +70,15 @@
   { "id": "its-a-yes", "file": "engagement-its-a-yes.html", "name": "It's a Yes!", "category": "engagement",
     "description": "Big news in bright colours: tick Yes and the card flips to a confetti YES! A sticker-badge photo frame, chunky colour cards and a tear-off calendar countdown." },
   { "id": "golden-hour", "file": "engagement-golden-hour.html", "name": "Golden Hour", "category": "engagement",
-    "description": "A seashore at sunset: tap the sun and it sinks as the couple join hands. The photo is the setting sun, events sit on the sand and wishes arrive as messages in bottles." }
+    "description": "A seashore at sunset: tap the sun and it sinks as the couple join hands. The photo is the setting sun, events sit on the sand and wishes arrive as messages in bottles." },
+  { "id": "marigold-mela", "file": "haldi-marigold-mela.html", "name": "Marigold Mela", "category": "haldi",
+    "description": "Tap the bowl of haldi: turmeric handprints stamp the screen and a brush sweeps it gold. A canopy of swaying umbrellas, a marigold-wreath photo frame, events hung on marigold strings and a brass-urli countdown." },
+  { "id": "haldi-groove", "file": "haldi-groove.html", "name": "Haldi Groove", "category": "haldi",
+    "description": "70s retro: drop the needle and a haldi-yellow record spins up the music. An album-sleeve photo, cassette-tape events, a daisy countdown and dedications from an ON AIR request line." },
+  { "id": "phool-chadar", "file": "haldi-phool-chadar.html", "name": "Phool Chadar", "category": "haldi",
+    "description": "Pastel lemon, sage and blush: tap to lift a sheer embroidered dupatta. A canopy of flowers with hanging strands, an oval photo frame with flower clusters, embroidery-hoop countdown and stitched wishes." },
+  { "id": "haldi-times", "file": "haldi-times.html", "name": "The Haldi Times", "category": "haldi",
+    "description": "A newspaper special edition: the front page spins in with the headline \"to turn yellow!\" A yellow-printed lead photo, a news ticker, clip-out events and letters to the editor." },
+  { "id": "petal-pool", "file": "haldi-petal-pool.html", "name": "Petal Pool", "category": "haldi",
+    "description": "A pool haldi in turquoise and yellow: tap the water and dive in. The photo floats in a pool ring, events sit on the pool deck, a pool-ring countdown and wishes as paper boats." }
 ]

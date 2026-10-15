@@ -146,7 +146,8 @@ export const DEFAULT_CATEGORIES = [
   { id: "housewarming", name: "Housewarmings", order: 2 },
   { id: "birthday", name: "Birthdays", order: 3 },
   { id: "baby-shower", name: "Baby Showers", order: 4 },
-  { id: "engagement", name: "Engagements", order: 5 }
+  { id: "engagement", name: "Engagements", order: 5 },
+  { id: "haldi", name: "Haldi Ceremonies", order: 6 }
 ];
 export const isWedding = cfg => (cfg?.category || "wedding") === "wedding";
 
@@ -253,6 +254,36 @@ const SAMPLES = {
         place: { en: "Sri Ganesh Mahal", ta: "" }, venue: { en: "K.K. Nagar, Madurai - 625020", ta: "" },
         desc: { en: "A banana-leaf feast with both families.", ta: "" }, mapQuery: "K.K. Nagar Madurai 625020", mapUrl: "" }
     ]
+  },
+  // The couple, as for weddings; a haldi for one of them leaves the second name empty.
+  haldi: {
+    groomName: { en: "Vikram", ta: "" },
+    brideName: { en: "Kavya", ta: "" },
+    title: { en: "Haldi Ceremony", ta: "ஹல்தி விழா" },
+    weddingDateTimeISO: "2027-02-11T09:30:00+05:30",
+    hashtag: "#VikramKavyaHaldi",
+    curtainVerse: "",
+    tagline: { en: "Before the wedding, a splash of yellow! Join us for a morning of haldi, flowers, music and lots of laughter as we get ready for the big day.", ta: "" },
+    heroDateLine: { en: "🌼 11th February 2027 • Chennai", ta: "" },
+    accommodationText: { en: "Coming from out of town or need help finding the venue? Call us and we'll guide you.", ta: "" },
+    coordinators: [
+      { name: { en: "Vikram's family", ta: "" }, phones: ["+91 90000 00000"] },
+      { name: { en: "Kavya's family", ta: "" }, phones: ["+91 90000 00001"] }
+    ],
+    events: [
+      { id: "haldi", icon: { type: "emoji", emoji: "🌼", imageId: "" },
+        name: { en: "Haldi Ceremony", ta: "" }, date: { en: "11th February 2027", ta: "" }, time: { en: "9:30 AM to 12:30 PM", ta: "" },
+        place: { en: "Green Meadows Lawn", ta: "" }, venue: { en: "ECR, Injambakkam, Chennai - 600115", ta: "" },
+        desc: { en: "Turmeric, flowers, music and lots of laughter. Come dressed in yellow!", ta: "" }, mapQuery: "Injambakkam Chennai 600115", mapUrl: "" },
+      { id: "lunch", icon: { type: "emoji", emoji: "🍃", imageId: "" },
+        name: { en: "Lunch", ta: "" }, date: { en: "11th February 2027", ta: "" }, time: { en: "1:00 PM onwards", ta: "" },
+        place: { en: "Green Meadows Lawn", ta: "" }, venue: { en: "ECR, Injambakkam, Chennai - 600115", ta: "" },
+        desc: { en: "A banana-leaf lunch with family and friends.", ta: "" }, mapQuery: "Injambakkam Chennai 600115", mapUrl: "" },
+      { id: "mehendi", icon: { type: "emoji", emoji: "🎶", imageId: "" },
+        name: { en: "Mehendi & Sangeet", ta: "" }, date: { en: "11th February 2027", ta: "" }, time: { en: "6:00 PM onwards", ta: "" },
+        place: { en: "Green Meadows Lawn", ta: "" }, venue: { en: "ECR, Injambakkam, Chennai - 600115", ta: "" },
+        desc: { en: "Henna, music, dancing and dinner under the stars.", ta: "" }, mapQuery: "Injambakkam Chennai 600115", mapUrl: "" }
+    ]
   }
 };
 // For categories the admin adds later.
@@ -280,8 +311,9 @@ const SAMPLE_PHOTOS = {
   housewarming: "assets/samples/housewarming.jpg",
   birthday: "assets/samples/birthday.jpg",
   "baby-shower": "assets/samples/baby-shower.jpg",
-  // The couple's photo suits an engagement too.
-  engagement: "assets/samples/wedding.jpg"
+  // The couple's photo suits an engagement and a haldi too (it is warm gold, with marigold strings).
+  engagement: "assets/samples/wedding.jpg",
+  haldi: "assets/samples/wedding.jpg"
 };
 export const samplePhoto = category => SAMPLE_PHOTOS[category || "wedding"] || "";
 export const SAMPLE_MUSIC = { v: "sample", url: "assets/samples/the-rose-instrumental.mp3", type: "audio/mpeg", name: "The Rose (instrumental)" };
